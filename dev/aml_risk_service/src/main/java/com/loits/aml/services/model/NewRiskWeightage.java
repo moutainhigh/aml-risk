@@ -1,0 +1,112 @@
+package com.loits.aml.services.model;
+
+import com.loits.aml.domain.RiskCategory;
+
+import java.sql.Timestamp;
+
+public class NewRiskWeightage {
+    private Integer id;
+    private String key;
+    private String name;
+    private Integer weightage;
+    private Byte status;
+    private String createdBy;
+    private Timestamp createdOn;
+    private String company;
+    private String module;
+    private Long version;
+    private RiskCategory riskCategoryByCategory;
+
+
+    public NewRiskWeightage(){
+
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Integer getWeightage() {
+        return weightage;
+    }
+
+    public void setWeightage(Integer weightage) {
+        this.weightage = weightage;
+    }
+
+    public Byte getStatus() {
+        return status;
+    }
+
+    public void setStatus(Byte status) {
+        this.status = status;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Timestamp getCreatedOn() {
+        return createdOn;
+    }
+
+    public void setCreatedOn(Timestamp createdOn) {
+        this.createdOn = createdOn;
+    }
+
+    public String getCompany() {
+        return company;
+    }
+
+    public void setCompany(String company) {
+        this.company = company;
+    }
+
+    public String getModule() {
+        return module;
+    }
+
+    public void setModule(String module) {
+        this.module = module;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
+    public RiskCategory getRiskCategoryByCategory() {
+        return riskCategoryByCategory;
+    }
+
+    public void setRiskCategoryByCategory(RiskCategory riskCategoryByCategory) {
+        this.riskCategoryByCategory = riskCategoryByCategory;
+    }
+}

@@ -1,0 +1,87 @@
+databaseChangeLog:
+- changeSet:
+    id: 1
+    author: Minoli (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+            name: id
+            type: INT
+        - column:
+            name: key
+            type: VARCHAR(45)
+        - column:
+            name: category
+            type: VARCHAR(45)
+        - column:
+            name: name
+            type: VARCHAR(45)
+        - column:
+            name: weightage
+            type: INT
+        - column:
+            name: status
+            type: TINYINT(3)
+        - column:
+            name: created_by
+            type: VARCHAR(45)
+        - column:
+            name: created_on
+            type: datetime
+        - column:
+            name: company
+            type: VARCHAR(45)
+        - column:
+            name: module
+            type: VARCHAR(45)
+        tableName: risk_weightage
+
+- changeSet:
+      id: 2
+      author: Minoli
+      changes:
+          - addColumn:
+                tableName: risk_weightage
+                columns:
+                    - column:
+                          name: version
+                          type: BIGINT
+
+- changeSet:
+      id: 3
+      author: Minoli
+      changes:
+          - modifyDataType:
+                columnName: category
+                newDataType: int
+                tableName: risk_weightage
+
+- changeSet:
+      id: 4
+      author: Minoli
+      changes:
+          - createIndex:
+                columns:
+                    - column:
+                          name: category
+                indexName: fk_riskweightage_riskcategory_idx
+                tableName: risk_weightage
+- changeSet:
+      id: 5
+      author: Minoli
+      changes:
+          - addForeignKeyConstraint:
+                baseColumnNames: category
+                baseTableName: risk_weightage
+                constraintName: fk_riskweightage_riskcategory
+                deferrable: false
+                initiallyDeferred: false
+                onDelete: NO ACTION
+                onUpdate: NO ACTION
+                referencedColumnNames: id
+                referencedTableName: risk_category
+                validate: true

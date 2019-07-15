@@ -1,0 +1,95 @@
+databaseChangeLog:
+- changeSet:
+    id: 1
+    author: Minoli (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+            name: id
+            type: INT
+        - column:
+            name: risk_weightage_id
+            type: INT
+        - column:
+            name: key
+            type: VARCHAR(45)
+        - column:
+            name: category
+            type: VARCHAR(45)
+        - column:
+            name: name
+            type: VARCHAR(45)
+        - column:
+            name: weightage
+            type: INT
+        - column:
+            name: status
+            type: TINYINT(3)
+        - column:
+            name: created_by
+            type: VARCHAR(45)
+        - column:
+            name: created_on
+            type: datetime
+        - column:
+            name: company
+            type: VARCHAR(45)
+        - column:
+            name: module
+            type: VARCHAR(45)
+        - column:
+            name: modified_by
+            type: VARCHAR(45)
+        - column:
+            name: modified_on
+            type: datetime
+        tableName: risk_weightage_history
+
+- changeSet:
+      id: 2
+      author: Minoli
+      changes:
+          - dropColumn:
+                columnName: modified_by
+                tableName: risk_weightage_history
+          - dropColumn:
+                columnName: modified_on
+                tableName: risk_weightage_history
+- changeSet:
+      id: 3
+      author: Minoli
+      changes:
+          - modifyDataType:
+                columnName: category
+                newDataType: int
+                tableName: risk_weightage_history
+
+#- changeSet:
+#    id: 1562561382064-47
+#    author: Minoli (generated)
+#    changes:
+#    - createIndex:
+#        columns:
+#        - column:
+#            name: risk_weightage_id
+#        indexName: risk_weightage_fk_idx
+#        tableName: risk_weightage_history
+#- changeSet:
+#    id: 1562561382064-65
+#    author: Minoli (generated)
+#    changes:
+#    - addForeignKeyConstraint:
+#        baseColumnNames: risk_weightage_id
+#        baseTableName: risk_weightage_history
+#        constraintName: risk_weightage_fk
+#        deferrable: false
+#        initiallyDeferred: false
+#        onDelete: NO ACTION
+#        onUpdate: NO ACTION
+#        referencedColumnNames: id
+#        referencedTableName: risk_weightage
+#        validate: true

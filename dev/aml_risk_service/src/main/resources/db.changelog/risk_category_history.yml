@@ -1,0 +1,85 @@
+databaseChangeLog:
+- changeSet:
+    id: 1
+    author: Minoli (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+            name: id
+            type: INT
+        - column:
+            name: risk_category_id
+            type: INT
+        - column:
+            name: code
+            type: VARCHAR(45)
+        - column:
+            name: description
+            type: VARCHAR(45)
+        - column:
+            name: from
+            type: INT
+        - column:
+            name: to
+            type: INT
+        - column:
+            name: status
+            type: TINYINT(3)
+        - column:
+            name: created_by
+            type: VARCHAR(45)
+        - column:
+            name: created_on
+            type: datetime
+        - column:
+            name: company
+            type: VARCHAR(45)
+        - column:
+            name: module
+            type: VARCHAR(45)
+        - column:
+            name: modified_by
+            type: VARCHAR(45)
+        - column:
+            name: modified_on
+            type: datetime
+        tableName: risk_category_history
+- changeSet:
+      id: 2
+      author: Minoli
+      changes:
+          - dropColumn:
+                columnName: modified_by
+                tableName: risk_category_history
+          - dropColumn:
+                columnName: modified_on
+                tableName: risk_category_history
+#- changeSet:
+#    id: 1562561382064-46
+#    author: Minoli (generated)
+#    changes:
+#    - createIndex:
+#        columns:
+#        - column:
+#            name: risk_category_id
+#        indexName: risk_category_fk_idx
+#        tableName: risk_category_history
+#- changeSet:
+#    id: 1562561382064-64
+#    author: Minoli (generated)
+#    changes:
+#    - addForeignKeyConstraint:
+#        baseColumnNames: risk_category_id
+#        baseTableName: risk_category_history
+#        constraintName: risk_category_fk
+#        deferrable: false
+#        initiallyDeferred: false
+#        onDelete: NO ACTION
+#        onUpdate: NO ACTION
+#        referencedColumnNames: id
+#        referencedTableName: risk_category
+#        validate: true
