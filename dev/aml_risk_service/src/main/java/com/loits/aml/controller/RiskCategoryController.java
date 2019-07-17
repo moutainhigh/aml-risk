@@ -29,7 +29,7 @@ import java.sql.Timestamp;
  */
 @CrossOrigin(origins = "*")
 @RestController
-@RequestMapping(path = "/aml/v1/risk-category")
+@RequestMapping(path = "/aml/v1/risk/risk-category")
 @SuppressWarnings("unchecked")
 public class RiskCategoryController {
 

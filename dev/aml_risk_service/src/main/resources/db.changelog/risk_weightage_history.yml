@@ -67,6 +67,15 @@ databaseChangeLog:
                 columnName: category
                 newDataType: int
                 tableName: risk_weightage_history
+- changeSet:
+    id: 4
+    author: minoli
+    changes:
+      - renameColumn:
+          columnDataType: VARCHAR(45)
+          newColumnName: code
+          oldColumnName: key
+          tableName: risk_weightage_history
 
 #- changeSet:
 #    id: 1562561382064-47

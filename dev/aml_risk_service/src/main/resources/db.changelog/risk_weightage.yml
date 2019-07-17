@@ -85,3 +85,12 @@ databaseChangeLog:
                 referencedColumnNames: id
                 referencedTableName: risk_category
                 validate: true
+- changeSet:
+    id: 6
+    author: minoli
+    changes:
+      - renameColumn:
+          columnDataType: VARCHAR(45)
+          newColumnName: code
+          oldColumnName: key
+          tableName: risk_weightage

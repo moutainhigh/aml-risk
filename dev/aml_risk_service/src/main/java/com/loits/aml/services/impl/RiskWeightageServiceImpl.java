@@ -2,6 +2,7 @@ package com.loits.aml.services.impl;
 
 import com.loits.aml.config.LoitServiceException;
 import com.loits.aml.domain.*;
+import com.loits.aml.repo.RiskCategoryRepository;
 import com.loits.aml.repo.RiskWeightageHistoryRepository;
 import com.loits.aml.repo.RiskWeightageRepository;
 import com.loits.aml.services.model.NewRiskWeightage;
@@ -37,6 +38,9 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
     private RiskWeightageRepository riskWeightageRepository;
 
     @Autowired
+    private RiskCategoryRepository riskCategoryRepository;
+
+    @Autowired
     private RiskWeightageHistoryRepository riskWeightageHistoryRepository;
 
     @Autowired
@@ -60,7 +64,7 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
             bb.and(riskWeightage.id.in(ids));
         }
         return riskWeightageRepository.findAll(bb.getValue(), pageable).map(
-                riskWeightage1 -> projectionFactory.createProjection(LovRiskCategories.class, riskWeightage1)
+                riskWeightage1 -> projectionFactory.createProjection(LovRiskWeightages.class, riskWeightage1)
         );
     }
 
@@ -78,7 +82,17 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
             throw new LoitServiceException("Required fields cannot be empty", "NULL");
         }
 
-        //TODO check duplicates by code
+        //check if Risk Category available in db (foreign key constraint)
+        Integer categoryId = riskWeightage.getCategoryId();
+        if(categoryId != null){
+            if(!riskCategoryRepository.existsById(categoryId)) {
+                throw new LoitServiceException("Risk Category should match an existing Risk Category",
+                        "INVALID_DATA");
+            }else{
+                riskWeightage.setCategory(riskCategoryRepository.findById(categoryId).get());
+
+            }
+        }
 
         //overriding id to 0
         riskWeightage.setId(0);
@@ -111,6 +125,18 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
                     "NULL");
         }
 
+        //check if Risk Category available in db (foreign key constraint)
+        Integer categoryId = newRiskWeightage.getCategoryId();
+        if(categoryId != null){
+            if(!riskCategoryRepository.existsById(categoryId)) {
+                throw new LoitServiceException("Risk Category should match an existing Risk Category",
+                        "INVALID_DATA");
+            }else{
+                newRiskWeightage.setCategory(riskCategoryRepository.findById(categoryId).get());
+
+            }
+        }
+
         //Check for availability of RiskWeightage by id
         if (!riskWeightageRepository.existsById(id)) {
             //RiskWeightage not found
@@ -132,8 +158,7 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
         saveHistoryRecord(riskWeightage);
 
         //Editable fields being updated //editable fields not given in doc (assumed)
-        riskWeightage.setRiskCategoryByCategory(newRiskWeightage.getRiskCategoryByCategory());
-        //TODO should fo a foreign key check
+        riskWeightage.setCategory(newRiskWeightage.getCategory());
         riskWeightage.setName(newRiskWeightage.getName());
         riskWeightage.setWeightage(newRiskWeightage.getWeightage());
         riskWeightage.setStatus(newRiskWeightage.getStatus());
@@ -145,7 +170,7 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
         //increment version
         riskWeightage.setVersion(newRiskWeightage.getVersion() + 1);
 
-        return projectionFactory.createProjection(LovRiskCategories.class,
+        return projectionFactory.createProjection(LovRiskWeightages.class,
                 riskWeightageRepository.save(riskWeightage));
     }
 
@@ -167,7 +192,7 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
         saveHistoryRecord(riskWeightage);
 
         riskWeightageRepository.delete(riskWeightage);
-        return projectionFactory.createProjection(LovRiskCategories.class, riskWeightage);
+        return projectionFactory.createProjection(LovRiskWeightages.class, riskWeightage);
     }
 
 
@@ -181,7 +206,9 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
         BeanUtils.copyProperties(riskWeightage, riskWeightageHistory);
         riskWeightageHistory.setId(0);
         riskWeightageHistory.setRiskWeightageId(riskWeightage.getId());
-        riskWeightageHistory.setCategory(riskWeightage.getRiskCategoryByCategory().getId());
+        if(riskWeightage.getCategory()!=null){
+            riskWeightageHistory.setCategory(riskWeightage.getCategory().getId());
+        }
         riskWeightageHistoryRepository.save(riskWeightageHistory);
     }
 }

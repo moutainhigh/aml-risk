@@ -29,7 +29,7 @@ import java.sql.Timestamp;
  */
 @CrossOrigin(origins = "*")
 @RestController
-@RequestMapping(path = "/aml/v1/risk-weightage")
+@RequestMapping(path = "/aml/v1/risk/risk-weightage")
 @SuppressWarnings("unchecked")
 public class RiskWeightageController {
 

@@ -6,7 +6,7 @@ import java.sql.Timestamp;
 
 public class NewRiskWeightage {
     private Integer id;
-    private String key;
+    private String code;
     private String name;
     private Integer weightage;
     private Byte status;
@@ -15,8 +15,9 @@ public class NewRiskWeightage {
     private String company;
     private String module;
     private Long version;
-    private RiskCategory riskCategoryByCategory;
+    private RiskCategory category;
 
+    private Integer categoryId;
 
     public NewRiskWeightage(){
 
@@ -30,12 +31,12 @@ public class NewRiskWeightage {
         this.id = id;
     }
 
-    public String getKey() {
-        return key;
+    public String getCode() {
+        return code;
     }
 
-    public void setKey(String key) {
-        this.key = key;
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public String getName() {
@@ -102,11 +103,19 @@ public class NewRiskWeightage {
         this.version = version;
     }
 
-    public RiskCategory getRiskCategoryByCategory() {
-        return riskCategoryByCategory;
+    public RiskCategory getCategory() {
+        return category;
     }
 
-    public void setRiskCategoryByCategory(RiskCategory riskCategoryByCategory) {
-        this.riskCategoryByCategory = riskCategoryByCategory;
+    public void setCategory(RiskCategory category) {
+        this.category = category;
+    }
+
+    public Integer getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Integer categoryId) {
+        this.categoryId = categoryId;
     }
 }

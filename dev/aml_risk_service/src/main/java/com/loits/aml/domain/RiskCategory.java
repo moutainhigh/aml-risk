@@ -10,8 +10,8 @@ public class RiskCategory {
     private Integer id;
     private String code;
     private String description;
-    private Integer from;
-    private Integer to;
+    private Integer valueFrom;
+    private Integer valueTo;
     private Byte status;
     private String createdBy;
     private Timestamp createdOn;
@@ -50,23 +50,23 @@ public class RiskCategory {
     }
 
     @Basic
-    @Column(name = "from", nullable = true)
-    public Integer getFrom() {
-        return from;
+    @Column(name = "value_from", nullable = true)
+    public Integer getValueFrom() {
+        return valueFrom;
     }
 
-    public void setFrom(Integer from) {
-        this.from = from;
+    public void setValueFrom(Integer valueFrom) {
+        this.valueFrom = valueFrom;
     }
 
     @Basic
-    @Column(name = "to", nullable = true)
-    public Integer getTo() {
-        return to;
+    @Column(name = "value_to", nullable = true)
+    public Integer getValueTo() {
+        return valueTo;
     }
 
-    public void setTo(Integer to) {
-        this.to = to;
+    public void setValueTo(Integer valueTo) {
+        this.valueTo = valueTo;
     }
 
     @Basic
@@ -134,11 +134,11 @@ public class RiskCategory {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         RiskCategory that = (RiskCategory) o;
-        return id == that.id &&
+        return Objects.equals(id, that.id) &&
                 Objects.equals(code, that.code) &&
                 Objects.equals(description, that.description) &&
-                Objects.equals(from, that.from) &&
-                Objects.equals(to, that.to) &&
+                Objects.equals(valueFrom, that.valueFrom) &&
+                Objects.equals(valueTo, that.valueTo) &&
                 Objects.equals(status, that.status) &&
                 Objects.equals(createdBy, that.createdBy) &&
                 Objects.equals(createdOn, that.createdOn) &&
@@ -149,6 +149,6 @@ public class RiskCategory {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, code, description, from, to, status, createdBy, createdOn, company, module, version);
+        return Objects.hash(id, code, description, valueFrom, valueTo, status, createdBy, createdOn, company, module, version);
     }
 }

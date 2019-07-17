@@ -6,8 +6,8 @@ public class NewRiskCategory {
     private Integer id;
     private String code;
     private String description;
-    private Integer from;
-    private Integer to;
+    private Integer valueFrom;
+    private Integer valueTo;
     private Byte status;
     private String createdBy;
     private Timestamp createdOn;
@@ -43,20 +43,20 @@ public class NewRiskCategory {
         this.description = description;
     }
 
-    public Integer getFrom() {
-        return from;
+    public Integer getValueFrom() {
+        return valueFrom;
     }
 
-    public void setFrom(Integer from) {
-        this.from = from;
+    public void setValueFrom(Integer valueFrom) {
+        this.valueFrom = valueFrom;
     }
 
-    public Integer getTo() {
-        return to;
+    public Integer getValueTo() {
+        return valueTo;
     }
 
-    public void setTo(Integer to) {
-        this.to = to;
+    public void setValueTo(Integer valueTo) {
+        this.valueTo = valueTo;
     }
 
     public Byte getStatus() {

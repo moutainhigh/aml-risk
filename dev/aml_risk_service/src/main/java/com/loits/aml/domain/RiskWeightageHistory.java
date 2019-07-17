@@ -9,7 +9,7 @@ import java.util.Objects;
 public class RiskWeightageHistory {
     private Integer id;
     private Integer riskWeightageId;
-    private String key;
+    private String code;
     private Integer category;
     private String name;
     private Integer weightage;
@@ -40,13 +40,13 @@ public class RiskWeightageHistory {
     }
 
     @Basic
-    @Column(name = "key", nullable = true, length = 45)
-    public String getKey() {
-        return key;
+    @Column(name = "code", nullable = true, length = 45)
+    public String getCode() {
+        return code;
     }
 
-    public void setKey(String key) {
-        this.key = key;
+    public void setCode(String key) {
+        this.code = key;
     }
 
     @Basic
@@ -134,9 +134,9 @@ public class RiskWeightageHistory {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         RiskWeightageHistory that = (RiskWeightageHistory) o;
-        return id == that.id &&
+        return Objects.equals(id, that.id) &&
                 Objects.equals(riskWeightageId, that.riskWeightageId) &&
-                Objects.equals(key, that.key) &&
+                Objects.equals(code, that.code) &&
                 Objects.equals(category, that.category) &&
                 Objects.equals(name, that.name) &&
                 Objects.equals(weightage, that.weightage) &&
@@ -149,6 +149,6 @@ public class RiskWeightageHistory {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, riskWeightageId, key, category, name, weightage, status, createdBy, createdOn, company, module);
+        return Objects.hash(id, riskWeightageId, code, category, name, weightage, status, createdBy, createdOn, company, module);
     }
 }

@@ -162,7 +162,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <app.dev.db.validate.key>spring.jpa.hibernate.ddl-auto</app.dev.db.validate.key>
+                <app.dev.db.validate.code>spring.jpa.hibernate.ddl-auto</app.dev.db.validate.code>
                 <app.dev.db.url>spring.datasource.url</app.dev.db.url>
                 <app.dev.db.user>spring.datasource.username</app.dev.db.user>
                 <app.dev.db.pass>spring.datasource.password</app.dev.db.pass>

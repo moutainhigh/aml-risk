@@ -1,12 +1,12 @@
 package com.loits.aml.services.impl;
 
 import com.loits.aml.config.LoitServiceException;
-import com.loits.aml.domain.QChannel;
 import com.loits.aml.domain.QRiskCategory;
 import com.loits.aml.domain.RiskCategory;
 import com.loits.aml.domain.RiskCategoryHistory;
 import com.loits.aml.repo.RiskCategoryHistoryRepository;
 import com.loits.aml.repo.RiskCategoryRepository;
+import com.loits.aml.repo.RiskWeightageRepository;
 import com.loits.aml.services.projections.LovRiskCategories;
 import com.loits.aml.services.model.NewRiskCategory;
 import com.loits.aml.services.RiskCategoryService;
@@ -37,6 +37,9 @@ public class RiskCategoryServiceImpl implements RiskCategoryService {
 
     @Autowired
     private RiskCategoryRepository riskCategoryRepository;
+
+    @Autowired
+    private RiskWeightageRepository riskWeightageRepository;
 
     @Autowired
     private RiskCategoryHistoryRepository riskCategoryHistoryRepository;
@@ -134,8 +137,8 @@ public class RiskCategoryServiceImpl implements RiskCategoryService {
         //Editable fields being updated
         riskCategory.setCode(newRiskCategory.getCode());
         riskCategory.setDescription(newRiskCategory.getDescription());
-        riskCategory.setFrom(newRiskCategory.getFrom());
-        riskCategory.setTo(newRiskCategory.getTo());
+        riskCategory.setValueFrom(newRiskCategory.getValueFrom());
+        riskCategory.setValueTo(newRiskCategory.getValueTo());
         riskCategory.setStatus(newRiskCategory.getStatus());
 
         //user and time being updated
@@ -162,6 +165,16 @@ public class RiskCategoryServiceImpl implements RiskCategoryService {
         }
 
         RiskCategory riskCategory = riskCategoryRepository.findById(id).get();
+
+        //check if deleting violates risk-weightage foreign key contraint
+        if(riskWeightageRepository.existsByCategory(riskCategory)){
+            throw new LoitServiceException("Cannot delete Risk Category. Risk-Weightage Foreign Key constraint fails",
+                    "INVALID_ATTEMPT");
+        }else{
+            //save to history before deleting record
+            saveHistoryRecord(riskCategory);
+            riskCategoryRepository.delete(riskCategory);
+        }
 
         //save to history before deleting record
         saveHistoryRecord(riskCategory);

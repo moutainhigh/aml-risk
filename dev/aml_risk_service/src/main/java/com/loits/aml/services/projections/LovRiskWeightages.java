@@ -11,7 +11,7 @@ public interface LovRiskWeightages {
 
     public Integer getId();
 
-    public String getKey();
+    public String getCode();
 
     public String getName();
 
@@ -29,6 +29,6 @@ public interface LovRiskWeightages {
 
     public Long getVersion();
 
-    public RiskCategory getRiskCategoryByCategory();
+    public RiskCategory getCategory();
 
 }

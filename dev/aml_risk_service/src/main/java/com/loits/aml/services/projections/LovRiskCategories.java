@@ -14,9 +14,9 @@ public interface LovRiskCategories {
 
     public String getDescription();
 
-    public Integer getFrom();
+    public Integer getValueFrom();
 
-    public Integer getTo();
+    public Integer getValueTo();
 
     public Byte getStatus();
 
@@ -29,4 +29,5 @@ public interface LovRiskCategories {
     public String getModule();
 
     public Long getVersion();
+
 }

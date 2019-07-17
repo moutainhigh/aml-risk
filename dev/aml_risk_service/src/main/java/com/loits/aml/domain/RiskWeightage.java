@@ -1,5 +1,8 @@
 package com.loits.aml.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.Objects;
@@ -8,7 +11,7 @@ import java.util.Objects;
 @Table(name = "risk_weightage", schema = "risk_db", catalog = "")
 public class RiskWeightage {
     private Integer id;
-    private String key;
+    private String code;
     private String name;
     private Integer weightage;
     private Byte status;
@@ -17,7 +20,19 @@ public class RiskWeightage {
     private String company;
     private String module;
     private Long version;
-    private RiskCategory riskCategoryByCategory;
+    private RiskCategory category;
+
+    private Integer categoryId;
+
+    @Transient
+    @JsonInclude
+    public Integer getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Integer categoryId) {
+        this.categoryId = categoryId;
+    }
 
     @Id
     @Column(name = "id", nullable = false)
@@ -30,13 +45,13 @@ public class RiskWeightage {
     }
 
     @Basic
-    @Column(name = "key", nullable = true, length = 45)
-    public String getKey() {
-        return key;
+    @Column(name = "code", nullable = true, length = 45)
+    public String getCode() {
+        return code;
     }
 
-    public void setKey(String key) {
-        this.key = key;
+    public void setCode(String key) {
+        this.code = key;
     }
 
     @Basic
@@ -124,8 +139,8 @@ public class RiskWeightage {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         RiskWeightage that = (RiskWeightage) o;
-        return id == that.id &&
-                Objects.equals(key, that.key) &&
+        return Objects.equals(id, that.id) &&
+                Objects.equals(code, that.code) &&
                 Objects.equals(name, that.name) &&
                 Objects.equals(weightage, that.weightage) &&
                 Objects.equals(status, that.status) &&
@@ -138,16 +153,17 @@ public class RiskWeightage {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, key, name, weightage, status, createdBy, createdOn, company, module, version);
+        return Objects.hash(id, code, name, weightage, status, createdBy, createdOn, company, module, version);
     }
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "category", referencedColumnName = "id")
-    public RiskCategory getRiskCategoryByCategory() {
-        return riskCategoryByCategory;
+    public RiskCategory getCategory() {
+        return category;
     }
 
-    public void setRiskCategoryByCategory(RiskCategory riskCategoryByCategory) {
-        this.riskCategoryByCategory = riskCategoryByCategory;
+    public void setCategory(RiskCategory riskCategoryByCategory) {
+        this.category = riskCategoryByCategory;
     }
 }
