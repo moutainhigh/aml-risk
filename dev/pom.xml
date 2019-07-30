@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.loits</groupId>
-    <artifactId>risk</artifactId>
+    <artifactId>comn-aml-risk</artifactId>
     <name>LOIT AML Risk Service</name>
     <description>Risk Creation and Management</description>
 
@@ -166,7 +166,7 @@
                 <app.dev.db.url>spring.datasource.url</app.dev.db.url>
                 <app.dev.db.user>spring.datasource.username</app.dev.db.user>
                 <app.dev.db.pass>spring.datasource.password</app.dev.db.pass>
-                <app.dev.url>jdbc:mysql://localhost:3306/risk_db</app.dev.url>
+                <app.dev.url>jdbc:mysql://localhost:3306/AnRkr_comn_aml_risk?createDatabaseIfNotExist=true</app.dev.url>
                 <app.dev.user>root</app.dev.user>
                 <app.dev.pass>1234</app.dev.pass>
             </properties>

@@ -1,6 +1,7 @@
 package com.loits.aml.services.impl;
 
 import com.loits.aml.config.LoitServiceException;
+import com.loits.aml.config.Translator;
 import com.loits.aml.domain.QRiskCategory;
 import com.loits.aml.domain.RiskCategory;
 import com.loits.aml.domain.RiskCategoryHistory;
@@ -80,7 +81,7 @@ public class RiskCategoryServiceImpl implements RiskCategoryService {
 
         //Check null (**Check if custom error messages are required for each)
         if (user == null || timestamp == null || module == null || company == null) {
-            throw new LoitServiceException("Required fields cannot be empty", "NULL");
+            throw new LoitServiceException(Translator.toLocale("REQUIRED"), "NULL");
         }
 
         //overriding channelId to 0
@@ -110,14 +111,14 @@ public class RiskCategoryServiceImpl implements RiskCategoryService {
 
         //Check null (**Check if custom error messages are required for each)
         if (id == null || user == null || timestamp == null ) {
-            throw new LoitServiceException("Required fields cannot be null",
+            throw new LoitServiceException(Translator.toLocale("REQUIRED"),
                     "NULL");
         }
 
         //Check for availability of RiskCategory by id
         if (!riskCategoryRepository.existsById(id)) {
             //RiskCategory not found
-            throw new LoitServiceException("RiskCategory not found!",
+            throw new LoitServiceException(Translator.toLocale("NO_DATA_FOUND_RC"),
                     "NO_DATA_FOUND");
         }
 
@@ -127,7 +128,7 @@ public class RiskCategoryServiceImpl implements RiskCategoryService {
         //Check if record version has changed
         long currentVersion = riskCategory.getVersion();
         if (newRiskCategory.getVersion() == null || newRiskCategory.getVersion().compareTo(currentVersion) != 0) {
-            throw new LoitServiceException("Record has been modified by another User.",
+            throw new LoitServiceException(Translator.toLocale("VERSION_MISMATCH"),
                     "VERSION_MISMATCH");
         }
 
@@ -160,7 +161,7 @@ public class RiskCategoryServiceImpl implements RiskCategoryService {
         //Check for availability of RiskCategory by id
         if (!riskCategoryRepository.existsById(id)) {
             //RiskCategory not found
-            throw new LoitServiceException("RiskCategory not found!",
+            throw new LoitServiceException(Translator.toLocale("NO_DATA_FOUND_RC"),
                     "NO_DATA_FOUND");
         }
 
@@ -168,7 +169,7 @@ public class RiskCategoryServiceImpl implements RiskCategoryService {
 
         //check if deleting violates risk-weightage foreign key contraint
         if(riskWeightageRepository.existsByCategory(riskCategory)){
-            throw new LoitServiceException("Cannot delete Risk Category. Risk-Weightage Foreign Key constraint fails",
+            throw new LoitServiceException(Translator.toLocale("FK_DELETE_PR"),
                     "INVALID_ATTEMPT");
         }else{
             //save to history before deleting record

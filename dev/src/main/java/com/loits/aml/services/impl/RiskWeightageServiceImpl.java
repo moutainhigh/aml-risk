@@ -1,13 +1,13 @@
 package com.loits.aml.services.impl;
 
 import com.loits.aml.config.LoitServiceException;
+import com.loits.aml.config.Translator;
 import com.loits.aml.domain.*;
 import com.loits.aml.repo.RiskCategoryRepository;
 import com.loits.aml.repo.RiskWeightageHistoryRepository;
 import com.loits.aml.repo.RiskWeightageRepository;
 import com.loits.aml.services.model.NewRiskWeightage;
 import com.loits.aml.services.projections.LovRiskWeightages;
-import com.loits.aml.services.projections.LovRiskCategories;
 import com.loits.aml.services.RiskWeightageService;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
@@ -79,14 +79,14 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
 
         //Check null (**Check if custom error messages are required for each)
         if (user == null || timestamp == null || module == null || company == null) {
-            throw new LoitServiceException("Required fields cannot be empty", "NULL");
+            throw new LoitServiceException(Translator.toLocale("REQUIRED"), "NULL");
         }
 
         //check if Risk Category available in db (foreign key constraint)
         Integer categoryId = riskWeightage.getCategoryId();
         if(categoryId != null){
             if(!riskCategoryRepository.existsById(categoryId)) {
-                throw new LoitServiceException("Risk Category should match an existing Risk Category",
+                throw new LoitServiceException(Translator.toLocale("FK_RISK_CAT "),
                         "INVALID_DATA");
             }else{
                 riskWeightage.setCategory(riskCategoryRepository.findById(categoryId).get());
@@ -121,7 +121,7 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
 
         //Check null (**Check if custom error messages are required for each)
         if (id == null || user == null || timestamp == null ) {
-            throw new LoitServiceException("Required fields cannot be null",
+            throw new LoitServiceException(Translator.toLocale("REQUIRED"),
                     "NULL");
         }
 
@@ -129,7 +129,7 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
         Integer categoryId = newRiskWeightage.getCategoryId();
         if(categoryId != null){
             if(!riskCategoryRepository.existsById(categoryId)) {
-                throw new LoitServiceException("Risk Category should match an existing Risk Category",
+                throw new LoitServiceException(Translator.toLocale("FK_RISK_CAT "),
                         "INVALID_DATA");
             }else{
                 newRiskWeightage.setCategory(riskCategoryRepository.findById(categoryId).get());
@@ -140,7 +140,7 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
         //Check for availability of RiskWeightage by id
         if (!riskWeightageRepository.existsById(id)) {
             //RiskWeightage not found
-            throw new LoitServiceException("RiskWeightage not found!",
+            throw new LoitServiceException(Translator.toLocale("NO_DATA_FOUND_RW"),
                     "NO_DATA_FOUND");
         }
 
@@ -150,7 +150,7 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
         //Check if record version has changed
         long currentVersion = riskWeightage.getVersion();
         if (newRiskWeightage.getVersion() == null || newRiskWeightage.getVersion().compareTo(currentVersion) != 0) {
-            throw new LoitServiceException("Record has been modified by another User.",
+            throw new LoitServiceException(Translator.toLocale("VERSION_MISMATCH"),
                     "VERSION_MISMATCH");
         }
 
@@ -182,7 +182,7 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
         //Check for availability of RiskWeightage by id
         if (!riskWeightageRepository.existsById(id)) {
             //RiskWeightage not found
-            throw new LoitServiceException("RiskWeightage not found!",
+            throw new LoitServiceException(Translator.toLocale("NO_DATA_FOUND_RW"),
                     "NO_DATA_FOUND");
         }
 
