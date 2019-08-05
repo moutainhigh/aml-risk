@@ -1,9 +1,0 @@
-databaseChangeLog:
-  - include:
-      file: "db.changelog/risk_category.yml"
-  - include:
-      file: "db.changelog/risk_category_history.yml"
-  - include:
-      file: "db.changelog/risk_weightage.yml"
-  - include:
-      file: "db.changelog/risk_weightage_history.yml"

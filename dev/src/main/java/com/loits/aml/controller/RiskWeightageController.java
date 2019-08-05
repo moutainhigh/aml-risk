@@ -6,8 +6,8 @@ import com.loits.aml.domain.RiskWeightage;
 import com.loits.aml.services.model.NewRiskWeightage;
 import com.loits.aml.services.RiskWeightageService;
 import com.querydsl.core.types.Predicate;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,7 +29,7 @@ import java.sql.Timestamp;
  */
 @CrossOrigin(origins = "*")
 @RestController
-@RequestMapping(path = "/aml/v1/risk/risk-weightage")
+@RequestMapping(path = "/risk/risk-weightage/v1")
 @SuppressWarnings("unchecked")
 public class RiskWeightageController {
 
@@ -50,10 +50,11 @@ public class RiskWeightageController {
 
     @GetMapping(produces = "application/json")
     public @ResponseBody
-    Page<?> getRiskWeightage(@PageableDefault(size = 10) Pageable pageable,
-                              @QuerydslPredicate(root = RiskWeightage.class) Predicate predicate,
-                              @RequestParam(value = "bookmarks", required = false) String bookmarks,
-                              @RequestParam(name = "projection", defaultValue = "RiskWeightageLov") String projection) {
+    Page<?> getRiskWeightage(@RequestParam(value = "tenent", defaultValue = "1") String tenent,
+                             @PageableDefault(size = 10) Pageable pageable,
+                             @QuerydslPredicate(root = RiskWeightage.class) Predicate predicate,
+                             @RequestParam(value = "bookmarks", required = false) String bookmarks,
+                             @RequestParam(name = "projection", defaultValue = "RiskWeightageLov") String projection) {
 
         logger.debug(String.format("Loading RiskWeightage details.(Projection: %s )",
                 projection));
@@ -74,13 +75,13 @@ public class RiskWeightageController {
      * @throws LoitServiceException
      */
     @PostMapping(produces = "application/json", consumes = "application/json")
-    public ResponseEntity<?> addRiskWeightage(
-            @RequestParam(value = "projection") String projection,
-            @RequestBody @Valid RiskWeightage riskWeightage,
-            @RequestHeader("user") String user,
-            @RequestParam("timestamp")Timestamp timestamp,
-            @RequestParam("company")String company,
-            @RequestParam("module") String module
+    public ResponseEntity<?> addRiskWeightage(@RequestParam(value = "tenent", defaultValue = "1") String tenent,
+                                                @RequestParam(value = "projection") String projection,
+                                                @RequestBody @Valid RiskWeightage riskWeightage,
+                                                @RequestHeader("user") String user,
+                                                @RequestParam("timestamp")Timestamp timestamp,
+                                                @RequestParam("company")String company,
+                                                @RequestParam("module") String module
             ) throws LoitServiceException{
 
         logger.debug(String.format("Creating RiskWeightage data.(Projection: %s |" +
@@ -104,11 +105,12 @@ public class RiskWeightageController {
      * @throws LoitServiceException
      */
     @PutMapping(path = "/{id}", produces = "application/json", consumes = "application/json")
-    public ResponseEntity<?> updateRiskWeightage(@PathVariable(value = "id") Integer id,
-                                                  @RequestParam(value = "projection") String projection,
-                                                  @RequestBody NewRiskWeightage newRiskWeightage,
-                                                  @RequestHeader("user") String user,
-                                                  @RequestParam("timestamp")Timestamp timestamp
+    public ResponseEntity<?> updateRiskWeightage(@RequestParam(value = "tenent", defaultValue = "1") String tenent,
+                                                 @PathVariable(value = "id") Integer id,
+                                                 @RequestParam(value = "projection") String projection,
+                                                 @RequestBody NewRiskWeightage newRiskWeightage,
+                                                 @RequestHeader("user") String user,
+                                                 @RequestParam("timestamp")Timestamp timestamp
     ) throws LoitServiceException {
 
 
@@ -132,8 +134,9 @@ public class RiskWeightageController {
      */
     @DeleteMapping(path = "/{id}")
     public @ResponseBody
-    ResponseEntity<?> deleteProductChannel(@PathVariable(value = "id") Integer id,
-                                        @RequestParam(value = "projection") String projection)
+    ResponseEntity<?> deleteProductChannel(@RequestParam(value = "tenent", defaultValue = "1") String tenent,
+                                           @PathVariable(value = "id") Integer id,
+                                           @RequestParam(value = "projection") String projection)
             throws LoitServiceException {
 
 

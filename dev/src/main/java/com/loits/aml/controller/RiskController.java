@@ -1,13 +1,7 @@
 package com.loits.aml.controller;
 
-import com.querydsl.core.types.Predicate;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.querydsl.binding.QuerydslPredicate;
-import org.springframework.data.web.PageableDefault;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -18,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @CrossOrigin(origins = "*")
 @RestController
-@RequestMapping(path = "/aml/v1/risk")
+@RequestMapping("/risk/v1")
 @SuppressWarnings("unchecked")
 public class RiskController {
     Logger logger = LogManager.getLogger(RiskCategoryController.class);
