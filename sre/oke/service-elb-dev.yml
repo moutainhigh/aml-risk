@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aml-risk-dev
+  labels:
+    app: aml-risk-dev
+spec:
+  ports:
+  - name: http
+    protocol: TCP
+    port: 8080
+  selector:
+    app: aml-risk-dev

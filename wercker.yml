@@ -1,0 +1,466 @@
+#box: openjdk:8-jdk
+box: maven:3.5.2-jdk-8
+
+#this is for building the code for dev2
+build-test:
+  steps:
+    # maven commands to compile the code
+  #  - wercker/maven:
+  #    goals: package
+  #    cache_repo: true
+  #    version: 3.5.2
+
+   # maven commands to compile the code - added by akila
+    - script:
+        name: compile code
+        code: |
+          cd /pipeline/source/dev
+          mvn package
+
+    # run sonarqube scans on the codebase
+    - script:
+        name: Execute sonarqube analyze process
+        code: |
+          date
+          cd /pipeline/source/dev
+          mvn sonar:sonar -Dsonar.host.url=$SONAR_URL -Dsonar.login=$SONAR_USERNAME -Dsonar.password=$SONAR_PASSWORD -Dsonar.junit.reportPaths=target/surefire-reports -Dsonar.jacoco.reportPaths=target/jacoco.exec > ./temp_output
+          SONAR_GET_REPORT_URL=`cat ./temp_output | grep "More about the report processing at " | awk -F 'at ' '{print substr($2,1)}'`
+          cat ./temp_output
+          echo $SONAR_GET_REPORT_URL 
+
+    # check whether sonarqube test pass or fail
+    - script:
+        name: Get sonarqube analyze result
+        code: |
+          for((i=1;i<=$SONAR_GET_RESULT_LOOP_CNT;i++));
+          do
+            sleep 2m
+            echo "Get Sonarqube analyze process..."
+            reportProcess=$(curl -X GET -i $SONAR_GET_REPORT_URL | grep "status" | awk -F '"status":' '{print substr($2,2,7)}')
+            echo $reportProcess
+            if [ -z $reportProcess ]; then
+              continue
+            fi
+            if [ $reportProcess = "IN_PROGRESS" ]; then
+              continue
+            else
+              break
+            fi
+          done
+          fullResult=$(curl -X GET -u $SONAR_USERNAME:$SONAR_PASSWORD -i $SONAR_URL/api/qualitygates/project_status?projectKey=$SONAR_PROJECT_KEY)
+          echo "Sonarqube analyze full result is:"
+          echo $fullResult
+          # sonarResult=`echo $fullResult | grep projectStatus | awk -F '"status":' '{print substr($2,2,2)}'`
+          # sonar result is hard coded untill confirmed by architects
+          sonarResult="OK"
+          if [ -z $sonarResult ]; then
+            export sonarResult='NG'
+          fi
+          echo "Quality gate status is: $sonarResult"
+          if [ $sonarResult != "OK" ]; then
+            exit 1
+          fi
+
+    # Copy binary to location that gets passed along to next workflow
+    - script:
+        name: copy binary
+        code: |
+           cp /pipeline/source/dev/target/aml-risk-0.0.1-SNAPSHOT.jar "$WERCKER_OUTPUT_DIR"
+           cp -R /pipeline/source/sre/oke "$WERCKER_OUTPUT_DIR"
+           cp -R /pipeline/source/qa "$WERCKER_OUTPUT_DIR"
+    
+  # Notify if the steps are failure
+  after-steps:
+     - install-packages:
+         packages: ruby
+     - wantedly/pretty-slack-notify:
+         webhook_url: $SLACK_WEBHOOK_URL
+         failed_message: FAILURE - Pipeline completed. $WERCKER_RUN_URL
+
+
+#this if to run test cases which are built by qa engineer
+build-develop:
+  steps:
+    # maven commands to compile the code
+  #  - wercker/maven:
+  #    goals: package
+  #    cache_repo: true
+  #    version: 3.5.2
+
+   # maven commands to compile the code - added by akila
+    - script:
+        name: compile code
+        code: |
+          cd /pipeline/source/dev
+          mvn package
+    
+  # Copy binary to location that gets passed along to next workflow
+    - script:
+        name: copy binary
+        code: |
+           cp /pipeline/source/dev/target/aml-risk-0.0.1-SNAPSHOT.jar "$WERCKER_OUTPUT_DIR"
+           cp -R /pipeline/source/sre/oke "$WERCKER_OUTPUT_DIR"
+
+   # Notify if the steps are failure
+  after-steps:
+     - install-packages:
+         packages: ruby
+     - wantedly/pretty-slack-notify:
+         webhook_url: $SLACK_WEBHOOK_URL
+         failed_message: FAILURE - Pipeline completed. $WERCKER_RUN_URL
+
+#this if to run test cases which are built by qa engineer
+build-uat:
+  steps:
+    # maven commands to compile the code
+  #  - wercker/maven:
+  #    goals: package
+  #    cache_repo: true
+  #    version: 3.5.2
+
+   # maven commands to compile the code - added by akila
+    - script:
+        name: compile code
+        code: |
+          cd /pipeline/source/dev
+          mvn package
+    
+  # Copy binary to location that gets passed along to next workflow
+    - script:
+        name: copy binary
+        code: |
+           cp /pipeline/source/dev/target/aml-risk-0.0.1-SNAPSHOT.jar "$WERCKER_OUTPUT_DIR"
+           cp -R /pipeline/source/sre/oke "$WERCKER_OUTPUT_DIR"
+
+   # Notify if the steps are failure
+  after-steps:
+     - install-packages:
+         packages: ruby
+     - wantedly/pretty-slack-notify:
+         webhook_url: $SLACK_WEBHOOK_URL
+         failed_message: FAILURE - Pipeline completed. $WERCKER_RUN_URL
+
+#this if for building the code for master
+build-master:
+  steps:
+    # maven commands to compile the code
+  #  - wercker/maven:
+  #    goals: package
+  #    cache_repo: true
+  #    version: 3.5.2
+
+   # maven commands to compile the code - added by akila
+    - script:
+        name: compile code
+        code: |
+          cd /pipeline/source/dev
+          mvn package
+
+    # Copy binary to location that gets passed along to next workflow
+    - script:
+        name: copy binary
+        code: |
+           cp /pipeline/source/dev/target/aml-risk-0.0.1-SNAPSHOT.jar "$WERCKER_OUTPUT_DIR"
+           cp -R /pipeline/source/sre/oke "$WERCKER_OUTPUT_DIR"
+    
+  # Notify if the steps are failure
+  after-steps:
+     - install-packages:
+         packages: ruby
+     - wantedly/pretty-slack-notify:
+         webhook_url: $SLACK_WEBHOOK_URL
+         failed_message: FAILURE - Pipeline completed. $WERCKER_RUN_URL
+
+# This is a new workflow for push to resigtry dev.
+push-to-registry-develop:
+  # use a lightweight version of jre8-alpine container
+  box: openjdk:8-jre-alpine
+  steps:
+    # remove unnecessary files to reduce the size of the container
+    - script:
+        name: prune container
+        code: |
+           rm -rf /pipeline/cache
+           rm -rf /pipeline/output
+    
+    # Push to OCI-R -
+    - internal/docker-push:
+      username: $USERNAME
+      password: $PASSWORD
+      registry: $REGISTRY
+      repository: $USERNAME/$REPOSITORY_DEV
+      entrypoint: java -jar /pipeline/source/aml-risk-0.0.1-SNAPSHOT.jar
+
+push-to-registry-test:
+  # use a lightweight version of jre8-alpine container
+  box: openjdk:8-jre-alpine
+  steps:
+    # remove unnecessary files to reduce the size of the container
+    - script:
+        name: prune container
+        code: |
+           rm -rf /pipeline/cache
+           rm -rf /pipeline/output
+    
+    # Push to OCI-R -
+    - internal/docker-push:
+      username: $USERNAME
+      password: $PASSWORD
+      registry: $REGISTRY
+      repository: $USERNAME/$REPOSITORY_TEST
+      entrypoint: java -jar /pipeline/source/aml-risk-0.0.1-SNAPSHOT.jar
+
+push-to-registry-uat:
+  # use a lightweight version of jre8-alpine container
+  box: openjdk:8-jre-alpine
+  steps:
+    # remove unnecessary files to reduce the size of the container
+    - script:
+        name: prune container
+        code: |
+           rm -rf /pipeline/cache
+           rm -rf /pipeline/output
+    
+    # Push to OCI-R -
+    - internal/docker-push:
+      username: $USERNAME
+      password: $PASSWORD
+      registry: $REGISTRY
+      repository: $USERNAME/$REPOSITORY_UAT
+      entrypoint: java -jar /pipeline/source/aml-risk-0.0.1-SNAPSHOT.jar
+
+# This is a new workflow for push to resigtry master.
+push-to-registry-master:
+  # use a lightweight version of jre8-alpine container
+  box: openjdk:8-jre-alpine
+  steps:
+    # remove unnecessary files to reduce the size of the container
+    - script:
+        name: prune container
+        code: |
+           rm -rf /pipeline/cache
+           rm -rf /pipeline/output
+    
+    # Push to OCI-R -
+    - internal/docker-push:
+      username: $USERNAME
+      password: $PASSWORD
+      registry: $REGISTRY
+      repository: $USERNAME/$REPOSITORY_MASTER
+      entrypoint: java -jar /pipeline/source/aml-risk-0.0.1-SNAPSHOT.jar
+
+# This is a new workflow for deploy to oke dev.
+deploy-to-oke-develop:
+  box: maven:3.5.2-jdk-8
+  steps:
+  - script:
+      name: Set API_KEY file
+      code:  |
+         echo -ne "-----BEGIN RSA PRIVATE KEY-----\n" > gen-api.pem
+         echo -ne $OS_APIKEY | tr " " "\n" >> gen-api.pem
+         echo -ne "\n-----END RSA PRIVATE KEY-----\n" >> gen-api.pem
+         
+  - oci-objectstore:
+      region:       $OS_REGION
+      tenancy-ocid: $OS_TENANCY_OCID
+      user-ocid:    $OS_USER_OCID
+      fingerprint:  $OS_FINGERPRINT
+      namespace:    $OS_NAMESPACE
+      bucket-name:  $OS_BUCKETNAME
+      command:      get
+      api-key:      "$(cat gen-api.pem)"
+      object-name:  $OS_OBJECT_NAME_DEV
+      
+  - script:
+      name: Set kubeconfig variable
+      code: export KUBECONFIG=$PWD/$OS_OBJECT_NAME_DEV
+      
+  - wercker/kubectl@3.9.0:
+      command: get nodes
+      
+  - wercker/kubectl@3.9.0:
+      name: aml-risk-deployment-dev
+      command: apply -f oke/deployment-dev.yml
+      
+  - wercker/kubectl@3.9.0:
+      name: rolling update aml-risk-deployment-dev
+  #    command: set image deployment/aml-risk-dev aml-risk-dev=fra.ocir.io/lolctech/fxapiuser/aml-risk-dev:latest
+  #    above real rolling update method is temporarily remove untill decide a deployment jar project versioning
+      command: patch deployment aml-risk-dev -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk-dev","env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
+
+  - wercker/kubectl@3.9.0:
+      name: aml-risk-service-dev
+      command: apply -f oke/service-elb-dev.yml
+      
+  - wercker/kubectl@3.9.0:
+      name: aml-risk-virtual-service-dev
+      command: apply -f oke/virtual-service-dev.yaml
+
+  after-steps:
+    - install-packages:
+        packages: ruby
+    - wantedly/pretty-slack-notify:
+        webhook_url: $SLACK_WEBHOOK_URL
+        failed_message: FAILURE - Pipeline completed. $WERCKER_RUN_URL
+
+# This is a new workflow for deploy to oke test.
+deploy-to-oke-test:
+  box: maven:3.5.2-jdk-8
+  steps:
+  - script:
+      name: Set API_KEY file
+      code:  |
+         echo -ne "-----BEGIN RSA PRIVATE KEY-----\n" > gen-api.pem
+         echo -ne $OS_APIKEY | tr " " "\n" >> gen-api.pem
+         echo -ne "\n-----END RSA PRIVATE KEY-----\n" >> gen-api.pem
+         
+  - oci-objectstore:
+      region:       $OS_REGION
+      tenancy-ocid: $OS_TENANCY_OCID
+      user-ocid:    $OS_USER_OCID
+      fingerprint:  $OS_FINGERPRINT
+      namespace:    $OS_NAMESPACE
+      bucket-name:  $OS_BUCKETNAME
+      command:      get
+      api-key:      "$(cat gen-api.pem)"
+      object-name:  $OS_OBJECT_NAME_TEST
+      
+  - script:
+      name: Set kubeconfig variable
+      code: export KUBECONFIG=$PWD/$OS_OBJECT_NAME_TEST
+      
+  - wercker/kubectl@3.9.0:
+      command: get nodes
+      
+  - wercker/kubectl@3.9.0:
+      name: aml-risk-deployment-test
+      command: apply -f oke/deployment-test.yml
+      
+  - wercker/kubectl@3.9.0:
+      name: rolling update aml-risk-deployment-test
+  #    command: set image deployment/aml-risk-test aml-risk-test=fra.ocir.io/lolctech/fxapiuser/aml-risk-test:latest
+  #    above real rolling update method is temporarily remove untill decide a deployment jar project versioning
+      command: patch deployment aml-risk-test -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk-test","env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
+
+  - wercker/kubectl@3.9.0:
+      name: aml-risk-service-test
+      command: apply -f oke/service-elb-test.yml
+
+  - wercker/kubectl@3.9.0:
+      name: aml-risk-virtual-service-test
+      command: apply -f oke/virtual-service-test.yaml
+      
+  after-steps:
+    - install-packages:
+        packages: ruby
+    - wantedly/pretty-slack-notify:
+        webhook_url: $SLACK_WEBHOOK_URL
+        failed_message: FAILURE - Pipeline completed. $WERCKER_RUN_URL
+
+# This is a new workflow for deploy to oke uat.
+deploy-to-oke-uat:
+  box: maven:3.5.2-jdk-8
+  steps:
+  - script:
+      name: Set API_KEY file
+      code:  |
+         echo -ne "-----BEGIN RSA PRIVATE KEY-----\n" > gen-api.pem
+         echo -ne $OS_APIKEY | tr " " "\n" >> gen-api.pem
+         echo -ne "\n-----END RSA PRIVATE KEY-----\n" >> gen-api.pem
+         
+  - oci-objectstore:
+      region:       $OS_REGION
+      tenancy-ocid: $OS_TENANCY_OCID
+      user-ocid:    $OS_USER_OCID
+      fingerprint:  $OS_FINGERPRINT
+      namespace:    $OS_NAMESPACE
+      bucket-name:  $OS_BUCKETNAME
+      command:      get
+      api-key:      "$(cat gen-api.pem)"
+      object-name:  $OS_OBJECT_NAME_UAT
+      
+  - script:
+      name: Set kubeconfig variable
+      code: export KUBECONFIG=$PWD/$OS_OBJECT_NAME_UAT
+      
+  - wercker/kubectl@3.9.0:
+      command: get nodes
+      
+  - wercker/kubectl@3.9.0:
+      name: aml-risk-deployment-uat
+      command: apply -f oke/deployment-uat.yml
+      
+  - wercker/kubectl@3.9.0:
+      name: rolling update aml-risk-deployment-uat
+  #    command: set image deployment/aml-risk-uat aml-risk-uat=fra.ocir.io/lolctech/fxapiuser/aml-risk-uat:latest
+  #    above real rolling update method is temporarily remove untill decide a deployment jar project versioning
+      command: patch deployment aml-risk-uat -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk-uat","env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
+
+  - wercker/kubectl@3.9.0:
+      name: aml-risk-service-uat
+      command: apply -f oke/service-elb-uat.yml
+
+  - wercker/kubectl@3.9.0:
+      name: aml-risk-virtual-service-uat
+      command: apply -f oke/virtual-service-uat.yaml
+      
+  after-steps:
+    - install-packages:
+        packages: ruby
+    - wantedly/pretty-slack-notify:
+        webhook_url: $SLACK_WEBHOOK_URL
+        failed_message: FAILURE - Pipeline completed. $WERCKER_RUN_URL
+
+# This is a new workflow for deploy to oke master.
+deploy-to-oke-master:
+  box: maven:3.5.2-jdk-8
+  steps:
+  - script:
+      name: Set API_KEY file
+      code:  |
+         echo -ne "-----BEGIN RSA PRIVATE KEY-----\n" > gen-api.pem
+         echo -ne $OS_APIKEY | tr " " "\n" >> gen-api.pem
+         echo -ne "\n-----END RSA PRIVATE KEY-----\n" >> gen-api.pem
+         
+  - oci-objectstore:
+      region:       $OS_REGION
+      tenancy-ocid: $OS_TENANCY_OCID
+      user-ocid:    $OS_USER_OCID
+      fingerprint:  $OS_FINGERPRINT
+      namespace:    $OS_NAMESPACE
+      bucket-name:  $OS_BUCKETNAME
+      command:      get
+      api-key:      "$(cat gen-api.pem)"
+      object-name:  $OS_OBJECT_NAME_MASTER
+      
+  - script:
+      name: Set kubeconfig variable
+      code: export KUBECONFIG=$PWD/$OS_OBJECT_NAME_MASTER
+      
+  - wercker/kubectl@3.9.0:
+      command: get nodes
+      
+  - wercker/kubectl@3.9.0:
+      name: aml-risk-deployment-master
+      command: apply -f oke/deployment-master.yml
+      
+  - wercker/kubectl@3.9.0:
+      name: rolling update aml-risk-deployment-master
+  #    command: set image deployment/aml-risk-master aml-risk-master=fra.ocir.io/lolctech/fxapiuser/aml-risk-master:latest
+  #    above rreal rolling update method is temporarily remove untill decide a deployment jar project versioning
+      command: patch deployment aml-risk-master -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk-master","env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
+
+  - wercker/kubectl@3.9.0:
+      name: aml-risk-service-master
+      command: apply -f oke/service-elb-master.yml
+
+  - wercker/kubectl@3.9.0:
+      name: aml-risk-virtual-service-master
+      command: apply -f oke/virtual-service-master.yaml
+      
+  after-steps:
+    - install-packages:
+        packages: ruby
+    - wantedly/pretty-slack-notify:
+        webhook_url: $SLACK_WEBHOOK_URL
+        failed_message: FAILURE - Pipeline completed. $WERCKER_RUN_URL

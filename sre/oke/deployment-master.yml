@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aml-risk-master
+  labels:
+    app: aml-risk-master
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aml-risk-master
+  template:
+    metadata:
+      labels:
+        app: aml-risk-master
+        version: v1
+    spec:
+      imagePullSecrets:
+      - name: lolc-secret-master
+      containers:
+      - name: aml-risk-master
+        image: fra.ocir.io/lolctech/fxapiuser/aml-risk:latest
+        env:
+        - name: CONF_SERVER_USR
+          valueFrom:
+            secretKeyRef:
+              name: env-secret-master
+              key: CONF_SERVER_USR
+        - name: CONF_SERVER_PASS
+          valueFrom:
+            secretKeyRef:
+              name: env-secret-master
+              key: CONF_SERVER_PASS
+        - name: CONF_REPO_USR
+          valueFrom:
+            secretKeyRef:
+              name: env-secret-master
+              key: CONF_REPO_USR
+        - name: CONF_REPO_PASS
+          valueFrom:
+            secretKeyRef:
+              name: env-secret-master
+              key: CONF_REPO_PASS
+        - name: CONF_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: env-secret-master
+              key: CONF_DB_USER
+        - name: CONF_DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: env-secret-master
+              key: CONF_DB_PASS
+        - name: CONF_ENV_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: env-config-master
+              key: CONF_ENV_NAME
+        - name: CONF_SERVER_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: env-config-master
+              key: CONF_SERVER_PORT
+        - name: CONF_DB_IP_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: env-config-master
+              key: CONF_DB_IP_PORT
+        - name: CONF_URL_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: env-config-master
+              key: CONF_URL_PORT
+        ports:
+          - name: swagger-ui-port
+            containerPort: 8080
