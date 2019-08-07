@@ -3,7 +3,7 @@ package com.loits.aml.services.impl;
 import com.loits.aml.config.LoitServiceException;
 import com.loits.aml.config.Translator;
 import com.loits.aml.domain.*;
-import com.loits.aml.repo.RiskCategoryRepository;
+import com.loits.aml.domain.QRiskWeightage;
 import com.loits.aml.repo.RiskWeightageHistoryRepository;
 import com.loits.aml.repo.RiskWeightageRepository;
 import com.loits.aml.services.model.NewRiskWeightage;
@@ -38,9 +38,6 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
     private RiskWeightageRepository riskWeightageRepository;
 
     @Autowired
-    private RiskCategoryRepository riskCategoryRepository;
-
-    @Autowired
     private RiskWeightageHistoryRepository riskWeightageHistoryRepository;
 
     @Autowired
@@ -73,25 +70,12 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
                          RiskWeightage riskWeightage,
                          String user,
                          Timestamp timestamp,
-                         String company,
                          String module)
             throws LoitServiceException {
 
         //Check null (**Check if custom error messages are required for each)
-        if (user == null || timestamp == null || module == null || company == null) {
+        if (user == null || timestamp == null || module == null) {
             throw new LoitServiceException(Translator.toLocale("REQUIRED"), "NULL");
-        }
-
-        //check if Risk Category available in db (foreign key constraint)
-        Integer categoryId = riskWeightage.getCategoryId();
-        if(categoryId != null){
-            if(!riskCategoryRepository.existsById(categoryId)) {
-                throw new LoitServiceException(Translator.toLocale("FK_RISK_CAT "),
-                        "INVALID_DATA");
-            }else{
-                riskWeightage.setCategory(riskCategoryRepository.findById(categoryId).get());
-
-            }
         }
 
         //overriding id to 0
@@ -100,7 +84,6 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
         //overriding the values sent by user with the header variable values
         riskWeightage.setCreatedBy(user);
         riskWeightage.setCreatedOn(timestamp);
-        riskWeightage.setCompany(company);
         riskWeightage.setModule(module);
         riskWeightage.setVersion(Long.valueOf(1));
 
@@ -123,18 +106,6 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
         if (id == null || user == null || timestamp == null ) {
             throw new LoitServiceException(Translator.toLocale("REQUIRED"),
                     "NULL");
-        }
-
-        //check if Risk Category available in db (foreign key constraint)
-        Integer categoryId = newRiskWeightage.getCategoryId();
-        if(categoryId != null){
-            if(!riskCategoryRepository.existsById(categoryId)) {
-                throw new LoitServiceException(Translator.toLocale("FK_RISK_CAT "),
-                        "INVALID_DATA");
-            }else{
-                newRiskWeightage.setCategory(riskCategoryRepository.findById(categoryId).get());
-
-            }
         }
 
         //Check for availability of RiskWeightage by id
@@ -206,9 +177,6 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
         BeanUtils.copyProperties(riskWeightage, riskWeightageHistory);
         riskWeightageHistory.setId(0);
         riskWeightageHistory.setRiskWeightageId(riskWeightage.getId());
-        if(riskWeightage.getCategory()!=null){
-            riskWeightageHistory.setCategory(riskWeightage.getCategory().getId());
-        }
         riskWeightageHistoryRepository.save(riskWeightageHistory);
     }
 }

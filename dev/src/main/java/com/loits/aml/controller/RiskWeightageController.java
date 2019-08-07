@@ -29,7 +29,7 @@ import java.sql.Timestamp;
  */
 @CrossOrigin(origins = "*")
 @RestController
-@RequestMapping(path = "/risk/risk-weightage/v1")
+@RequestMapping(path = "/risk-weightage/v1")
 @SuppressWarnings("unchecked")
 public class RiskWeightageController {
 
@@ -69,7 +69,6 @@ public class RiskWeightageController {
      * @param riskWeightage object to be created
      * @param user user creating record
      * @param timestamp record creation timestamp
-     * @param company
      * @param module
      * @return
      * @throws LoitServiceException
@@ -80,16 +79,15 @@ public class RiskWeightageController {
                                                 @RequestBody @Valid RiskWeightage riskWeightage,
                                                 @RequestHeader("user") String user,
                                                 @RequestParam("timestamp")Timestamp timestamp,
-                                                @RequestParam("company")String company,
                                                 @RequestParam("module") String module
             ) throws LoitServiceException{
 
         logger.debug(String.format("Creating RiskWeightage data.(Projection: %s |" +
                 " | RiskWeightage : %s | User : %s " +
-                " | Timestamp : %s | Company : %s" +
-                " | Module : %s )", projection, riskWeightage, user, timestamp, company, module));
+                " | Timestamp : %s " +
+                " | Module : %s )", projection, riskWeightage, user, timestamp, module));
 
-        Resource resource = new Resource(riskWeightageService.create(projection, riskWeightage, user, timestamp, company, module));
+        Resource resource = new Resource(riskWeightageService.create(projection, riskWeightage, user, timestamp, module));
         return ResponseEntity.ok(resource);
     }
 

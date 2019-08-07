@@ -13,26 +13,13 @@ public class RiskWeightage {
     private Integer id;
     private String code;
     private String name;
-    private Integer weightage;
+    private Double weightage;
     private Byte status;
     private String createdBy;
     private Timestamp createdOn;
-    private String company;
     private String module;
     private Long version;
-    private RiskCategory category;
-
-    private Integer categoryId;
-
-    @Transient
-    @JsonInclude
-    public Integer getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(Integer categoryId) {
-        this.categoryId = categoryId;
-    }
+    private String category;
 
     @Id
     @Column(name = "id", nullable = false)
@@ -66,11 +53,11 @@ public class RiskWeightage {
 
     @Basic
     @Column(name = "weightage", nullable = true)
-    public Integer getWeightage() {
+    public Double getWeightage() {
         return weightage;
     }
 
-    public void setWeightage(Integer weightage) {
+    public void setWeightage(Double weightage) {
         this.weightage = weightage;
     }
 
@@ -105,16 +92,6 @@ public class RiskWeightage {
     }
 
     @Basic
-    @Column(name = "company", nullable = true, length = 45)
-    public String getCompany() {
-        return company;
-    }
-
-    public void setCompany(String company) {
-        this.company = company;
-    }
-
-    @Basic
     @Column(name = "module", nullable = true, length = 45)
     public String getModule() {
         return module;
@@ -134,6 +111,16 @@ public class RiskWeightage {
         this.version = version;
     }
 
+    @Basic
+    @Column(name = "category", nullable = true)
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -146,24 +133,12 @@ public class RiskWeightage {
                 Objects.equals(status, that.status) &&
                 Objects.equals(createdBy, that.createdBy) &&
                 Objects.equals(createdOn, that.createdOn) &&
-                Objects.equals(company, that.company) &&
                 Objects.equals(module, that.module) &&
                 Objects.equals(version, that.version);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, code, name, weightage, status, createdBy, createdOn, company, module, version);
-    }
-
-    @JsonIgnore
-    @ManyToOne
-    @JoinColumn(name = "category", referencedColumnName = "id")
-    public RiskCategory getCategory() {
-        return category;
-    }
-
-    public void setCategory(RiskCategory riskCategoryByCategory) {
-        this.category = riskCategoryByCategory;
+        return Objects.hash(id, code, name, weightage, status, createdBy, createdOn,  module, version);
     }
 }

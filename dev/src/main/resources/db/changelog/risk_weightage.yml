@@ -12,7 +12,7 @@ databaseChangeLog:
             name: id
             type: INT
         - column:
-            name: key
+            name: code
             type: VARCHAR(45)
         - column:
             name: category
@@ -22,7 +22,7 @@ databaseChangeLog:
             type: VARCHAR(45)
         - column:
             name: weightage
-            type: INT
+            type: DOUBLE
         - column:
             name: status
             type: TINYINT(3)
@@ -33,64 +33,9 @@ databaseChangeLog:
             name: created_on
             type: datetime
         - column:
-            name: company
-            type: VARCHAR(45)
-        - column:
             name: module
             type: VARCHAR(45)
+        - column:
+            name: version
+            type: BIGINT
         tableName: risk_weightage
-
-- changeSet:
-      id: 2
-      author: Minoli
-      changes:
-          - addColumn:
-                tableName: risk_weightage
-                columns:
-                    - column:
-                          name: version
-                          type: BIGINT
-
-- changeSet:
-      id: 3
-      author: Minoli
-      changes:
-          - modifyDataType:
-                columnName: category
-                newDataType: int
-                tableName: risk_weightage
-
-- changeSet:
-      id: 4
-      author: Minoli
-      changes:
-          - createIndex:
-                columns:
-                    - column:
-                          name: category
-                indexName: fk_riskweightage_riskcategory_idx
-                tableName: risk_weightage
-- changeSet:
-      id: 5
-      author: Minoli
-      changes:
-          - addForeignKeyConstraint:
-                baseColumnNames: category
-                baseTableName: risk_weightage
-                constraintName: fk_riskweightage_riskcategory
-                deferrable: false
-                initiallyDeferred: false
-                onDelete: NO ACTION
-                onUpdate: NO ACTION
-                referencedColumnNames: id
-                referencedTableName: risk_category
-                validate: true
-- changeSet:
-    id: 6
-    author: minoli
-    changes:
-      - renameColumn:
-          columnDataType: VARCHAR(45)
-          newColumnName: code
-          oldColumnName: key
-          tableName: risk_weightage

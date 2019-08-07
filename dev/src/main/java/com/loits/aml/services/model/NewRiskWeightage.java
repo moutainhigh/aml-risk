@@ -1,23 +1,18 @@
 package com.loits.aml.services.model;
 
-import com.loits.aml.domain.RiskCategory;
-
 import java.sql.Timestamp;
 
 public class NewRiskWeightage {
     private Integer id;
     private String code;
     private String name;
-    private Integer weightage;
+    private Double weightage;
     private Byte status;
     private String createdBy;
     private Timestamp createdOn;
-    private String company;
     private String module;
     private Long version;
-    private RiskCategory category;
-
-    private Integer categoryId;
+    private String category;
 
     public NewRiskWeightage(){
 
@@ -47,11 +42,11 @@ public class NewRiskWeightage {
         this.name = name;
     }
 
-    public Integer getWeightage() {
+    public Double getWeightage() {
         return weightage;
     }
 
-    public void setWeightage(Integer weightage) {
+    public void setWeightage(Double weightage) {
         this.weightage = weightage;
     }
 
@@ -79,14 +74,6 @@ public class NewRiskWeightage {
         this.createdOn = createdOn;
     }
 
-    public String getCompany() {
-        return company;
-    }
-
-    public void setCompany(String company) {
-        this.company = company;
-    }
-
     public String getModule() {
         return module;
     }
@@ -103,19 +90,11 @@ public class NewRiskWeightage {
         this.version = version;
     }
 
-    public RiskCategory getCategory() {
+    public String getCategory() {
         return category;
     }
 
-    public void setCategory(RiskCategory category) {
+    public void setCategory(String category) {
         this.category = category;
-    }
-
-    public Integer getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(Integer categoryId) {
-        this.categoryId = categoryId;
     }
 }

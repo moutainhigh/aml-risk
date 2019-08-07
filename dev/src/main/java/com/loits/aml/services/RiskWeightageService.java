@@ -18,7 +18,7 @@ public interface RiskWeightageService {
 
     Page<?> getAll(Pageable pageable, Predicate predicate, String bookmarks, String projection);
 
-    Object create(String projection, RiskWeightage riskWeightage, String user, Timestamp timestamp, String company, String module) throws LoitServiceException;
+    Object create(String projection, RiskWeightage riskWeightage, String user, Timestamp timestamp, String module) throws LoitServiceException;
 
     Object update(String projection, NewRiskWeightage newRiskWeightage, String user, Timestamp timestamp) throws LoitServiceException;
 

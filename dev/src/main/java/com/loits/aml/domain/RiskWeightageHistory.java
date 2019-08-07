@@ -10,13 +10,12 @@ public class RiskWeightageHistory {
     private Integer id;
     private Integer riskWeightageId;
     private String code;
-    private Integer category;
+    private String category;
     private String name;
-    private Integer weightage;
+    private Double weightage;
     private Byte status;
     private String createdBy;
     private Timestamp createdOn;
-    private String company;
     private String module;
 
     @Id
@@ -51,11 +50,11 @@ public class RiskWeightageHistory {
 
     @Basic
     @Column(name = "category", nullable = true)
-    public Integer getCategory() {
+    public String getCategory() {
         return category;
     }
 
-    public void setCategory(Integer category) {
+    public void setCategory(String category) {
         this.category = category;
     }
 
@@ -71,11 +70,11 @@ public class RiskWeightageHistory {
 
     @Basic
     @Column(name = "weightage", nullable = true)
-    public Integer getWeightage() {
+    public Double getWeightage() {
         return weightage;
     }
 
-    public void setWeightage(Integer weightage) {
+    public void setWeightage(Double weightage) {
         this.weightage = weightage;
     }
 
@@ -110,16 +109,6 @@ public class RiskWeightageHistory {
     }
 
     @Basic
-    @Column(name = "company", nullable = true, length = 45)
-    public String getCompany() {
-        return company;
-    }
-
-    public void setCompany(String company) {
-        this.company = company;
-    }
-
-    @Basic
     @Column(name = "module", nullable = true, length = 45)
     public String getModule() {
         return module;
@@ -143,12 +132,11 @@ public class RiskWeightageHistory {
                 Objects.equals(status, that.status) &&
                 Objects.equals(createdBy, that.createdBy) &&
                 Objects.equals(createdOn, that.createdOn) &&
-                Objects.equals(company, that.company) &&
                 Objects.equals(module, that.module);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, riskWeightageId, code, category, name, weightage, status, createdBy, createdOn, company, module);
+        return Objects.hash(id, riskWeightageId, code, category, name, weightage, status, createdBy, createdOn, module);
     }
 }

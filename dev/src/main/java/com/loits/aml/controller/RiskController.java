@@ -12,11 +12,9 @@ import org.springframework.web.bind.annotation.*;
  */
 @CrossOrigin(origins = "*")
 @RestController
-@RequestMapping("/risk/v1")
+@RequestMapping("/v1")
 @SuppressWarnings("unchecked")
 public class RiskController {
-    Logger logger = LogManager.getLogger(RiskCategoryController.class);
-
 
     /**
      * Risk calculation
