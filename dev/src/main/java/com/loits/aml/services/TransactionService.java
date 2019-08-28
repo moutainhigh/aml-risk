@@ -1,6 +1,6 @@
 package com.loits.aml.services;
 
-import com.loits.aml.config.LoitServiceException;
+import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.domain.Transaction;
 import com.querydsl.core.types.Predicate;
 import org.springframework.data.domain.Page;
@@ -15,5 +15,5 @@ import java.sql.Timestamp;
 public interface TransactionService {
     Page<?> getAll(Pageable pageable, Predicate predicate, String bookmarks, String projection);
 
-    Object create(String projection, Transaction transaction, String user, Timestamp timestamp, String module) throws LoitServiceException;
+    Object create(String projection, Transaction transaction, String user, Timestamp timestamp, String module) throws FXDefaultException;
 }

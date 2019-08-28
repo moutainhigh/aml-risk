@@ -1,7 +1,7 @@
 package com.loits.aml.services.impl;
 
-import com.loits.aml.config.LoitServiceException;
 import com.loits.aml.config.Translator;
+import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.domain.QTransaction;
 import com.loits.aml.domain.Transaction;
 import com.loits.aml.repo.TransactionRepository;
@@ -16,10 +16,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 
 @Service
 public class TransactionServiceImpl implements TransactionService {
@@ -60,11 +62,12 @@ public class TransactionServiceImpl implements TransactionService {
                          String user,
                          Timestamp timestamp,
                          String module)
-            throws LoitServiceException {
+            throws FXDefaultException {
 
         //Check null (**Check if custom error messages are required for each)
         if (user == null || timestamp == null || module == null) {
-            throw new LoitServiceException(Translator.toLocale("REQUIRED"), "NULL");
+            throw new FXDefaultException("3000","NULL" ,Translator.toLocale("REQUIRED"), new Date(), HttpStatus.BAD_REQUEST,false);
+
         }
 
         //overriding channelId to 0

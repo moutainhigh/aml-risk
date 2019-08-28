@@ -29,7 +29,6 @@ public class Customer {
 
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "customer_code", nullable = false)
     public Integer getCustomerCode() {
         return customerCode;

@@ -15,10 +15,11 @@ public class Module {
     private String country;
     private String createdBy;
     private Timestamp createdOn;
+    private Long version;
 
     @Id
     @Basic
-    @Column(name = "code", nullable = false, length = 20)
+    @Column(name = "code", nullable = false, length = 10)
     public String getCode() {
         return code;
     }
@@ -93,5 +94,15 @@ public class Module {
     @Override
     public int hashCode() {
         return Objects.hash(code, name, type, country, createdBy, createdOn);
+    }
+
+    @Basic
+    @Column(name = "version", nullable = true)
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }

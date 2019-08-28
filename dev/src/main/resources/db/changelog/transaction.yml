@@ -41,4 +41,22 @@ databaseChangeLog:
         - column:
             name: customer
             type: INT
+        - column:
+            name: otherparty_name
+            type: VARCHAR(45)
+        - column:
+            name: source_of_funds
+            type: VARCHAR(45)
+        - column:
+            name: branch
+            type: VARCHAR(45)
+        - column:
+            name: facility_branch
+            type: VARCHAR(45)
+        - column:
+            name: otherparty_id
+            type: INT
+        - column:
+            name: otherparty_remark
+            type: VARCHAR(45)
         tableName: transaction

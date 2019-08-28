@@ -7,9 +7,9 @@ databaseChangeLog:
         columns:
         - column:
             constraints:
-              primaryKey: true
+                primaryKey: true
             name: code
-            type: VARCHAR(20)
+            type: VARCHAR(10)
         - column:
             name: name
             type: VARCHAR(60)
@@ -25,5 +25,8 @@ databaseChangeLog:
         - column:
             name: created_on
             type: DATETIME
+        - column:
+            name: version
+            type: BIGINT
         tableName: module
 

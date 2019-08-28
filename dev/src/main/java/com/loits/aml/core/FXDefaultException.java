@@ -41,8 +41,13 @@ public class FXDefaultException extends BaseException {
 		super(errorCode, errorShortDescription, errorDescription, errorDate);
 		// TODO Auto-generated constructor stub
 	}
+	public FXDefaultException(String errorCode, String errorShortDescription, String errorDescription, Date errorDate, HttpStatus htst, Boolean severity) {
+		super(errorCode, errorShortDescription, errorDescription, errorDate, htst, severity);
+		// TODO Auto-generated constructor stub
+	}
+
 	public FXDefaultException(String errorCode, String errorShortDescription, String errorDescription, Date errorDate, HttpStatus htst) {
 		super(errorCode, errorShortDescription, errorDescription, errorDate, htst);
 		// TODO Auto-generated constructor stub
-	}	
+	}
 }

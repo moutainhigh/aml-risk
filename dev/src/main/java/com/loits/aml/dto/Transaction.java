@@ -1,11 +1,13 @@
-package com.loits.aml.domain;
+package com.loits.aml.dto;
 
-import javax.persistence.*;
+import lombok.Data;
+
+import javax.validation.constraints.NotBlank;
 import java.sql.Timestamp;
-import java.util.Objects;
 
-@Entity
+@Data
 public class Transaction {
+    @NotBlank
     private Integer customer;
     private Integer txnId;
     private Timestamp txnDate;
@@ -24,8 +26,9 @@ public class Transaction {
     private Integer otherpartyId;
     private String otherpartyRemark;
 
-    @Basic
-    @Column(name = "customer", nullable = true)
+    public Transaction() {
+    }
+
     public Integer getCustomer() {
         return customer;
     }
@@ -34,10 +37,6 @@ public class Transaction {
         this.customer = customer;
     }
 
-    @Basic
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "txn_id", nullable = false)
     public Integer getTxnId() {
         return txnId;
     }
@@ -46,8 +45,6 @@ public class Transaction {
         this.txnId = txnId;
     }
 
-    @Basic
-    @Column(name = "txn_date", nullable = true)
     public Timestamp getTxnDate() {
         return txnDate;
     }
@@ -56,8 +53,6 @@ public class Transaction {
         this.txnDate = txnDate;
     }
 
-    @Basic
-    @Column(name = "product", nullable = true)
     public Integer getProduct() {
         return product;
     }
@@ -66,8 +61,6 @@ public class Transaction {
         this.product = product;
     }
 
-    @Basic
-    @Column(name = "txn_type", nullable = true, length = 45)
     public String getTxnType() {
         return txnType;
     }
@@ -76,8 +69,6 @@ public class Transaction {
         this.txnType = txnType;
     }
 
-    @Basic
-    @Column(name = "txn_reference", nullable = true, length = 45)
     public String getTxnReference() {
         return txnReference;
     }
@@ -86,8 +77,6 @@ public class Transaction {
         this.txnReference = txnReference;
     }
 
-    @Basic
-    @Column(name = "remarks", nullable = true, length = 45)
     public String getRemarks() {
         return remarks;
     }
@@ -96,8 +85,6 @@ public class Transaction {
         this.remarks = remarks;
     }
 
-    @Basic
-    @Column(name = "created_by", nullable = true, length = 45)
     public String getCreatedBy() {
         return createdBy;
     }
@@ -106,8 +93,6 @@ public class Transaction {
         this.createdBy = createdBy;
     }
 
-    @Basic
-    @Column(name = "created_on", nullable = true)
     public Timestamp getCreatedOn() {
         return createdOn;
     }
@@ -116,8 +101,6 @@ public class Transaction {
         this.createdOn = createdOn;
     }
 
-    @Basic
-    @Column(name = "module", nullable = true, length = 10)
     public String getModule() {
         return module;
     }
@@ -126,8 +109,6 @@ public class Transaction {
         this.module = module;
     }
 
-    @Basic
-    @Column(name = "amount", nullable = true, precision = 0)
     public Double getAmount() {
         return amount;
     }
@@ -136,31 +117,6 @@ public class Transaction {
         this.amount = amount;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Transaction that = (Transaction) o;
-        return Objects.equals(customer, that.customer) &&
-                Objects.equals(txnId, that.txnId) &&
-                Objects.equals(txnDate, that.txnDate) &&
-                Objects.equals(product, that.product) &&
-                Objects.equals(txnType, that.txnType) &&
-                Objects.equals(txnReference, that.txnReference) &&
-                Objects.equals(remarks, that.remarks) &&
-                Objects.equals(createdBy, that.createdBy) &&
-                Objects.equals(createdOn, that.createdOn) &&
-                Objects.equals(module, that.module) &&
-                Objects.equals(amount, that.amount);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(customer, txnId, txnDate, product, txnType, txnReference, remarks, createdBy, createdOn, module, amount);
-    }
-
-    @Basic
-    @Column(name = "otherparty_name", nullable = true, length = 45)
     public String getOtherpartyName() {
         return otherpartyName;
     }
@@ -169,8 +125,6 @@ public class Transaction {
         this.otherpartyName = otherpartyName;
     }
 
-    @Basic
-    @Column(name = "source_of_funds", nullable = true, length = 45)
     public String getSourceOfFunds() {
         return sourceOfFunds;
     }
@@ -179,8 +133,6 @@ public class Transaction {
         this.sourceOfFunds = sourceOfFunds;
     }
 
-    @Basic
-    @Column(name = "branch", nullable = true, length = 45)
     public String getBranch() {
         return branch;
     }
@@ -189,8 +141,6 @@ public class Transaction {
         this.branch = branch;
     }
 
-    @Basic
-    @Column(name = "facility_branch", nullable = true, length = 45)
     public String getFacilityBranch() {
         return facilityBranch;
     }
@@ -199,8 +149,6 @@ public class Transaction {
         this.facilityBranch = facilityBranch;
     }
 
-    @Basic
-    @Column(name = "otherparty_id", nullable = true)
     public Integer getOtherpartyId() {
         return otherpartyId;
     }
@@ -209,8 +157,6 @@ public class Transaction {
         this.otherpartyId = otherpartyId;
     }
 
-    @Basic
-    @Column(name = "otherparty_remark", nullable = true, length = 45)
     public String getOtherpartyRemark() {
         return otherpartyRemark;
     }

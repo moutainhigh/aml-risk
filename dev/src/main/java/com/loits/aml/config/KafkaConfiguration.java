@@ -25,7 +25,6 @@ public class KafkaConfiguration {
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         config.put(JsonDeserializer.TRUSTED_PACKAGES, "com.loits.aml.domain");
-
         return new DefaultKafkaConsumerFactory<String, Module>(config);
     }
 

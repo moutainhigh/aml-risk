@@ -62,13 +62,27 @@ public abstract class BaseException extends Exception {
 	}
 
 	protected BaseException(String errorCode, String errorShortDescription, String errorDescription, Date errorDate,
-			HttpStatus status) {
+							HttpStatus status) {
 		super();
 		this.errorCode = errorCode;
 		this.errorShortDescription = errorShortDescription;
 		this.errorDescription = errorDescription;
 		this.errorDate = errorDate;
 		this.httpStatus = status;
+
+		logger.info("Exception",
+				this.getErrorCode() + "-" + this.getErrorShortDescription() + "-" + this.getErrorDescription());
+	}
+
+	protected BaseException(String errorCode, String errorShortDescription, String errorDescription, Date errorDate,
+			HttpStatus status, Boolean severity) {
+		super();
+		this.errorCode = errorCode;
+		this.errorShortDescription = errorShortDescription;
+		this.errorDescription = errorDescription;
+		this.errorDate = errorDate;
+		this.httpStatus = status;
+		this.severity = severity;
 
 		logger.info("Exception",
 				this.getErrorCode() + "-" + this.getErrorShortDescription() + "-" + this.getErrorDescription());
@@ -151,6 +165,14 @@ public abstract class BaseException extends Exception {
 	 */
 	public void setErrorDate(Date errorDate) {
 		this.errorDate = errorDate;
+	}
+
+	/**
+	 *
+	 * @return httpstatus
+	 */
+	public HttpStatus getHttpStatus() {
+		return httpStatus;
 	}
 
 }

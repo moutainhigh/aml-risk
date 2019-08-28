@@ -22,6 +22,7 @@ public class RiskWeightage {
     private String category;
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     public Integer getId() {
         return id;

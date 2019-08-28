@@ -1,6 +1,6 @@
 package com.loits.aml.controller;
 
-import com.loits.aml.config.LoitServiceException;
+import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.domain.Transaction;
 import com.loits.aml.services.TransactionService;
 import com.querydsl.core.types.Predicate;
@@ -66,10 +66,9 @@ public class TransactionController {
      * @param transaction object to be created
      * @param user user creating record
      * @param timestamp record creation timestamp
-     * @param company
      * @param module
      * @return
-     * @throws LoitServiceException
+     * @throws FXDefaultException
      */
     @PostMapping(produces = "application/json", consumes = "application/json")
     public ResponseEntity<?> addProductChannel(@RequestParam(value = "tenent", defaultValue = "1") String tenent,
@@ -78,7 +77,7 @@ public class TransactionController {
                                                 @RequestHeader("user") String user,
                                                 @RequestParam("timestamp") Timestamp timestamp,
                                                 @RequestParam("module") String module
-    ) throws LoitServiceException {
+    ) throws FXDefaultException {
 
         logger.debug(String.format("Creating Transaction data.(Projection: %s |" +
                 " | ProductChannel : %s | User : %s " +

@@ -1,6 +1,6 @@
 package com.loits.aml.services;
 
-import com.loits.aml.config.LoitServiceException;
+import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.domain.RiskWeightage;
 import com.loits.aml.services.model.NewRiskWeightage;
 import com.querydsl.core.types.Predicate;
@@ -18,9 +18,9 @@ public interface RiskWeightageService {
 
     Page<?> getAll(Pageable pageable, Predicate predicate, String bookmarks, String projection);
 
-    Object create(String projection, RiskWeightage riskWeightage, String user, Timestamp timestamp, String module) throws LoitServiceException;
+    Object create(String projection, RiskWeightage riskWeightage, String user, Timestamp timestamp, String module) throws FXDefaultException;
 
-    Object update(String projection, NewRiskWeightage newRiskWeightage, String user, Timestamp timestamp) throws LoitServiceException;
+    Object update(String projection, NewRiskWeightage newRiskWeightage, String user, Timestamp timestamp) throws FXDefaultException;
 
-    Object delete(String projection, Integer id) throws LoitServiceException;
+    Object delete(String projection, Integer id) throws FXDefaultException;
 }
