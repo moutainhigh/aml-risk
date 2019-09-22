@@ -8,4 +8,11 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 @RepositoryRestResource(exported = false)
 public interface CustomerRepository extends PagingAndSortingRepository<Customer, Integer>, QuerydslPredicateExecutor<Customer> {
 
+    boolean existsByNic(String nic);
+
+    boolean existsByOldNic(String nic);
+
+    boolean existsByNicAndModule(String nic);
+
+    boolean existsByOldNicAndModule(String nic);
 }

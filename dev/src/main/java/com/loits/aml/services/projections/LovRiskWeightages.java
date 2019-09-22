@@ -1,6 +1,5 @@
 package com.loits.aml.services.projections;
 
-import com.loits.aml.domain.RiskWeightage;
 import org.springframework.data.rest.core.config.Projection;
 
 import java.sql.Timestamp;
