@@ -251,6 +251,14 @@
             <artifactId>aspectjweaver</artifactId>
             <version>1.8.12</version>
         </dependency>
+
+        <!-- Kafka -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+            <version>2.2.8.RELEASE</version>
+        </dependency>
+
     </dependencies>
     <dependencyManagement>
         <dependencies>
@@ -406,8 +414,6 @@
         </plugins>
     </reporting>
 
-
-
     <repositories>
         <repository>
             <id>spring-milestones</id>
@@ -415,5 +421,24 @@
             <url>https://repo.spring.io/milestone</url>
         </repository>
     </repositories>
+
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <property>
+                    <name>env</name>
+                    <value>dev</value>
+                </property>
+            </activation>
+            <properties>
+
+                <!--Test properties-->
+                <app.port.name>server.port</app.port.name>
+                <app.port>8094</app.port>
+            </properties>
+        </profile>
+    </profiles>
 
 </project>

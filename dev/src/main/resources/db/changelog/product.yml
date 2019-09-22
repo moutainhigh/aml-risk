@@ -1,0 +1,71 @@
+databaseChangeLog:
+- changeSet:
+    id: 1
+    author: minolid@i360.lk (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            startWith: 1
+            constraints:
+              primaryKey: true
+            name: product_code
+            type: INT
+        - column:
+            name: product_type
+            type: VARCHAR(45)
+        - column:
+            name: product_name
+            type: VARCHAR(45)
+        - column:
+            name: product_description
+            type: VARCHAR(45)
+        - column:
+            name: product_risk
+            type: DOUBLE
+        - column:
+            name: parent
+            type: INT
+        - column:
+            name: status
+            type: TINYINT(3)
+        - column:
+            name: created_by
+            type: VARCHAR(45)
+        - column:
+            name: created_on
+            type: datetime
+        - column:
+            name: module
+            type: VARCHAR(10)
+        - column:
+            name: version
+            type: BIGINT
+        tableName: product
+
+- changeSet:
+      id: 2
+      author: minolid@i360.lk
+      changes:
+          - createIndex:
+                columns:
+                    - column:
+                          name: parent
+                indexName: fk_product_product_idx
+                tableName: product
+- changeSet:
+      id: 3
+      author: minolid@i360.lk
+      changes:
+          - addForeignKeyConstraint:
+                baseColumnNames: parent
+                baseTableName: product
+                constraintName: fk_product_product
+                deferrable: false
+                initiallyDeferred: false
+                onDelete: NO ACTION
+                onUpdate: NO ACTION
+                referencedColumnNames: product_code
+                referencedTableName: product
+                validate: true

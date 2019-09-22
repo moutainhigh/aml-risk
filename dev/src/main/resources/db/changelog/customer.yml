@@ -1,0 +1,57 @@
+databaseChangeLog:
+- changeSet:
+    id: 1
+    author: minolid@i360.lk (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            startWith: 1
+            constraints:
+              primaryKey: true
+            name: customer_code
+            type: INT
+        - column:
+            name: surname
+            type: VARCHAR(45)
+        - column:
+            name: other_names
+            type: VARCHAR(45)
+        - column:
+            name: title
+            type: VARCHAR(45)
+        - column:
+            name: nic
+            type: VARCHAR(45)
+        - column:
+            name: old_nic
+            type: VARCHAR(45)
+        - column:
+            name: client_category
+            type: VARCHAR(45)
+        - column:
+            name: peps_enabled
+            type: TINYINT(3)
+        - column:
+            name: within_branch_service_area
+            type: TINYINT(3)
+        - column:
+            name: residency
+            type: VARCHAR(45)
+        - column:
+            name: status
+            type: TINYINT(3)
+        - column:
+            name: created_by
+            type: VARCHAR(45)
+        - column:
+            name: created_on
+            type: datetime
+        - column:
+            name: module
+            type: VARCHAR(45)
+        - column:
+              name: version
+              type: BIGINT
+        tableName: customer

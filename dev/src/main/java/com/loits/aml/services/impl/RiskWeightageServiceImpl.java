@@ -1,7 +1,7 @@
 package com.loits.aml.services.impl;
 
-import com.loits.aml.config.LoitServiceException;
 import com.loits.aml.config.Translator;
+import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.domain.*;
 import com.loits.aml.domain.QRiskWeightage;
 import com.loits.aml.repo.RiskWeightageHistoryRepository;
@@ -19,10 +19,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 
 /**
  * @author Minoli De Silva - Infinitum360
@@ -71,11 +73,12 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
                          String user,
                          Timestamp timestamp,
                          String module)
-            throws LoitServiceException {
+            throws FXDefaultException {
 
         //Check null (**Check if custom error messages are required for each)
         if (user == null || timestamp == null || module == null) {
-            throw new LoitServiceException(Translator.toLocale("REQUIRED"), "NULL");
+            throw new FXDefaultException("3000","NULL" ,Translator.toLocale("REQUIRED"), new Date(), HttpStatus.BAD_REQUEST,false);
+
         }
 
         //overriding id to 0
@@ -98,21 +101,19 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
                          NewRiskWeightage newRiskWeightage,
                          String user,
                          Timestamp timestamp)
-            throws LoitServiceException {
+            throws FXDefaultException {
 
         Integer id = newRiskWeightage.getId();
 
         //Check null (**Check if custom error messages are required for each)
         if (id == null || user == null || timestamp == null ) {
-            throw new LoitServiceException(Translator.toLocale("REQUIRED"),
-                    "NULL");
+            throw new FXDefaultException("3000","NULL" ,Translator.toLocale("REQUIRED"), new Date(), HttpStatus.BAD_REQUEST,false);
         }
 
         //Check for availability of RiskWeightage by id
         if (!riskWeightageRepository.existsById(id)) {
             //RiskWeightage not found
-            throw new LoitServiceException(Translator.toLocale("NO_DATA_FOUND_RW"),
-                    "NO_DATA_FOUND");
+            throw new FXDefaultException("3002","NO_DATA_FOUND" ,Translator.toLocale("NO_DATA_FOUND_RW"), new Date(), HttpStatus.BAD_REQUEST,false);
         }
 
         //Get RiskWeightage object
@@ -121,8 +122,7 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
         //Check if record version has changed
         long currentVersion = riskWeightage.getVersion();
         if (newRiskWeightage.getVersion() == null || newRiskWeightage.getVersion().compareTo(currentVersion) != 0) {
-            throw new LoitServiceException(Translator.toLocale("VERSION_MISMATCH"),
-                    "VERSION_MISMATCH");
+            throw new FXDefaultException("3003","VERSION_MISMATCH" ,Translator.toLocale("VERSION_MISMATCH"), new Date(), HttpStatus.BAD_REQUEST,false);
         }
 
 
@@ -148,13 +148,12 @@ public class RiskWeightageServiceImpl implements RiskWeightageService {
     @Override
     public Object delete(String projection,
                          Integer id)
-            throws LoitServiceException {
+            throws FXDefaultException {
 
         //Check for availability of RiskWeightage by id
         if (!riskWeightageRepository.existsById(id)) {
             //RiskWeightage not found
-            throw new LoitServiceException(Translator.toLocale("NO_DATA_FOUND_RW"),
-                    "NO_DATA_FOUND");
+            throw new FXDefaultException("3002","NO_DATA_FOUND" ,Translator.toLocale("NO_DATA_FOUND_RW"), new Date(), HttpStatus.BAD_REQUEST,false);
         }
 
         RiskWeightage riskWeightage = riskWeightageRepository.findById(id).get();

@@ -1,7 +1,7 @@
 package com.loits.aml.controller;
 
 
-import com.loits.aml.config.LoitServiceException;
+import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.domain.RiskWeightage;
 import com.loits.aml.services.model.NewRiskWeightage;
 import com.loits.aml.services.RiskWeightageService;
@@ -71,7 +71,7 @@ public class RiskWeightageController {
      * @param timestamp record creation timestamp
      * @param module
      * @return
-     * @throws LoitServiceException
+     * @throws FXDefaultException
      */
     @PostMapping(produces = "application/json", consumes = "application/json")
     public ResponseEntity<?> addRiskWeightage(@RequestParam(value = "tenent", defaultValue = "1") String tenent,
@@ -80,7 +80,7 @@ public class RiskWeightageController {
                                                 @RequestHeader("user") String user,
                                                 @RequestParam("timestamp")Timestamp timestamp,
                                                 @RequestParam("module") String module
-            ) throws LoitServiceException{
+            ) throws FXDefaultException {
 
         logger.debug(String.format("Creating RiskWeightage data.(Projection: %s |" +
                 " | RiskWeightage : %s | User : %s " +
@@ -100,7 +100,7 @@ public class RiskWeightageController {
      * @param user user modifying record
      * @param timestamp modified timestamp
      * @return
-     * @throws LoitServiceException
+     * @throws FXDefaultException
      */
     @PutMapping(path = "/{id}", produces = "application/json", consumes = "application/json")
     public ResponseEntity<?> updateRiskWeightage(@RequestParam(value = "tenent", defaultValue = "1") String tenent,
@@ -109,7 +109,7 @@ public class RiskWeightageController {
                                                  @RequestBody NewRiskWeightage newRiskWeightage,
                                                  @RequestHeader("user") String user,
                                                  @RequestParam("timestamp")Timestamp timestamp
-    ) throws LoitServiceException {
+    ) throws FXDefaultException {
 
 
         newRiskWeightage.setId(id);
@@ -128,14 +128,14 @@ public class RiskWeightageController {
      * @param id id of the RiskWeightage to be deleted
      * @param projection for data shaping
      * @return
-     * @throws LoitServiceException
+     * @throws FXDefaultException
      */
     @DeleteMapping(path = "/{id}")
     public @ResponseBody
     ResponseEntity<?> deleteProductChannel(@RequestParam(value = "tenent", defaultValue = "1") String tenent,
                                            @PathVariable(value = "id") Integer id,
                                            @RequestParam(value = "projection") String projection)
-            throws LoitServiceException {
+            throws FXDefaultException {
 
 
         logger.debug(String.format("Deleting RiskWeightage data.(Projection: %s |"  +

@@ -3,3 +3,11 @@ databaseChangeLog:
       file: "db/changelog/risk_weightage.yml"
   - include:
       file: "db/changelog/risk_weightage_history.yml"
+  - include:
+      file: "db/changelog/module.yml"
+  - include:
+      file: "db/changelog/transaction.yml"
+  - include:
+      file: "db/changelog/product.yml"
+  - include:
+      file: "db/changelog/customer.yml"
