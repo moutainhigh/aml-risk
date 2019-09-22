@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: aml-risk
+  cloud:
+    config:
+      uri: http://${CONF_URL_PORT}
+      username: ${CONF_SERVER_USR}
+      password: ${CONF_SERVER_PASS}
+  profiles:
+    active:
+      - ${CONF_ENV_NAME}

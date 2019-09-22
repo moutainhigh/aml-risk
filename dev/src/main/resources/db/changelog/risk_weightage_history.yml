@@ -1,0 +1,42 @@
+databaseChangeLog:
+- changeSet:
+    id: 1
+    author: Minoli (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+            name: id
+            type: INT
+        - column:
+            name: risk_weightage_id
+            type: INT
+        - column:
+            name: code
+            type: VARCHAR(45)
+        - column:
+            name: category
+            type: VARCHAR(45)
+        - column:
+            name: name
+            type: VARCHAR(45)
+        - column:
+            name: weightage
+            type: DOUBLE
+        - column:
+            name: status
+            type: TINYINT(3)
+        - column:
+            name: created_by
+            type: VARCHAR(45)
+        - column:
+            name: created_on
+            type: datetime
+        - column:
+            name: module
+            type: VARCHAR(45)
+        tableName: risk_weightage_history
+
