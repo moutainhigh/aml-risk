@@ -6,8 +6,6 @@ databaseChangeLog:
   - include:
       file: "db/changelog/module.yml"
   - include:
-      file: "db/changelog/transaction.yml"
-  - include:
       file: "db/changelog/product.yml"
   - include:
       file: "db/changelog/customer.yml"
