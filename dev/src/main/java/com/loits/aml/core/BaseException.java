@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 
 import javax.persistence.MappedSuperclass;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 
@@ -34,6 +35,15 @@ public abstract class BaseException extends Exception {
 	private Date errorDate;
 	private boolean severity;
 	private HttpStatus httpStatus;
+	private List<String> errors;
+
+	public BaseException(HttpStatus status, String errorShortDescription, String errorDescription, List<String> errors) {
+		super();
+		this.httpStatus = status;
+		this.errorShortDescription = errorShortDescription;
+		this.errorDescription = errorDescription;
+		this.errors = errors;
+	}
 
 	public BaseException() {
 		super();
@@ -175,4 +185,11 @@ public abstract class BaseException extends Exception {
 		return httpStatus;
 	}
 
+	public List<String> getErrors() {
+		return errors;
+	}
+
+	public void setErrors(List<String> errors) {
+		this.errors = errors;
+	}
 }

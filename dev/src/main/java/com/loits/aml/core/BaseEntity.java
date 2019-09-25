@@ -6,6 +6,8 @@
 
 package com.loits.aml.core;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import javax.persistence.*;
 
 /**
@@ -23,32 +25,22 @@ import javax.persistence.*;
 @MappedSuperclass
 public abstract class BaseEntity {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "common_generator")
-	@SequenceGenerator(name = "common_generator", sequenceName = "common_seq", allocationSize = 1)
-	@Column(name = "id", updatable = false, nullable = false)
 	protected Long id;
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	@Version
-	private Long version;
 
 	protected BaseEntity() {
 		id = null;
 	}
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO, generator="native")
+	@GenericGenerator(name = "native", strategy = "native")
+	@Column(name = "id", nullable = false)
 	public Long getId() {
 		return id;
 	}
 
-	public Long getVersion() {
-		return version;
+	public void setId(Long id) {
+		this.id = id;
 	}
 
-	public void setVersion(Long version) {
-		this.version = version;
-	}
 }

@@ -12,7 +12,7 @@ public interface CustomerRepository extends PagingAndSortingRepository<Customer,
 
     boolean existsByOldNic(String nic);
 
-    boolean existsByNicAndModule(String nic);
-
-    boolean existsByOldNicAndModule(String nic);
+//    boolean existsByNicAndModule(String customerNic, String nic);
+//
+//    boolean existsByOldNicAndModule(String customerNic, String nic);
 }

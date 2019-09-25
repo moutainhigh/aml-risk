@@ -11,7 +11,7 @@ databaseChangeLog:
             constraints:
               primaryKey: true
             name: customer_code
-            type: INT
+            type: BIGINT
         - column:
             name: surname
             type: VARCHAR(45)
@@ -31,27 +31,17 @@ databaseChangeLog:
             name: client_category
             type: VARCHAR(45)
         - column:
-            name: peps_enabled
-            type: TINYINT(3)
-        - column:
-            name: within_branch_service_area
-            type: TINYINT(3)
-        - column:
-            name: residency
-            type: VARCHAR(45)
-        - column:
             name: status
             type: TINYINT(3)
-        - column:
-            name: created_by
-            type: VARCHAR(45)
-        - column:
-            name: created_on
-            type: datetime
-        - column:
-            name: module
-            type: VARCHAR(45)
-        - column:
-              name: version
-              type: BIGINT
         tableName: customer
+
+- changeSet:
+      id: 2
+      author: Minoli
+      changes:
+          - renameColumn:
+                columnDataType: BIGINT
+                newColumnName: id
+                oldColumnName: customer_code
+                tableName: customer
+

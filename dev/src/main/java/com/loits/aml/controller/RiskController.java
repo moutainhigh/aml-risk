@@ -3,9 +3,6 @@ package com.loits.aml.controller;
 import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.services.RiskService;
 import com.redhat.aml.Customer;
-import com.redhat.aml.OverallRisk;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
@@ -39,14 +36,14 @@ public class RiskController {
      * @return
      * @throws FXDefaultException
      */
-    @PostMapping(produces = "application/json", consumes = "application/json")
-    public ResponseEntity<?> calculateRisk(@RequestParam(value = "tenent", defaultValue = "1") String tenent,
-                                           @RequestParam(value = "projection") String projection,
+    @PostMapping(path= "/{tenent}", produces = "application/json")
+    public ResponseEntity<?> calculateRisk(@PathVariable(value = "tenent") String tenent,
+//                                           @RequestParam(value = "projection") String projection,
                                            @RequestBody @Valid Customer customer,
                                            @RequestHeader("user") String user,
                                            @RequestParam("timestamp") Timestamp timestamp
     ) throws FXDefaultException {
-        Resource resource = new Resource(riskService.calcRisk(projection, customer, user, timestamp));
+        Resource resource = new Resource(riskService.calcRisk(customer, user, timestamp));
         return ResponseEntity.ok(resource);
     }
 

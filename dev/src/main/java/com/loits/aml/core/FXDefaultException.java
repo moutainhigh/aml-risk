@@ -9,6 +9,7 @@ package com.loits.aml.core;
 import org.springframework.http.HttpStatus;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * 
@@ -19,6 +20,7 @@ import java.util.Date;
  * @author ranjithk
  * @since 2018-12-13
  * @version 1.0
+ * @edited minolid@i360.lk
  * 
  */
 public class FXDefaultException extends BaseException {
@@ -37,7 +39,6 @@ public class FXDefaultException extends BaseException {
 	}
 
 	public FXDefaultException(String errorCode, String errorShortDescription, String errorDescription, Date errorDate) {
-
 		super(errorCode, errorShortDescription, errorDescription, errorDate);
 		// TODO Auto-generated constructor stub
 	}
@@ -50,4 +51,9 @@ public class FXDefaultException extends BaseException {
 		super(errorCode, errorShortDescription, errorDescription, errorDate, htst);
 		// TODO Auto-generated constructor stub
 	}
+
+	public FXDefaultException(HttpStatus status, String errorShortDescription, String errorDescription, List<String> errors) {
+		super(status, errorShortDescription, errorDescription, errors);
+	}
 }
+
