@@ -1,16 +1,13 @@
 package com.loits.aml.services;
 
-import com.querydsl.core.types.Predicate;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.loits.aml.core.FXDefaultException;
+import com.redhat.aml.Customer;
+import com.redhat.aml.OnboardingCustomer;
+import com.redhat.aml.OverallRisk;
 
-/**
- * @author Minoli De Silva - Infinitum360
- * @version 1.0.0
- */
+import java.sql.Timestamp;
 
 public interface AmlRiskService {
-
-    Page<?> getAll(Pageable pageable, Predicate predicate, String bookmarks, String projection);
-
+    Object calcRisk(Customer customer, String user, Timestamp timestamp) throws FXDefaultException;
+    Object calcOnboardingRisk(OnboardingCustomer customer, String user, Timestamp timestamp) throws FXDefaultException;
 }

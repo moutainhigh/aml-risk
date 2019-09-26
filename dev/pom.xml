@@ -259,6 +259,20 @@
             <version>2.2.8.RELEASE</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.kie.server/kie-server-api -->
+        <dependency>
+            <groupId>org.kie.server</groupId>
+            <artifactId>kie-server-api</artifactId>
+            <version>7.24.0.Final</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.kie.server/kie-server-client -->
+        <dependency>
+            <groupId>org.kie.server</groupId>
+            <artifactId>kie-server-client</artifactId>
+            <version>7.24.0.Final</version>
+        </dependency>
+
     </dependencies>
     <dependencyManagement>
         <dependencies>

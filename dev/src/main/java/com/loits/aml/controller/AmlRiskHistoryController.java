@@ -1,7 +1,7 @@
 package com.loits.aml.controller;
 
 import com.loits.aml.domain.AmlRisk;
-import com.loits.aml.services.AmlRiskService;
+import com.loits.aml.services.AmlRiskHistoryService;
 import com.querydsl.core.types.Predicate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,7 +27,7 @@ public class AmlRiskHistoryController {
     Logger logger = LogManager.getLogger(AmlRiskHistoryController.class);
 
     @Autowired
-    AmlRiskService channelRiskService;
+    AmlRiskHistoryService channelRiskService;
 
     @GetMapping(path = "/{tenent}", produces = "application/json")
     public @ResponseBody
