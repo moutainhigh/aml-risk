@@ -17,7 +17,17 @@ public class Product {
     private String productName;
     private String productDescription;
     private Byte status;
+    private Double defaultRate;
 
+    @Basic
+    @Column(name = "default_rate", nullable = false)
+    public Double getDefaultRate() {
+        return defaultRate;
+    }
+
+    public void setDefaultRate(Double defaultRate) {
+        this.defaultRate = defaultRate;
+    }
 
     @Basic
     @Id

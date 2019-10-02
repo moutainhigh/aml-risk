@@ -1,11 +1,13 @@
 package com.loits.aml.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.loits.aml.core.BaseEntity;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.Objects;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Transaction extends BaseEntity {
     private Customer customer;
     private Timestamp txnDate;

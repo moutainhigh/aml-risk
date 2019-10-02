@@ -1,13 +1,17 @@
-package com.redhat.aml;
+package com.redhat.aml.sample;
 
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.loits.aml.core.BaseEntity;
+import com.redhat.aml.Address;
 import lombok.Data;
 
-import javax.validation.constraints.Null;
+import java.sql.Timestamp;
 import java.util.Collection;
-import java.util.List;
 
 @Data
-public class OnboardingCustomer {
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class Customer {
     private Long id;
     private String surname;
     private String otherNames;
@@ -19,12 +23,16 @@ public class OnboardingCustomer {
     private Byte withinBranchServiceArea;
     private String residency;
     private Byte status;
+    private String createdBy;
+    private Timestamp createdOn;
     private Long version;
     private Collection<Address> addressesByCustomerCode;
-    private String industry;
-    private String occupation;
-    private String customerType;
-    private String module;
+    private Industry industry;
+    private Occupation occupation;
+    private CustomerType customerType;
+    private Module module;
     private Double annualTurnover;
     private String riskRating;
+
+
 }

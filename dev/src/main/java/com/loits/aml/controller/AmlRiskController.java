@@ -2,7 +2,6 @@ package com.loits.aml.controller;
 
 import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.services.AmlRiskService;
-import com.redhat.aml.Customer;
 import com.redhat.aml.OnboardingCustomer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
@@ -30,22 +29,22 @@ public class AmlRiskController {
     /**
      * Overall Risk Calculation
      * @param tenent
-     * @param customer
      * @param user
      * @param timestamp
      * @return
      * @throws FXDefaultException
      */
-//    @PostMapping(path= "/{tenent}", produces = "application/json")
-//    public ResponseEntity<?> calculateRisk(@PathVariable(value = "tenent") String tenent,
-//                                           @RequestParam(value = "projection") String projection,
-//                                           @RequestBody @Valid Customer customer,
-//                                           @RequestHeader("user") String user,
-//                                           @RequestParam("timestamp") Timestamp timestamp
-//    ) throws FXDefaultException {
-//        Resource resource = new Resource(amlRiskService.calcRisk(customer, user, timestamp));
-//        return ResponseEntity.ok(resource);
-//    }
+    @PostMapping(path= "/{tenent}/{nic}", produces = "application/json")
+    public ResponseEntity<?> calculateRisk(@PathVariable(value = "tenent") String tenent,
+                                           @PathVariable(value="nic") String nic,
+                                           @RequestParam(value = "projection") String projection,
+                                           @RequestHeader("user") String user,
+                                           @RequestParam("timestamp") Timestamp timestamp //Remove timestamp
+    ) throws FXDefaultException {
+        Resource resource = new Resource(amlRiskService.calcRisk(nic, user, timestamp));
+        return ResponseEntity.ok(resource);
+    }
+
 
     @PostMapping(path= "/{tenent}", produces = "application/json")
     public ResponseEntity<?> calculateRiskOnOnboarding(@PathVariable(value = "tenent") String tenent,

@@ -28,3 +28,14 @@ databaseChangeLog:
             name: status
             type: TINYINT(3)
         tableName: product
+
+- changeSet:
+      id: 2
+      author: minolid@i360.lk
+      changes:
+          - addColumn:
+                columns:
+                    - column:
+                          name: defaultRate
+                          type: BIGINT
+                tableName: product
