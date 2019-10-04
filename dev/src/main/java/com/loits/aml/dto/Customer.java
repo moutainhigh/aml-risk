@@ -1,9 +1,7 @@
-package com.redhat.aml.sample;
+package com.loits.aml.dto;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.loits.aml.core.BaseEntity;
-import com.redhat.aml.Address;
 import lombok.Data;
 
 import java.sql.Timestamp;
@@ -30,7 +28,6 @@ public class Customer {
     private Industry industry;
     private Occupation occupation;
     private CustomerType customerType;
-    private Module module;
     private Double annualTurnover;
     private String riskRating;
 

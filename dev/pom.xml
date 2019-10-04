@@ -437,22 +437,22 @@
     </repositories>
 
     <profiles>
-        <profile>
-            <id>dev</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-                <property>
-                    <name>env</name>
-                    <value>dev</value>
-                </property>
-            </activation>
-            <properties>
+<!--        <profile>-->
+<!--            <id>dev</id>-->
+<!--            <activation>-->
+<!--                <activeByDefault>true</activeByDefault>-->
+<!--                <property>-->
+<!--                    <name>env</name>-->
+<!--                    <value>dev</value>-->
+<!--                </property>-->
+<!--            </activation>-->
+<!--            <properties>-->
 
-                <!--Test properties-->
-                <app.port.name>server.port</app.port.name>
-                <app.port>8094</app.port>
-            </properties>
-        </profile>
+<!--                &lt;!&ndash;Test properties&ndash;&gt;-->
+<!--                <app.port.name>server.port</app.port.name>-->
+<!--                <app.port>8094</app.port>-->
+<!--            </properties>-->
+<!--        </profile>-->
     </profiles>
 
 </project>

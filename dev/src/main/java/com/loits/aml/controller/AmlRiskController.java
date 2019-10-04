@@ -2,14 +2,13 @@ package com.loits.aml.controller;
 
 import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.services.AmlRiskService;
-import com.redhat.aml.OnboardingCustomer;
+import com.redhat.aml.RiskCustomer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.sql.Timestamp;
 
 /**
  * Managing Riskrelated operations
@@ -30,18 +29,18 @@ public class AmlRiskController {
      * Overall Risk Calculation
      * @param tenent
      * @param user
-     * @param timestamp
      * @return
      * @throws FXDefaultException
      */
-    @PostMapping(path= "/{tenent}/{nic}", produces = "application/json")
+    @GetMapping(path= "/{tenent}", produces = "application/json")
     public ResponseEntity<?> calculateRisk(@PathVariable(value = "tenent") String tenent,
-                                           @PathVariable(value="nic") String nic,
                                            @RequestParam(value = "projection") String projection,
-                                           @RequestHeader("user") String user,
-                                           @RequestParam("timestamp") Timestamp timestamp //Remove timestamp
+                                           @RequestParam(value= "customer_code", required = true) String customerCode,
+                                           @RequestParam(value= "module" , required = true) String module,
+                                           @RequestParam(value= "other_identity") String otherIdentity,
+                                           @RequestHeader("user") String user
     ) throws FXDefaultException {
-        Resource resource = new Resource(amlRiskService.calcRisk(nic, user, timestamp));
+        Resource resource = new Resource(amlRiskService.calcRisk(customerCode, module, otherIdentity, user));
         return ResponseEntity.ok(resource);
     }
 
@@ -49,11 +48,10 @@ public class AmlRiskController {
     @PostMapping(path= "/{tenent}", produces = "application/json")
     public ResponseEntity<?> calculateRiskOnOnboarding(@PathVariable(value = "tenent") String tenent,
                                                        @RequestParam(value = "projection") String projection,
-                                                       @RequestBody @Valid OnboardingCustomer customer,
-                                                       @RequestHeader("user") String user,
-                                                       @RequestParam("timestamp") Timestamp timestamp
+                                                       @RequestBody @Valid RiskCustomer customer,
+                                                       @RequestHeader("user") String user
     ) throws FXDefaultException {
-        Resource resource = new Resource(amlRiskService.calcOnboardingRisk(customer, user, timestamp));
+        Resource resource = new Resource(amlRiskService.calcOnboardingRisk(customer, user));
         return ResponseEntity.ok(resource);
     }
 }

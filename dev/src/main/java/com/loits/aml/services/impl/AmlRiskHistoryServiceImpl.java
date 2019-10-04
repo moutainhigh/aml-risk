@@ -37,7 +37,7 @@ public class AmlRiskHistoryServiceImpl implements AmlRiskHistoryService {
                           Predicate predicate,
                           String bookmarks,
                           String projection) {
-        logger.debug("ChannelRisk find CRUD operation started");
+        logger.debug("AMLRisk find CRUD operation started");
 
         BooleanBuilder bb = new BooleanBuilder(predicate);
         QAmlRisk amlRisk = QAmlRisk.amlRisk;
@@ -52,7 +52,7 @@ public class AmlRiskHistoryServiceImpl implements AmlRiskHistoryService {
         }
 
         return amlRiskRepository.findAll(bb.getValue(), pageable).map(
-                channelRisk1 -> projectionFactory.createProjection(LovAmlRisk.class, channelRisk1)
+                amlrisk1 -> projectionFactory.createProjection(LovAmlRisk.class, amlrisk1)
         );
     }
 

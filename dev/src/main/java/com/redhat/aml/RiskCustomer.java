@@ -1,13 +1,12 @@
 package com.redhat.aml;
 
+import com.loits.aml.dto.Address;
 import lombok.Data;
 
-import javax.validation.constraints.Null;
 import java.util.Collection;
-import java.util.List;
 
 @Data
-public class OnboardingCustomer {
+public class RiskCustomer {
     private Long id;
     private String surname;
     private String otherNames;
