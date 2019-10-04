@@ -1,4 +1,4 @@
-package com.redhat.aml.sample;
+package com.loits.aml.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
@@ -20,6 +20,4 @@ public class Module {
     private String createdBy;
     private Timestamp createdOn;
     private Long version;
-
-
 }
