@@ -8,6 +8,7 @@
     <artifactId>aml-risk</artifactId>
     <name>LOIT AML Risk Service</name>
     <description>Risk Creation and Management</description>
+    <version>0.0.1-SNAPSHOT</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
