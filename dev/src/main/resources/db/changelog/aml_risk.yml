@@ -50,23 +50,11 @@ databaseChangeLog:
                 name: created_by
                 type: VARCHAR(45)
             - column:
-                name: from_date
-                type: DATETIME
-            - column:
-                name: to_date
-                type: DATETIME
+                name: risk
+                type: DOUBLE
             - column:
                 name: risk_rating
                 type: VARCHAR(45)
             tableName: aml_risk
-- changeSet:
-    id: 2
-    author: Minoli
-    changes:
-      - addColumn:
-          columns:
-            - column:
-                name: risk
-                type: DOUBLE
-          tableName: aml_risk
+
 

@@ -1,6 +1,7 @@
-package com.redhat.aml;
+package com.loits.aml.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.redhat.aml.GeoLocation;
 import lombok.Data;
 
 import java.sql.Timestamp;
