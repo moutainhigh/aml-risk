@@ -1,0 +1,47 @@
+databaseChangeLog:
+- changeSet:
+    id: 1
+    author: minolid@i360.lk (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            startWith: 1
+            constraints:
+              primaryKey: true
+            name: customer_code
+            type: BIGINT
+        - column:
+            name: surname
+            type: VARCHAR(45)
+        - column:
+            name: other_names
+            type: VARCHAR(45)
+        - column:
+            name: title
+            type: VARCHAR(45)
+        - column:
+            name: nic
+            type: VARCHAR(45)
+        - column:
+            name: old_nic
+            type: VARCHAR(45)
+        - column:
+            name: client_category
+            type: VARCHAR(45)
+        - column:
+            name: status
+            type: TINYINT(3)
+        tableName: customer
+
+- changeSet:
+      id: 2
+      author: Minoli
+      changes:
+          - renameColumn:
+                columnDataType: BIGINT
+                newColumnName: id
+                oldColumnName: customer_code
+                tableName: customer
+
