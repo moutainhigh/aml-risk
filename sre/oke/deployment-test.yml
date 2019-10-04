@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: aml-risk-test
+  namespace: fusionx-aml 
   labels:
     app: aml-risk-test
 spec:

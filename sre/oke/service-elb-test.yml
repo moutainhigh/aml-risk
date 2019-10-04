@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: aml-risk-test
+  namespace: fusionx-aml 
   labels:
     app: aml-risk-test
 spec:

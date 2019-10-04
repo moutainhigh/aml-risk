@@ -286,7 +286,7 @@ deploy-to-oke-develop:
       name: rolling update aml-risk-deployment-dev
   #    command: set image deployment/aml-risk-dev aml-risk-dev=fra.ocir.io/lolctech/fxapiuser/aml-risk-dev:latest
   #    above real rolling update method is temporarily remove untill decide a deployment jar project versioning
-      command: patch deployment aml-risk-dev -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk-dev","env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
+      command: patch deployment aml-risk-dev -n=fusionx-aml -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk-dev", "env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
 
   - wercker/kubectl@3.9.0:
       name: aml-risk-service-dev
@@ -340,7 +340,7 @@ deploy-to-oke-test:
       name: rolling update aml-risk-deployment-test
   #    command: set image deployment/aml-risk-test aml-risk-test=fra.ocir.io/lolctech/fxapiuser/aml-risk-test:latest
   #    above real rolling update method is temporarily remove untill decide a deployment jar project versioning
-      command: patch deployment aml-risk-test -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk-test","env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
+      command: patch deployment aml-risk-test -n=fusionx-aml -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk-test", "env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
 
   - wercker/kubectl@3.9.0:
       name: aml-risk-service-test
@@ -394,7 +394,7 @@ deploy-to-oke-uat:
       name: rolling update aml-risk-deployment-uat
   #    command: set image deployment/aml-risk-uat aml-risk-uat=fra.ocir.io/lolctech/fxapiuser/aml-risk-uat:latest
   #    above real rolling update method is temporarily remove untill decide a deployment jar project versioning
-      command: patch deployment aml-risk-uat -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk-uat","env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
+      command: patch deployment aml-risk-uat -n=fusionx-aml -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk-uat", "env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
 
   - wercker/kubectl@3.9.0:
       name: aml-risk-service-uat
@@ -448,7 +448,7 @@ deploy-to-oke-master:
       name: rolling update aml-risk-deployment-master
   #    command: set image deployment/aml-risk-master aml-risk-master=fra.ocir.io/lolctech/fxapiuser/aml-risk-master:latest
   #    above rreal rolling update method is temporarily remove untill decide a deployment jar project versioning
-      command: patch deployment aml-risk-master -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk-master","env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
+      command: patch deployment aml-risk-master -n=fusionx-aml -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk-master", "env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
 
   - wercker/kubectl@3.9.0:
       name: aml-risk-service-master

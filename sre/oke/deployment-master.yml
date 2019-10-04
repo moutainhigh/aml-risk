@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: aml-risk-master
+  namespace: fusionx-aml
   labels:
     app: aml-risk-master
 spec:

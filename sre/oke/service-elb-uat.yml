@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: aml-risk-uat
+  namespace: fusionx-aml 
   labels:
     app: aml-risk-uat
 spec:

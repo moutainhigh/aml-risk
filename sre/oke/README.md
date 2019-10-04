@@ -1,2 +1,2 @@
-aml-risk.git
+aml-notification.git
 
