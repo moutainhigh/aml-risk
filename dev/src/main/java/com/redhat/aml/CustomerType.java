@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CustomerType {
+    private Long id;
     private String customerType;
     private Double risk;
     private Boolean occupationApplicable;
@@ -16,7 +17,8 @@ public class CustomerType {
     public CustomerType() {
     }
 
-    public CustomerType(String customerType, Double risk, Boolean occupationApplicable, Boolean highRisk, String module, Double weightage) {
+    public CustomerType(Long id, String customerType, Double risk, Boolean occupationApplicable, Boolean highRisk, String module, Double weightage) {
+        this.id = id;
         this.customerType = customerType;
         this.risk = risk;
         this.occupationApplicable = occupationApplicable;
