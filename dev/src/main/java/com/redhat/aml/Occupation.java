@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Occupation {
+    private Long id;
     private String isoCode;
     private Double risk;
     private Boolean industryApplicable;
@@ -16,7 +17,8 @@ public class Occupation {
     public Occupation() {
     }
 
-    public Occupation(String isoCode, Double risk, Boolean industryApplicable, Boolean highRisk, String module, Double weightage) {
+    public Occupation(Long id, String isoCode, Double risk, Boolean industryApplicable, Boolean highRisk, String module, Double weightage) {
+        this.id = id;
         this.isoCode = isoCode;
         this.risk = risk;
         this.industryApplicable = industryApplicable;

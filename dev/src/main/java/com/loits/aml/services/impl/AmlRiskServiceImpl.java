@@ -53,7 +53,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         HashMap<String, String> headers = new HashMap<>();
         headers.put("user", user);
         HttpResponse httpResponse = sendPostRequest(riskCustomer, "http://localhost:8099/aml-category-risk/v1/AnRkr?projection", "Aml-Category-Risk", headers);
-        if(httpResponse.getStatusLine().getStatusCode()==200) {
+        if (httpResponse.getStatusLine().getStatusCode() == 200) {
             ObjectMapper objectMapper = new ObjectMapper();
             String jsonString = null;
             CustomerRisk customerRisk = null;
@@ -65,7 +65,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             }
             OverallRisk overallRisk = new OverallRisk(riskCustomer.getId(), riskCustomer.getModule(), customerRisk.getCalculatedRisk(), 0.0, 0.0, customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
             return calculateOverallRisk(overallRisk);
-        }else{
+        } else {
             throw new FXDefaultException();
         }
     }
@@ -78,37 +78,44 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         String jsonString = null;
         List<Customer> customerList = null;
 
-        CustomerRisk customerRisk = calculateCustomerRisk(customerCode, module);
+        CustomerRisk customerRisk = calculateCustomerRisk(customerCode, module, user);
 
-        ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), module);
+        ChannelRisk channelRisk = calculateChannelRisk(customerRisk.getCustomerCode(), module, user);
 
-        ChannelRisk channelRisk = calculateChannelRisk(customerRisk.getCustomerCode(), module);
+        ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), module, user);
 
 
-            if(customerRisk!=null && productRisk !=null && channelRisk !=null){
-                OverallRisk overallRisk = new OverallRisk(customerRisk.getCustomerCode(), module, customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(), channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
-                overallRisk = calculateOverallRisk(overallRisk);
-
-                AmlRisk amlRisk = new AmlRisk();
-                amlRisk.setCreatedOn(new Timestamp(new Date().getTime()));
-                amlRisk.setRiskRating(user);
-                amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
-                amlRisk.setChannelRisk(overallRisk.getChannelRisk());
-                amlRisk.setProductRisk(overallRisk.getProductRisk());
-                amlRisk.setRisk(overallRisk.getCalculatedRisk());
-                amlRisk.setRiskRating(overallRisk.getRiskRating());
-                //amlRisk.setCustomerRiskId();
-                //amlRisk.setChannelRiskId();
-                //amlRisk.setProductRiskId();
-                return  overallRisk;
-
-            }else{
-                throw new FXDefaultException();
+        if (customerRisk.getCalculatedRisk() != null) {
+            if (channelRisk.getCalculatedRisk() == null) {
+                channelRisk.setCalculatedRisk(0.0);
             }
+            if (productRisk.getCalculatedRisk() == null) {
+                productRisk.setCalculatedRisk(0.0);
+            }
+            OverallRisk overallRisk = new OverallRisk(customerRisk.getCustomerCode(), module, customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(), channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
+            overallRisk = calculateOverallRisk(overallRisk);
+
+            AmlRisk amlRisk = new AmlRisk();
+            amlRisk.setCreatedOn(new Timestamp(new Date().getTime()));
+            amlRisk.setRiskRating(user);
+            amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
+            amlRisk.setChannelRisk(overallRisk.getChannelRisk());
+            amlRisk.setProductRisk(overallRisk.getProductRisk());
+            amlRisk.setRisk(overallRisk.getCalculatedRisk());
+            amlRisk.setRiskRating(overallRisk.getRiskRating());
+            amlRisk.setCustomerRiskId(customerRisk.getId());
+            amlRisk.setChannelRiskId(channelRisk.getId());
+            amlRisk.setProductRiskId(productRisk.getId());
+
+            return overallRisk;
+
+        } else {
+            throw new FXDefaultException();
+        }
     }
 
 
-    public CustomerRisk calculateCustomerRisk(String customerCode, String module) throws FXDefaultException {
+    public CustomerRisk calculateCustomerRisk(String customerCode, String module, String user) throws FXDefaultException {
         List<ModuleCustomer> moduleCustomerList = null;
         Customer customer = null;
         ModuleCustomer moduleCustomer = null;
@@ -145,11 +152,14 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             riskCustomer.setModule(moduleCustomer.getModule().getCode());
             riskCustomer.setPepsEnabled(customer.getPepsEnabled());
             riskCustomer.setWithinBranchServiceArea(customer.getWithinBranchServiceArea());
+            riskCustomer.setIndustryId(customer.getIndustry().getId());
+            riskCustomer.setCustomerTypeId(customer.getCustomerType().getId());
+            riskCustomer.setOccupationId(customer.getOccupation().getId());
         } catch (Exception e) {
             throw new FXDefaultException();
         }
         HashMap<String, String> headers = new HashMap<>();
-        headers.put("user", "testUser");
+        headers.put("user", user);
         HttpResponse res = sendPostRequest(riskCustomer, "http://localhost:8099/aml-category-risk/v1/AnRkr?projection", "Aml-Category-Risk", headers);
         CustomerRisk customerRisk = null;
         try {
@@ -165,7 +175,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         return customerRisk;
     }
 
-    public ProductRisk calculateProductRisk(Long customerId, String module) throws FXDefaultException {
+    public ProductRisk calculateProductRisk(Long customerId, String module, String user) throws FXDefaultException {
         List<CustomerProduct> customerProductList = null;
         ObjectMapper objectMapper = new ObjectMapper();
 
@@ -176,10 +186,10 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         productsParameters.put("customer.id", customerId.toString());
 
         //Send request to Customer Service
-        RestResponsePage amlProductsResultsPage = sendServiceRequest(amlServiceProductsUrl, productsParameters, null, "AML");
+        ArrayList list = sendServiceRequest2(amlServiceProductsUrl, productsParameters, null, "AML");
 
-        customerProductList = objectMapper.convertValue(amlProductsResultsPage.getContent(), new TypeReference<List<CustomerProduct>>() {});
-
+        customerProductList = objectMapper.convertValue(list, new TypeReference<List<CustomerProduct>>() {
+        });
 
         ProductRisk productRisk = new ProductRisk();
         productRisk.setCustomerCode(customerId);
@@ -189,7 +199,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         List<Product> productList = new ArrayList<>();
         for (CustomerProduct cp : customerProductList) {
             Product product = new Product();
-            product.setProductName(cp.getProduct().getCode());
+            product.setCode(cp.getProduct().getCode());
             product.setCommencedDate(cp.getCommenceDate());
             product.setTerminatedDate(cp.getTerminateDate());
             product.setInterestRate(cp.getRate());
@@ -219,7 +229,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         return productRisk;
     }
 
-    public ChannelRisk calculateChannelRisk(Long customerId, String module) throws FXDefaultException {
+    public ChannelRisk calculateChannelRisk(Long customerId, String module, String user) throws FXDefaultException {
         ObjectMapper objectMapper = new ObjectMapper();
         List<Transaction> transactionList = null;
 
@@ -230,10 +240,11 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         transactionParameters.put("customer.id", customerId.toString());
 
         //Send request to Customer Service
-        RestResponsePage amlTransactionResultsPage = sendServiceRequest(amlServiceTransactionUrl, transactionParameters, null, "AML");
+        ArrayList<Object> list = sendServiceRequest2(amlServiceTransactionUrl, transactionParameters, null, "AML");
         try {
-            transactionList = objectMapper.convertValue(amlTransactionResultsPage.getContent(), new TypeReference<List<Transaction>>() {});
-        }catch(Exception e){
+            transactionList = objectMapper.convertValue(list, new TypeReference<List<Transaction>>() {
+            });
+        } catch (Exception e) {
             throw new FXDefaultException();
         }
 
@@ -245,6 +256,10 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             channelUsage.setDate(t.getTxnDate());
             channelUsage.setChannel(t.getChannel().getCode());
             channelUsageList.add(channelUsage);
+            channelUsage.setAmount(t.getAmount());
+            channelUsage.setTxnReference(t.getTxnReference());
+            channelUsage.setTxnId(t.getId());
+            channelUsage.setRemark(t.getRemarks());
         }
         ChannelRisk channelRisk = new ChannelRisk();
         channelRisk.setModule(module);
@@ -252,7 +267,9 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         channelRisk.setCustomerCode(customerId);
         channelRisk.setToday(new Timestamp(new Date().getTime()));
 
-        HttpResponse httpResponse = sendPostRequest(channelRisk, "http://localhost:8096/aml-channel-risk/v1/AnRkr?projection&timestamp=2019-05-29%2013%3A00%3A14", "ChannelRisk", null);
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("user", user);
+        HttpResponse httpResponse = sendPostRequest(channelRisk, "http://localhost:8096/aml-channel-risk/v1/AnRkr?projection&timestamp=2019-05-29%2013%3A00%3A14", "ChannelRisk", headers);
 
         try {
             String jsonString = EntityUtils.toString(httpResponse.getEntity());
@@ -260,9 +277,8 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return  channelRisk;
+        return channelRisk;
     }
-
 
 
     public OverallRisk calculateOverallRisk(OverallRisk overallRisk) throws FXDefaultException {
@@ -315,8 +331,8 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         HttpEntity stringEntity = new StringEntity(jsonString, ContentType.APPLICATION_JSON);
         httpReq.setEntity(stringEntity);
         httpReq.setHeader("Content-type", "application/json");
-        if(headers!=null){
-            for(Map.Entry<String,String> entry : headers.entrySet()){
+        if (headers != null) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
                 httpReq.setHeader(entry.getKey(), entry.getValue());
             }
         }
@@ -336,8 +352,8 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
         HttpGet httpReq = new HttpGet(url);
         httpReq.setHeader("Content-type", "application/json");
-        if(headers!=null){
-            for(Map.Entry<String,String> entry : headers.entrySet()){
+        if (headers != null) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
                 httpReq.setHeader(entry.getKey(), entry.getValue());
             }
         }
@@ -368,7 +384,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         }
 
         HttpResponse httpResponse = sendGetRequest(url, service, headers);
-        if(httpResponse.getStatusLine().getStatusCode()==200){
+        if (httpResponse.getStatusLine().getStatusCode() == 200) {
             try {
                 jsonString = EntityUtils.toString(httpResponse.getEntity());
                 restResponsePage = objectMapper.readValue(jsonString, RestResponsePage.class);
@@ -376,8 +392,40 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 throw new FXDefaultException();
             }
             return restResponsePage;
-        }else{
-            throw new FXDefaultException("","","",new Date(), HttpStatus.BAD_REQUEST);
+        } else {
+            throw new FXDefaultException("", "", "", new Date(), HttpStatus.BAD_REQUEST);
         }
     }
+
+    public ArrayList sendServiceRequest2(String serviceUrl, HashMap<String, String> parameters, HashMap<String, String> headers, String service) throws FXDefaultException {
+        URIBuilder builder;
+        String url = null;
+        String jsonString = null;
+        ArrayList list = null;
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            builder = new URIBuilder(serviceUrl);
+            for (Map.Entry<String, String> entry : parameters.entrySet()) {
+                builder.addParameter(entry.getKey(), entry.getValue());
+            }
+            url = builder.build().toString();
+        } catch (URISyntaxException e) {
+            throw new FXDefaultException();
+        }
+
+        HttpResponse httpResponse = sendGetRequest(url, service, headers);
+        if (httpResponse.getStatusLine().getStatusCode() == 200) {
+            try {
+                jsonString = EntityUtils.toString(httpResponse.getEntity());
+                list = objectMapper.readValue(jsonString, ArrayList.class);
+            } catch (IOException e) {
+                throw new FXDefaultException();
+            }
+            return list;
+        } else {
+            throw new FXDefaultException("", "", "", new Date(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
 }

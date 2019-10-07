@@ -10,8 +10,8 @@ import java.util.List;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Product {
-    private Long productCode;
-    private String productName;
+    private Long id;
+    private String code;
     private String module;
     private Date commencedDate;
     private Date terminatedDate;
