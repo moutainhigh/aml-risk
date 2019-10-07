@@ -83,8 +83,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         ChannelRisk channelRisk = calculateChannelRisk(customerRisk.getCustomerCode(), module, user);
 
         ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), module, user);
-
-
+        
         if (customerRisk.getCalculatedRisk() != null) {
             if (channelRisk.getCalculatedRisk() == null) {
                 channelRisk.setCalculatedRisk(0.0);
