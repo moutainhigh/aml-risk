@@ -9,6 +9,7 @@ import java.util.Collection;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Occupation {
+    private Long id;
     private String type;
     private String isoCode;
     private String occupation;

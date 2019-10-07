@@ -8,6 +8,7 @@ import java.util.List;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CustomerRisk {
+    private Long id;
     private Long customerCode;
     private String module;
     private Boolean pepsEnabled;
@@ -23,7 +24,8 @@ public class CustomerRisk {
     public CustomerRisk() {
     }
 
-    public CustomerRisk(Long customerCode, String module, Boolean pepsEnabled, Boolean withinBranchServiceArea, Industry industry, Occupation occupation, CustomerType customerType, Turnover turnover, String riskRating, Double calculatedRisk, List<GeoLocation> addresses, Double geoRisk) {
+    public CustomerRisk(Long id, Long customerCode, String module, Boolean pepsEnabled, Boolean withinBranchServiceArea, Industry industry, Occupation occupation, CustomerType customerType, Turnover turnover, Double calculatedRisk, List<GeoLocation> addresses, Double geoRisk) {
+        this.id = id;
         this.customerCode = customerCode;
         this.module = module;
         this.pepsEnabled = pepsEnabled;

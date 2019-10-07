@@ -10,6 +10,7 @@ import java.util.Collection;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CustomerType{
+    private Long id;
     private String code;
     private String description;
     private Double riskScore;
