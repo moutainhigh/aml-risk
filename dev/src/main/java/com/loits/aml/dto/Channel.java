@@ -17,7 +17,6 @@ public class Channel {
     private String code;
     private String channelName;
     private String channelDescription;
-    private String module;
     private Integer productCode;
     private Long version;
 

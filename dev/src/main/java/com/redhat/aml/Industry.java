@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Industry {
+    private Long id;
     private String isoCode;
     private Double risk;
     private String module;
@@ -14,7 +15,8 @@ public class Industry {
     public Industry() {
     }
 
-    public Industry(String isoCode, Double risk, String module, Double weightage) {
+    public Industry(Long id, String isoCode, Double risk, String module, Double weightage) {
+        this.id = id;
         this.isoCode = isoCode;
         this.risk = risk;
         this.module = module;

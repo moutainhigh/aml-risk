@@ -18,7 +18,6 @@ public class Transaction extends BaseEntity {
     private String remarks;
     private String createdBy;
     private Timestamp createdOn;
-    private String module;
     private Double amount;
     private String otherpartyName;
     private String sourceOfFunds;

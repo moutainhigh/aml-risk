@@ -20,6 +20,9 @@ public class RiskCustomer {
     private Byte status;
     private Long version;
     private Collection<Address> addressesByCustomerCode;
+    private Long industryId;
+    private Long occupationId;
+    private Long customerTypeId;
     private String industry;
     private String occupation;
     private String customerType;
