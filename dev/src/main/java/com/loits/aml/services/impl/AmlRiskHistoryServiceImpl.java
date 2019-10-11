@@ -1,6 +1,5 @@
 package com.loits.aml.services.impl;
 
-import com.loits.aml.domain.QAmlRisk;
 import com.loits.aml.repo.AmlRiskRepository;
 import com.loits.aml.services.AmlRiskHistoryService;
 import com.loits.aml.services.projections.LovAmlRisk;
@@ -40,7 +39,7 @@ public class AmlRiskHistoryServiceImpl implements AmlRiskHistoryService {
         logger.debug("AMLRisk find CRUD operation started");
 
         BooleanBuilder bb = new BooleanBuilder(predicate);
-        QAmlRisk amlRisk = QAmlRisk.amlRisk;
+        //QAmlRisk amlRisk = QAmlRisk.amlRisk;
 
         //split and separate ids sent as a string
         if (!StringUtils.isEmpty(bookmarks)) {
@@ -48,7 +47,7 @@ public class AmlRiskHistoryServiceImpl implements AmlRiskHistoryService {
             for (String id : bookmarks.split(",")) {
                 ids.add(Long.parseLong(id));
             }
-            bb.and(amlRisk.id.in(ids));
+            //bb.and(amlRisk.id.in(ids));
         }
 
         return amlRiskRepository.findAll(bb.getValue(), pageable).map(

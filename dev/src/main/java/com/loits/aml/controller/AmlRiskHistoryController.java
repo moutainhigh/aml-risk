@@ -35,7 +35,7 @@ public class AmlRiskHistoryController {
                             @PageableDefault(size = 10) Pageable pageable,
                             @QuerydslPredicate(root = AmlRisk.class) Predicate predicate,
                             @RequestParam(value = "bookmarks", required = false) String bookmarks,
-                            @RequestParam(name = "projection", defaultValue = "ChannelRiskLOV") String projection) {
+                            @RequestParam(name = "projection") String projection) {
 
         logger.debug(String.format("Loading Channel details.(Projection: %s )",
                 projection));
