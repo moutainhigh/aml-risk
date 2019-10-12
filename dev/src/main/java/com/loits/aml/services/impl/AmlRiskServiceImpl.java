@@ -9,8 +9,10 @@ import com.loits.aml.domain.AmlRisk;
 import com.loits.aml.dto.*;
 import com.loits.aml.dto.Transaction;
 import com.loits.aml.services.AmlRiskService;
+import com.loits.aml.services.KieService;
 import com.redhat.aml.*;
 import com.redhat.aml.Product;
+import net.bytebuddy.asm.Advice;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -21,18 +23,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.drools.core.command.runtime.BatchExecutionCommandImpl;
-import org.drools.core.command.runtime.rule.FireAllRulesCommand;
-import org.drools.core.command.runtime.rule.InsertObjectCommand;
-import org.kie.api.KieServices;
-import org.kie.api.command.KieCommands;
-import org.kie.api.runtime.ExecutionResults;
-import org.kie.server.api.marshalling.MarshallingFormat;
-import org.kie.server.api.model.ServiceResponse;
-import org.kie.server.client.KieServicesClient;
-import org.kie.server.client.KieServicesConfiguration;
-import org.kie.server.client.KieServicesFactory;
-import org.kie.server.client.RuleServicesClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -44,9 +35,8 @@ import java.util.*;
 @Service
 public class AmlRiskServiceImpl implements AmlRiskService {
 
-    private static KieServicesConfiguration conf;
-    private static KieServicesClient kieServicesClient;
-    private static final MarshallingFormat FORMAT = MarshallingFormat.JSON;
+    @Autowired
+    KieService kieService;
 
     @Override
     public Object calcOnboardingRisk(RiskCustomer riskCustomer, String user) throws FXDefaultException {
@@ -64,7 +54,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 throw new FXDefaultException();
             }
             OverallRisk overallRisk = new OverallRisk(riskCustomer.getId(), riskCustomer.getModule(), customerRisk.getCalculatedRisk(), 0.0, 0.0, customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
-            return calculateOverallRisk(overallRisk);
+            return kieService.getOverallRisk(overallRisk);
         } else {
             throw new FXDefaultException();
         }
@@ -83,7 +73,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         ChannelRisk channelRisk = calculateChannelRisk(customerRisk.getCustomerCode(), module, user);
 
         ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), module, user);
-        
+
         if (customerRisk.getCalculatedRisk() != null) {
             if (channelRisk.getCalculatedRisk() == null) {
                 channelRisk.setCalculatedRisk(0.0);
@@ -92,7 +82,8 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 productRisk.setCalculatedRisk(0.0);
             }
             OverallRisk overallRisk = new OverallRisk(customerRisk.getCustomerCode(), module, customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(), channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
-            overallRisk = calculateOverallRisk(overallRisk);
+            overallRisk = kieService.getOverallRisk(overallRisk);
+
 
             AmlRisk amlRisk = new AmlRisk();
             amlRisk.setCreatedOn(new Timestamp(new Date().getTime()));
@@ -177,6 +168,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
     public ProductRisk calculateProductRisk(Long customerId, String module, String user) throws FXDefaultException {
         List<CustomerProduct> customerProductList = null;
         ObjectMapper objectMapper = new ObjectMapper();
+        ProductRisk productRisk=new ProductRisk();
 
         //Get the products for customer
         //Request parameters to AML Service
@@ -190,47 +182,52 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         customerProductList = objectMapper.convertValue(list, new TypeReference<List<CustomerProduct>>() {
         });
 
-        ProductRisk productRisk = new ProductRisk();
-        productRisk.setCustomerCode(customerId);
-        productRisk.setModule(module);
-        productRisk.setToday(new Date());
+        if(customerProductList.size()>0){
+            productRisk.setCustomerCode(customerId);
+            productRisk.setModule(module);
+            productRisk.setToday(new Date());
 
-        List<Product> productList = new ArrayList<>();
-        for (CustomerProduct cp : customerProductList) {
-            Product product = new Product();
-            product.setCode(cp.getProduct().getCode());
-            product.setCommencedDate(cp.getCommenceDate());
-            product.setTerminatedDate(cp.getTerminateDate());
-            product.setInterestRate(cp.getRate());
-            product.setValue(cp.getValue());
-            product.setDefaultRate(cp.getProduct().getDefaultRate());  //TODO uncomment when data added
-            //product.setDefaultRate(1.0);
-            List<com.redhat.aml.Transaction> ruleTransactionsList = new ArrayList<>();
-            for (Transaction tr : cp.getTransactions()) {
-                com.redhat.aml.Transaction transaction = new com.redhat.aml.Transaction();
-                transaction.setType(tr.getTxnType());
-                transaction.setAmount(tr.getAmount());
-                transaction.setDate(tr.getTxnDate());
-                ruleTransactionsList.add(transaction);
+            List<Product> productList = new ArrayList<>();
+            for (CustomerProduct cp : customerProductList) {
+                Product product = new Product();
+                product.setCode(cp.getProduct().getCode());
+                product.setCommencedDate(cp.getCommenceDate());
+                product.setTerminatedDate(cp.getTerminateDate());
+                product.setInterestRate(cp.getRate());
+                product.setValue(cp.getValue());
+                product.setDefaultRate(cp.getProduct().getDefaultRate());
+                //product.setDefaultRate(1.0);
+                List<com.redhat.aml.Transaction> ruleTransactionsList = new ArrayList<>();
+                for (Transaction tr : cp.getTransactions()) {
+                    com.redhat.aml.Transaction transaction = new com.redhat.aml.Transaction();
+                    transaction.setType(tr.getTxnType());
+                    transaction.setAmount(tr.getAmount());
+                    transaction.setDate(tr.getTxnDate());
+                    ruleTransactionsList.add(transaction);
+                }
+                product.setTransactions(ruleTransactionsList);
+                productList.add(product);
             }
-            product.setTransactions(ruleTransactionsList);
-            productList.add(product);
-        }
-        productRisk.setProducts(productList);
+            productRisk.setProducts(productList);
 
-        HttpResponse httpResponse = sendPostRequest(productRisk, "http://localhost:8095/aml-product-risk/v1/AnRkr?projection", "ProductRisk", null);
-        try {
-            String jsonString = EntityUtils.toString(httpResponse.getEntity());
-            productRisk = objectMapper.readValue(jsonString, ProductRisk.class);
-        } catch (IOException e) {
-            e.printStackTrace();
+            HttpResponse httpResponse = sendPostRequest(productRisk, "http://localhost:8095/aml-product-risk/v1/AnRkr?projection", "ProductRisk", null);
+            try {
+                String jsonString = EntityUtils.toString(httpResponse.getEntity());
+                productRisk = objectMapper.readValue(jsonString, ProductRisk.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }else{
+            productRisk.setCalculatedRisk(0.0);
         }
+
         return productRisk;
     }
 
     public ChannelRisk calculateChannelRisk(Long customerId, String module, String user) throws FXDefaultException {
         ObjectMapper objectMapper = new ObjectMapper();
         List<Transaction> transactionList = null;
+        ChannelRisk channelRisk = new ChannelRisk();
 
         //Get the transactions for customer
         //Request parameters to AML Service
@@ -247,70 +244,40 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             throw new FXDefaultException();
         }
 
-        //send Transaction list to ChannelRisk
-        List<ChannelUsage> channelUsageList = new ArrayList<>();
+        if (transactionList.size() > 0) {
+            //send Transaction list to ChannelRisk
+            List<ChannelUsage> channelUsageList = new ArrayList<>();
 
-        for (Transaction t : transactionList) {
-            ChannelUsage channelUsage = new ChannelUsage();
-            channelUsage.setDate(t.getTxnDate());
-            channelUsage.setChannel(t.getChannel().getCode());
-            channelUsageList.add(channelUsage);
-            channelUsage.setAmount(t.getAmount());
-            channelUsage.setTxnReference(t.getTxnReference());
-            channelUsage.setTxnId(t.getId());
-            channelUsage.setRemark(t.getRemarks());
-        }
-        ChannelRisk channelRisk = new ChannelRisk();
-        channelRisk.setModule(module);
-        channelRisk.setChannelUsage(channelUsageList);
-        channelRisk.setCustomerCode(customerId);
-        channelRisk.setToday(new Timestamp(new Date().getTime()));
+            for (Transaction t : transactionList) {
+                ChannelUsage channelUsage = new ChannelUsage();
+                channelUsage.setDate(t.getTxnDate());
+                channelUsage.setChannel(t.getChannel().getCode());
+                channelUsageList.add(channelUsage);
+                channelUsage.setAmount(t.getAmount());
+                channelUsage.setTxnReference(t.getTxnReference());
+                channelUsage.setTxnId(t.getId());
+                channelUsage.setRemark(t.getRemarks());
+            }
+            channelRisk.setModule(module);
+            channelRisk.setChannelUsage(channelUsageList);
+            channelRisk.setCustomerCode(customerId);
+            channelRisk.setToday(new Timestamp(new Date().getTime()));
 
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put("user", user);
-        HttpResponse httpResponse = sendPostRequest(channelRisk, "http://localhost:8096/aml-channel-risk/v1/AnRkr?projection&timestamp=2019-05-29%2013%3A00%3A14", "ChannelRisk", headers);
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("user", user);
+            HttpResponse httpResponse = sendPostRequest(channelRisk, "http://localhost:8096/aml-channel-risk/v1/AnRkr?projection&timestamp=2019-05-29%2013%3A00%3A14", "ChannelRisk", headers);
 
-        try {
-            String jsonString = EntityUtils.toString(httpResponse.getEntity());
-            channelRisk = objectMapper.readValue(jsonString, ChannelRisk.class);
-        } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                String jsonString = EntityUtils.toString(httpResponse.getEntity());
+                channelRisk = objectMapper.readValue(jsonString, ChannelRisk.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }else{
+            channelRisk.setCalculatedRisk(0.0);
         }
         return channelRisk;
-    }
-
-
-    public OverallRisk calculateOverallRisk(OverallRisk overallRisk) throws FXDefaultException {
-        conf = KieServicesFactory.newRestConfiguration("http://130.61.87.156:8080/kie-server/services/rest/server", "capi", "apic123");
-        conf.setMarshallingFormat(FORMAT);
-        kieServicesClient = KieServicesFactory.newKieServicesClient(conf);
-
-        //Kie API
-        String containerId = "AML_1.0.0-SNAPSHOT";
-        System.out.println("== Sending commands to the server ==");
-        RuleServicesClient rulesClient = kieServicesClient.getServicesClient(RuleServicesClient.class);
-        KieCommands commandsFactory = KieServices.Factory.get().getCommands();
-
-        BatchExecutionCommandImpl command = new BatchExecutionCommandImpl();
-        command.setLookup("kie-session");
-
-        InsertObjectCommand insertObjectCommand = new InsertObjectCommand(overallRisk);
-        FireAllRulesCommand fireAllRulesCommand = new FireAllRulesCommand();
-
-        command.addCommand(insertObjectCommand);
-        command.addCommand(fireAllRulesCommand);
-        command.addCommand(commandsFactory.newGetObjects("OverallRisk"));
-
-        ServiceResponse<ExecutionResults> response = rulesClient.executeCommandsWithResults(containerId, command);
-        ArrayList obj = (ArrayList) response.getResult().getValue("OverallRisk");
-        System.out.println();
-        OverallRisk calculatedOverallRisk = (OverallRisk) obj.get(0);
-
-        if (calculatedOverallRisk.getCalculatedRisk() == null) {
-            throw new FXDefaultException();
-        }
-
-        return calculatedOverallRisk;
     }
 
 
