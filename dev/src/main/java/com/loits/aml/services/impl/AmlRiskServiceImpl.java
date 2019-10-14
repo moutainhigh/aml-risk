@@ -8,11 +8,11 @@ import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.domain.AmlRisk;
 import com.loits.aml.dto.*;
 import com.loits.aml.dto.Transaction;
+import com.loits.aml.repo.AmlRiskRepository;
 import com.loits.aml.services.AmlRiskService;
 import com.loits.aml.services.KieService;
 import com.redhat.aml.*;
 import com.redhat.aml.Product;
-import net.bytebuddy.asm.Advice;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -37,6 +37,9 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
     @Autowired
     KieService kieService;
+
+    @Autowired
+    AmlRiskRepository amlRiskRepository;
 
     @Override
     public Object calcOnboardingRisk(RiskCustomer riskCustomer, String user) throws FXDefaultException {
@@ -87,16 +90,17 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
             AmlRisk amlRisk = new AmlRisk();
             amlRisk.setCreatedOn(new Timestamp(new Date().getTime()));
-            amlRisk.setRiskRating(user);
+            amlRisk.setCreatedBy(user);
+            amlRisk.setRiskRating(overallRisk.getRiskRating());
             amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
             amlRisk.setChannelRisk(overallRisk.getChannelRisk());
             amlRisk.setProductRisk(overallRisk.getProductRisk());
             amlRisk.setRisk(overallRisk.getCalculatedRisk());
-            amlRisk.setRiskRating(overallRisk.getRiskRating());
             amlRisk.setCustomerRiskId(customerRisk.getId());
             amlRisk.setChannelRiskId(channelRisk.getId());
             amlRisk.setProductRiskId(productRisk.getId());
 
+            amlRiskRepository.save(amlRisk);
             return overallRisk;
 
         } else {
@@ -250,13 +254,15 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
             for (Transaction t : transactionList) {
                 ChannelUsage channelUsage = new ChannelUsage();
-                channelUsage.setDate(t.getTxnDate());
+                channelUsage.setChannelId(t.getChannel().getId());
                 channelUsage.setChannel(t.getChannel().getCode());
-                channelUsageList.add(channelUsage);
+                channelUsage.setChannelName(t.getChannel().getChannelName());
+                channelUsage.setChannelDescription(t.getChannel().getChannelDescription());
+                channelUsage.setDate(t.getTxnDate());
                 channelUsage.setAmount(t.getAmount());
-                channelUsage.setTxnReference(t.getTxnReference());
-                channelUsage.setTxnId(t.getId());
-                channelUsage.setRemark(t.getRemarks());
+
+                channelUsageList.add(channelUsage);
+
             }
             channelRisk.setModule(module);
             channelRisk.setChannelUsage(channelUsageList);

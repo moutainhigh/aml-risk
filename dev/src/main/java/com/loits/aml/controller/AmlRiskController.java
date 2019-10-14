@@ -38,7 +38,7 @@ public class AmlRiskController {
                                            @RequestParam(value= "customer_code", required = true) String customerCode,
                                            @RequestParam(value= "module" , required = true) String module,
                                            @RequestParam(value= "other_identity") String otherIdentity,
-                                           @RequestHeader("user") String user
+                                           @RequestHeader(value = "user", defaultValue = "sysUser") String user
     ) throws FXDefaultException {
         Resource resource = new Resource(amlRiskService.calcRisk(customerCode, module, otherIdentity, user));
         return ResponseEntity.ok(resource);
@@ -49,7 +49,7 @@ public class AmlRiskController {
     public ResponseEntity<?> calculateRiskOnOnboarding(@PathVariable(value = "tenent") String tenent,
                                                        @RequestParam(value = "projection") String projection,
                                                        @RequestBody @Valid RiskCustomer customer,
-                                                       @RequestHeader("user") String user
+                                                       @RequestHeader(value = "user", defaultValue = "sysUser") String user
     ) throws FXDefaultException {
         Resource resource = new Resource(amlRiskService.calcOnboardingRisk(customer, user));
         return ResponseEntity.ok(resource);

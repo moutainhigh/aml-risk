@@ -31,6 +31,9 @@
 
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
+
+        <!-- application properties-->
+        <buildNo>-1 (dev)</buildNo>
     </properties>
 
     <dependencies>
@@ -438,22 +441,39 @@
     </repositories>
 
     <profiles>
-<!--        <profile>-->
-<!--            <id>dev</id>-->
-<!--            <activation>-->
-<!--                <activeByDefault>true</activeByDefault>-->
-<!--                <property>-->
-<!--                    <name>env</name>-->
-<!--                    <value>dev</value>-->
-<!--                </property>-->
-<!--            </activation>-->
-<!--            <properties>-->
+        <profile>
+            <id>dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <property>
+                    <name>env</name>
+                    <value>dev</value>
+                </property>
+            </activation>
+            <properties>
+                <!--application build properties-->
+                <api.build-version>${buildNo}</api.build-version>
 
-<!--                &lt;!&ndash;Test properties&ndash;&gt;-->
-<!--                <app.port.name>server.port</app.port.name>-->
-<!--                <app.port>8094</app.port>-->
-<!--            </properties>-->
-<!--        </profile>-->
+                <!--Test properties-->
+                <app.port.name>server.port</app.port.name>
+                <app.port>8094</app.port>
+            </properties>
+        </profile>
+        <profile>
+            <id>production</id>
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>production</value>
+                </property>
+            </activation>
+            <properties>
+
+                <!--application build properties-->
+                <api.build-version>${buildNo}</api.build-version>
+
+            </properties>
+        </profile>
     </profiles>
 
 </project>
