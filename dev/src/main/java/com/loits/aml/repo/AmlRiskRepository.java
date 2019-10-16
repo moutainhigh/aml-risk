@@ -12,9 +12,5 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
  */
 
 @RepositoryRestResource(exported = false)
-public interface AmlRiskRepository extends PagingAndSortingRepository<AmlRisk, Long>, QuerydslPredicateExecutor<AmlRisk> {
-    //AmlRisk findOneByOrderByCreatedOnAsc(Predicate value);
-    //AmlRisk findFirstByIdOrderByCreatedOn(Long id);
-
-    //Object findTopByOrderByCreatedOnAsc(Predicate value);
+public interface AmlRiskRepository extends PagingAndSortingRepository<AmlRisk, Long>, QuerydslPredicateExecutor<QAmlRisk> {
 }

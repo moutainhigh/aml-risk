@@ -43,6 +43,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
     @Override
     public Object calcOnboardingRisk(RiskCustomer riskCustomer, String user) throws FXDefaultException {
+        //TODO get district and get GeoLocation for that from Customer
         HashMap<String, String> headers = new HashMap<>();
         headers.put("user", user);
         HttpResponse httpResponse = sendPostRequest(riskCustomer, "http://localhost:8099/aml-category-risk/v1/AnRkr?projection", "Aml-Category-Risk", headers);
