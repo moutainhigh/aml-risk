@@ -7,7 +7,6 @@
 package com.loits.aml.core;
 
 import lombok.Data;
-import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 
@@ -28,14 +27,13 @@ import javax.persistence.*;
 public abstract class BaseEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO, generator="native")
-	@GenericGenerator(name = "native", strategy = "native")
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "common_generator")
+	@SequenceGenerator(name = "common_generator", sequenceName = "common_seq", allocationSize = 1)
 	@Column(name = "id", nullable = false)
 	protected Long id;
 
 	protected BaseEntity() {
 		id = null;
 	}
-
 
 }

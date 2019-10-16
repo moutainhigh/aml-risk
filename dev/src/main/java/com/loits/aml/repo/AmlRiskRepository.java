@@ -12,5 +12,5 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
  */
 
 @RepositoryRestResource(exported = false)
-public interface AmlRiskRepository extends PagingAndSortingRepository<AmlRisk, Long>, QuerydslPredicateExecutor<QAmlRisk> {
+public interface AmlRiskRepository extends PagingAndSortingRepository<AmlRisk, Long>, QuerydslPredicateExecutor<AmlRisk> {
 }
