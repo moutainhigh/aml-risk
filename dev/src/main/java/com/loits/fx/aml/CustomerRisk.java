@@ -1,4 +1,4 @@
-package com.redhat.aml;
+package com.loits.fx.aml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
@@ -10,7 +10,7 @@ import java.util.List;
 public class CustomerRisk {
     private Long id;
     private Long customerCode;
-    private String module;
+    private Module module;
     private Boolean pepsEnabled;
     private Boolean withinBranchServiceArea;;
     private Industry industry;
@@ -24,7 +24,7 @@ public class CustomerRisk {
     public CustomerRisk() {
     }
 
-    public CustomerRisk(Long id, Long customerCode, String module, Boolean pepsEnabled, Boolean withinBranchServiceArea, Industry industry, Occupation occupation, CustomerType customerType, Turnover turnover, Double calculatedRisk, List<GeoLocation> addresses, Double geoRisk) {
+    public CustomerRisk(Long id, Long customerCode, Module module, Boolean pepsEnabled, Boolean withinBranchServiceArea, Industry industry, Occupation occupation, CustomerType customerType, Turnover turnover, Double calculatedRisk, List<GeoLocation> addresses, Double geoRisk) {
         this.id = id;
         this.customerCode = customerCode;
         this.module = module;
