@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loits.aml.config.NullAwareBeanUtilsBean;
 import com.loits.aml.config.RestResponsePage;
+import com.loits.aml.config.Translator;
 import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.domain.AmlRisk;
 import com.loits.aml.dto.*;
@@ -13,9 +14,11 @@ import com.loits.aml.repo.AmlRiskRepository;
 import com.loits.aml.repo.ModuleRepository;
 import com.loits.aml.services.AmlRiskService;
 import com.loits.aml.services.KieService;
+import com.loits.aml.services.ServiceMetadataService;
 import com.loits.fx.aml.*;
 import com.loits.fx.aml.Module;
 import com.loits.fx.aml.Product;
+import net.bytebuddy.asm.Advice;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -27,6 +30,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +43,9 @@ import java.util.*;
 @Service
 public class AmlRiskServiceImpl implements AmlRiskService {
 
+    @Value("${loits.aml.anrkr.category-risk.url-key}")
+    private String CATEGORY_RISK_URL_KEY;
+
     @Autowired
     KieService kieService;
 
@@ -48,24 +55,28 @@ public class AmlRiskServiceImpl implements AmlRiskService {
     @Autowired
     ModuleRepository moduleRepository;
 
+    @Autowired
+    ServiceMetadataService serviceMetadataService;
+
     @Override
     public Object calcOnboardingRisk(OnboardingCustomer onboardingCustomer, String user) throws FXDefaultException {
         ObjectMapper objectMapper = null;
-        RiskCustomer riskCustomer=null;
+        RiskCustomer riskCustomer = null;
 
         //Check if a module exists by sent module code
-        if(moduleRepository.existsByCode(onboardingCustomer.getModule())){
+        if (moduleRepository.existsByCode(onboardingCustomer.getModule())) {
             riskCustomer = new RiskCustomer();
 
             //copy similar properties from onboarding customer to risk customer
             //set id field to ignore when copying
             HashSet<String> ignoreFields = new HashSet<String>();
             ignoreFields.add("module");
+            ignoreFields.add("addressesByCustomerCode");
 
             try {
                 NullAwareBeanUtilsBean utilsBean = new NullAwareBeanUtilsBean();
                 utilsBean.setIgnoreFields(ignoreFields);
-                utilsBean.copyProperties(riskCustomer,onboardingCustomer);
+                utilsBean.copyProperties(riskCustomer, onboardingCustomer);
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             } catch (InvocationTargetException e) {
@@ -77,18 +88,20 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
             Module ruleModule = new Module();
             ruleModule.setCode(dbModule.getCode());
-            if(dbModule.getParent()!=null){
+            if (dbModule.getParent() != null) {
                 Module ruleModuleParent = new Module();
                 ruleModuleParent.setCode(dbModule.getParent().getCode());
                 ruleModule.setParent(ruleModuleParent);
             }
             riskCustomer.setModule(ruleModule);
+        } else {
+            throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"), new Date(), HttpStatus.BAD_REQUEST, false);
         }
 
         HashMap<String, String> headers = new HashMap<>();
         headers.put("user", user);
 
-        HttpResponse httpResponse = sendPostRequest(riskCustomer, "http://localhost:8099/aml-category-risk/v1/AnRkr?projection", "Aml-Category-Risk", headers);
+        HttpResponse httpResponse = sendPostRequest(riskCustomer, serviceMetadataService.getServiceMetadata(CATEGORY_RISK_URL_KEY).getMetaValue(), "Aml-Category-Risk", headers);
         if (httpResponse.getStatusLine().getStatusCode() == 200) {
             objectMapper = new ObjectMapper();
             String jsonString = null;
@@ -108,30 +121,30 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
     @Override
     public Object calcRisk(String customerCode, String module, String otherIdentity, String user) throws FXDefaultException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        HttpResponse httpResponse = null;
-        String content = null;
-        String jsonString = null;
-        List<Customer> customerList = null;
-
-        CustomerRisk customerRisk = calculateCustomerRisk(customerCode, module, user);
-
-        ChannelRisk channelRisk = calculateChannelRisk(customerRisk.getCustomerCode(), module, user);
-
-        ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), module, user);
-
-        if (customerRisk.getCalculatedRisk() != null) {
-            if (channelRisk.getCalculatedRisk() == null) {
-                channelRisk.setCalculatedRisk(0.0);
-            }
-            if (productRisk.getCalculatedRisk() == null) {
-                productRisk.setCalculatedRisk(0.0);
-            }
-            //OverallRisk overallRisk = new OverallRisk(customerRisk.getCustomerCode(), module, customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(), channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        HttpResponse httpResponse = null;
+//        String content = null;
+//        String jsonString = null;
+//        List<Customer> customerList = null;
+//
+//        CustomerRisk customerRisk = calculateCustomerRisk(customerCode, module, user);
+//
+//        ChannelRisk channelRisk = calculateChannelRisk(customerRisk.getCustomerCode(), module, user);
+//
+//        ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), module, user);
+//
+//        if (customerRisk.getCalculatedRisk() != null) {
+//            if (channelRisk.getCalculatedRisk() == null) {
+//                channelRisk.setCalculatedRisk(0.0);
+//            }
+//            if (productRisk.getCalculatedRisk() == null) {
+//                productRisk.setCalculatedRisk(0.0);
+//            }
+        //OverallRisk overallRisk = new OverallRisk(customerRisk.getCustomerCode(), module, customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(), channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
 //            overallRisk = kieService.getOverallRisk(overallRisk);
 //
 //
-            AmlRisk amlRisk = new AmlRisk();
+//            AmlRisk amlRisk = new AmlRisk();
 //            amlRisk.setCreatedOn(new Timestamp(new Date().getTime()));
 //            amlRisk.setCreatedBy(user);
 //            amlRisk.setRiskRating(overallRisk.getRiskRating());
@@ -143,12 +156,21 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 //            amlRisk.setChannelRiskId(channelRisk.getId());
 //            amlRisk.setProductRiskId(productRisk.getId());
 
-            amlRiskRepository.save(amlRisk);
-            //return overallRisk;
-            return null;
-        } else {
-            throw new FXDefaultException();
-        }
+//            amlRiskRepository.save(amlRisk);
+        //return overallRisk;
+//        } else {
+//            throw new FXDefaultException();
+//        }
+
+        //Only for test purposes
+        Module ruleModule = new Module();
+        ruleModule.setCode("fd");
+        Module ruleModuleParent = new Module();
+        ruleModuleParent.setCode("lofc");
+        ruleModule.setParent(ruleModuleParent);
+
+        OverallRisk overallRisk = new OverallRisk(Long.parseLong(customerCode), ruleModule, 36.5, 24.7, 66.0,  true, false, true);
+        return overallRisk;
     }
 
 
@@ -180,14 +202,14 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
         try {
             riskCustomer.setId(customer.getId());
-            for (CustomerMeta customerMeta:customer.getCustomerMetaList()) {
-                if(customerMeta.getType().equalsIgnoreCase("client category")){
+            for (CustomerMeta customerMeta : customer.getCustomerMetaList()) {
+                if (customerMeta.getType().equalsIgnoreCase("client category")) {
                     riskCustomer.setClientCategory(customerMeta.getValue());
                 }
-                if(customerMeta.getType().equalsIgnoreCase("peps enabled")){
+                if (customerMeta.getType().equalsIgnoreCase("peps enabled")) {
                     riskCustomer.setPepsEnabled(Byte.parseByte(customerMeta.getValue()));
                 }
-                if(customerMeta.getType().equalsIgnoreCase("within branch service area")){
+                if (customerMeta.getType().equalsIgnoreCase("within branch service area")) {
                     riskCustomer.setWithinBranchServiceArea(Byte.parseByte(customerMeta.getType()));
                 }
             }
@@ -223,7 +245,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
     public ProductRisk calculateProductRisk(Long customerId, String module, String user) throws FXDefaultException {
         List<CustomerProduct> customerProductList = null;
         ObjectMapper objectMapper = new ObjectMapper();
-        ProductRisk productRisk=new ProductRisk();
+        ProductRisk productRisk = new ProductRisk();
 
         //Get the products for customer
         //Request parameters to AML Service
@@ -237,7 +259,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         customerProductList = objectMapper.convertValue(list, new TypeReference<List<CustomerProduct>>() {
         });
 
-        if(customerProductList.size()>0){
+        if (customerProductList.size() > 0) {
             productRisk.setCustomerCode(customerId);
             productRisk.setModule(module);
             productRisk.setToday(new Date());
@@ -272,7 +294,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }else{
+        } else {
             productRisk.setCalculatedRisk(0.0);
         }
 
@@ -331,7 +353,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 e.printStackTrace();
             }
 
-        }else{
+        } else {
             channelRisk.setCalculatedRisk(0.0);
         }
         return channelRisk;
