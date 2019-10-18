@@ -1,0 +1,41 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: minolid@i360.lk
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  startWith: 1
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                  name: id
+                  type: BIGINT
+              - column:
+                  name: topic
+                  type: VARCHAR(45)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: type
+                  type: VARCHAR(45)
+              - column:
+                  name: sub_type
+                  type: VARCHAR(45)
+              - column:
+                  name: data
+                  type: LONGTEXT
+              - column:
+                  name: error_message
+                  type: VARCHAR(2000)
+              - column:
+                  name: trace
+                  type: LONGTEXT
+              - column:
+                  name: timestamp
+                  type: datetime
+                  constraints:
+                    nullable: false
+            tableName: kafka_error_log
