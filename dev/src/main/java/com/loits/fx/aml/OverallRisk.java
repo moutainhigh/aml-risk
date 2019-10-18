@@ -1,11 +1,11 @@
-package com.redhat.aml;
+package com.loits.fx.aml;
 
 import lombok.Data;
 
 @Data
 public class OverallRisk {
     private Long customerCode;
-    private String module;
+    private Module module;
     private Double customerRisk;
     private Double productRisk;
     private Double channelRisk;
@@ -15,7 +15,7 @@ public class OverallRisk {
     private String riskRating;
     private Double calculatedRisk;
 
-    public OverallRisk(Long customerCode, String module, Double customerRisk, Double productRisk, Double channelRisk, Boolean pepsEnabled, Boolean highRiskCustomerType, Boolean highRiskOccupation) {
+    public OverallRisk(Long customerCode, Module module, Double customerRisk, Double productRisk, Double channelRisk, Boolean pepsEnabled, Boolean highRiskCustomerType, Boolean highRiskOccupation) {
         this.customerCode = customerCode;
         this.module = module;
         this.customerRisk = customerRisk;

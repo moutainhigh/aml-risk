@@ -2,7 +2,7 @@ package com.loits.aml.services.impl;
 
 import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.services.KieService;
-import com.redhat.aml.OverallRisk;
+import com.loits.fx.aml.OverallRisk;
 import org.drools.core.command.runtime.BatchExecutionCommandImpl;
 import org.drools.core.command.runtime.rule.FireAllRulesCommand;
 import org.drools.core.command.runtime.rule.InsertObjectCommand;

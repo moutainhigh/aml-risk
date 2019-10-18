@@ -1,8 +1,9 @@
 package com.loits.aml.controller;
 
 import com.loits.aml.core.FXDefaultException;
+import com.loits.aml.dto.OnboardingCustomer;
 import com.loits.aml.services.AmlRiskService;
-import com.redhat.aml.RiskCustomer;
+import com.loits.aml.dto.RiskCustomer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +49,7 @@ public class AmlRiskController {
     @PostMapping(path= "/{tenent}", produces = "application/json")
     public ResponseEntity<?> calculateRiskOnOnboarding(@PathVariable(value = "tenent") String tenent,
                                                        @RequestParam(value = "projection") String projection,
-                                                       @RequestBody @Valid RiskCustomer customer,
+                                                       @RequestBody @Valid OnboardingCustomer customer,
                                                        @RequestHeader(value = "user", defaultValue = "sysUser") String user
     ) throws FXDefaultException {
         Resource resource = new Resource(amlRiskService.calcOnboardingRisk(customer, user));

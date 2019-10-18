@@ -1,7 +1,7 @@
 package com.loits.aml.services;
 
 import com.loits.aml.core.FXDefaultException;
-import com.redhat.aml.OverallRisk;
+import com.loits.fx.aml.OverallRisk;
 
 public interface KieService {
 

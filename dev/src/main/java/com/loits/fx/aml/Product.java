@@ -1,4 +1,4 @@
-package com.redhat.aml;
+package com.loits.fx.aml;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

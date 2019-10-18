@@ -20,4 +20,5 @@ public class Module {
     private String createdBy;
     private Timestamp createdOn;
     private Long version;
+    private Module parent;
 }
