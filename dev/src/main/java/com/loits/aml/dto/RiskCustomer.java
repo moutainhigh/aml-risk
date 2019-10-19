@@ -1,6 +1,7 @@
-package com.redhat.aml;
+package com.loits.aml.dto;
 
 import com.loits.aml.dto.Address;
+import com.loits.fx.aml.Module;
 import lombok.Data;
 
 import java.util.Collection;
@@ -26,7 +27,7 @@ public class RiskCustomer {
     private String industry;
     private String occupation;
     private String customerType;
-    private String module;
+    private Module module;
     private Double annualTurnover;
     private String riskRating;
 }

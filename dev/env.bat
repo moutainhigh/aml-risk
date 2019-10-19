@@ -1,15 +1,17 @@
 @echo off
-set "CONF_DB_IP_PORT=130.61.46.215:3306"
-set "CONF_DB_USER=amluser"
-set "CONF_DB_PASS=aml2841@fusionX"
+set "DB_HOST=130.61.46.215"
+set "DB_PORT=3306
+set "DB_USER=amluser"
+set "DB_PASS=aml2841@fusionX"
 set "CONF_URL_PORT=132.145.233.0:8080"
 set "CONF_SERVER_USR=admin"
 set "CONF_SERVER_PASS=trypassword"
 set "CONF_ENV_NAME=dev"
 @echo on
-echo "CONF_DB_IP_PORT: "%CONF_DB_IP_PORT%
-echo "CONF_DB_USERT: "%CONF_DB_USER%
-echo "CONF_DB_PASS: "%CONF_DB_PASS%
+echo "DB_HOST: "%DB_HOST%
+echo "DB_PORT: "%DB_PORT%
+echo "DB_USER: "%DB_USER%
+echo "DB_PASS: "%DB_PASS%
 echo "CONF_URL_PORT: "%CONF_URL_PORT%
 echo "CONF_SERVER_USR: "%CONF_SERVER_USR%
 echo "CONF_SERVER_PASS: "%CONF_SERVER_PASS%

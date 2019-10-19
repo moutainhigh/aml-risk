@@ -1,7 +1,7 @@
 package com.loits.aml.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.redhat.aml.GeoLocation;
+import com.loits.fx.aml.GeoLocation;
 import lombok.Data;
 
 import java.sql.Timestamp;
@@ -16,4 +16,6 @@ public class Address {
     private Timestamp createdOn;
     private Long version;
     private GeoLocation geoLocation;
+    private String district;
+    private String country;
 }

@@ -1,4 +1,4 @@
-package com.redhat.aml;
+package com.loits.fx.aml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
@@ -16,7 +16,6 @@ public class ChannelRisk {
     private List<ChannelUsage> channelUsagesAfterCalc;
     private Date today;
     private Double calculatedRisk;
-    private Integer channelUsageCount;
 
     public ChannelRisk(Long customerCode, String module, List<ChannelUsage> channelUsage, Date today) {
         this.customerCode = customerCode;
@@ -36,7 +35,6 @@ public class ChannelRisk {
         this.channelUsagesAfterCalc = channelUsagesAfterCalc;
         this.today = today;
         this.calculatedRisk = calculatedRisk;
-        this.channelUsageCount = channelUsageCount;
     }
-}
 
+}

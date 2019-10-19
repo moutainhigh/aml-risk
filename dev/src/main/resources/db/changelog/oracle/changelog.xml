@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+        <changeSet id="1" author="minolid@i360.lk">
+            <sql dbms="h2, oracle" endDelimiter="\nGO" splitStatements="true" stripComments="true">
+                declare
+                    userexist integer;
+                    pw VARCHAR2(60);
+
+                    begin
+                        select count(*) into userexist from all_users where username='ANRKR_AML_RISK';
+
+                        if(userexist =0) then
+                            SELECT PSQ into pw FROM APP.USER_PW WHERE USERNAME ='COMN_USER';
+
+                            execute immediate 'create user ANRKR_AML_RISK identified by '|| pw;
+                            execute immediate 'grant create session to ANRKR_AML_RISK';
+                            execute immediate 'grant create table to ANRKR_AML_RISK';
+                            execute immediate 'alter session set current_schema = ANRKR_AML_RISK';
+                            execute immediate 'grant select on APP.USER_PW to ANRKR_AML_RISK';
+                            execute immediate 'grant create sequence to ANRKR_AML_RISK';
+                            execute immediate 'ALTER USER ANRKR_AML_RISK QUOTA unlimited ON users';
+                            execute immediate 'create sequence common_seq start with 1;
+                        end if;
+                    end;
+            </sql>
+        </changeSet>
+    <includeAll path="db/changelog"/>
+</databaseChangeLog>
