@@ -3,3 +3,9 @@ databaseChangeLog:
       file: "db/changelog/aml_risk.yml"
   - include:
       file: "db/changelog/mysql/sequence.yml"
+  - include:
+      file: "db/changelog/module.yml"
+  - include:
+      file: "db/changelog/geo_location.yml"
+  - include:
+      file: "db/changelog/service_metadata.yml"

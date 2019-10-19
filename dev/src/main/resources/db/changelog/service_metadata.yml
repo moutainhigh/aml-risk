@@ -1,0 +1,62 @@
+databaseChangeLog:
+  - property:
+      name: now
+      value: "now()"
+      dbms: mysql
+  - property:
+      name: now
+      value: "sysdate"
+      dbms: oracle
+  - changeSet:
+      id: 1
+      author: lahirubandara (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    primaryKey: true
+                  name: meta_key
+                  type: VARCHAR(10)
+              - column:
+                  name: meta_value
+                  type: VARCHAR(500)
+              - column:
+                  name: type
+                  type: VARCHAR(45)
+              - column:
+                  name: created_date
+                  type: datetime
+              - column:
+                  name: modified_date
+                  type: datetime
+            tableName: service_metadata
+
+  - changeSet:
+      id: 4
+      author: minolid@i360.lk
+      changes:
+        - modifyDataType:
+            columnName: meta_key
+            newDataType: VARCHAR(45)
+            tableName: service_metadata
+
+  - changeSet:
+      id: 2
+      author: minolid@i360.lk
+      changes:
+        - insert:
+            tableName: service_metadata
+            columns:
+              - column:
+                  name: meta_key
+                  value: "AML_ANRKR_CATEGORY_RISK"
+              - column:
+                  name: meta_value
+                  value: "http://localhost:8099/aml-category-risk/v1/AnRkr?projection"
+              - column:
+                  name: type
+                  value: "url"
+              - column:
+                  name: created_date
+                  value: "${now}"
