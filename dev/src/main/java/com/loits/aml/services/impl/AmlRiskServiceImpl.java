@@ -164,12 +164,18 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
         //Only for test purposes
         Module ruleModule = new Module();
-        ruleModule.setCode("fd");
+        ruleModule.setCode("lending");
         Module ruleModuleParent = new Module();
         ruleModuleParent.setCode("lofc");
         ruleModule.setParent(ruleModuleParent);
 
         OverallRisk overallRisk = new OverallRisk(Long.parseLong(customerCode), ruleModule, 36.5, 24.7, 66.0,  true, false, true);
+        if(overallRisk.getCalculatedRisk()==null){
+            overallRisk.setCalculatedRisk(0.0);
+        }
+        if(overallRisk.getRiskRating()==null){
+            overallRisk.setRiskRating("N/A");
+        }
         return overallRisk;
     }
 
