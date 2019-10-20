@@ -35,7 +35,6 @@ public class AmlRiskController {
      */
     @GetMapping(path= "/{tenent}", produces = "application/json")
     public ResponseEntity<?> calculateRisk(@PathVariable(value = "tenent") String tenent,
-                                           @RequestParam(value = "projection") String projection,
                                            @RequestParam(value= "customer_code", required = true) String customerCode,
                                            @RequestParam(value= "module" , required = true) String module,
                                            @RequestParam(value= "other_identity") String otherIdentity,
@@ -48,7 +47,6 @@ public class AmlRiskController {
 
     @PostMapping(path= "/{tenent}", produces = "application/json")
     public ResponseEntity<?> calculateRiskOnOnboarding(@PathVariable(value = "tenent") String tenent,
-                                                       @RequestParam(value = "projection") String projection,
                                                        @RequestBody @Valid OnboardingCustomer customer,
                                                        @RequestHeader(value = "user", defaultValue = "sysUser") String user
     ) throws FXDefaultException {
