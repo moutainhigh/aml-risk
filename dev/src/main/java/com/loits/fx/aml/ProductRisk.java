@@ -11,7 +11,7 @@ import java.util.List;
 public class ProductRisk {
     private Long id;
     private Long customerCode;
-    private String module;
+    private Module module;
     private Date today;
     private List<Product> products;
     private Double calculatedRisk;

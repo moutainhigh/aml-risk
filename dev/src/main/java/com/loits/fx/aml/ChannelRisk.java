@@ -11,13 +11,13 @@ import java.util.List;
 public class ChannelRisk {
     private Long id;
     private Long customerCode;
-    private String module;
+    private Module module;
     private List<ChannelUsage> channelUsage;
     private List<ChannelUsage> channelUsagesAfterCalc;
     private Date today;
     private Double calculatedRisk;
 
-    public ChannelRisk(Long customerCode, String module, List<ChannelUsage> channelUsage, Date today) {
+    public ChannelRisk(Long customerCode, Module module, List<ChannelUsage> channelUsage, Date today) {
         this.customerCode = customerCode;
         this.module = module;
         this.channelUsage = channelUsage;
@@ -28,7 +28,7 @@ public class ChannelRisk {
 
     }
 
-    public ChannelRisk(Long customerCode, String module, List<ChannelUsage> channelUsage, List<ChannelUsage> channelUsagesAfterCalc, Date today, Double calculatedRisk, Integer channelUsageCount) {
+    public ChannelRisk(Long customerCode, Module module, List<ChannelUsage> channelUsage, List<ChannelUsage> channelUsagesAfterCalc, Date today, Double calculatedRisk, Integer channelUsageCount) {
         this.customerCode = customerCode;
         this.module = module;
         this.channelUsage = channelUsage;
