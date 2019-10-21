@@ -16,4 +16,6 @@ import java.util.Optional;
 @RepositoryRestResource(exported = false)
 public interface GeoLocationRepository extends PagingAndSortingRepository<GeoLocation, Long>, QuerydslPredicateExecutor<GeoLocation> {
     Optional<GeoLocation> findByLocationName(String district);
+
+    boolean existsByLocationName(String district);
 }

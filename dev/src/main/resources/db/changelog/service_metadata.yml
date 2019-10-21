@@ -53,7 +53,7 @@ databaseChangeLog:
                   value: "AML_ANRKR_CATEGORY_RISK"
               - column:
                   name: meta_value
-                  value: "http://localhost:8099/aml-category-risk/v1/AnRkr?projection"
+                  value: "http://localhost:8095/aml-category-risk/v1/AnRkr?projection"
               - column:
                   name: type
                   value: "url"

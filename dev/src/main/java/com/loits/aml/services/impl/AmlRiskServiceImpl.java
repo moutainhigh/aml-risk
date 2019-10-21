@@ -89,17 +89,57 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 e.printStackTrace();
             }
 
-//            List<Address> riskAddresses = new ArrayList<>();
-//            if(onboardingCustomer.getAddressesByCustomerCode()!=null){
-//                for (Address address:onboardingCustomer.getAddressesByCustomerCode()) {
-//                    if(address.getDistrict()!=null){
-//                        GeoLocation geoLocation = geoLocationRepository.findByName(address.getDistrict()).get();
-//                        Address riskAddress1 = new Address();
-//                        riskAddresses.add(geoLocation);
-//                    }
-//
-//                }
-//            }
+            //List for creating onboarding customer Addresses by GeoLocation
+            List<Address> riskAddresses = new ArrayList<>();
+
+            if(onboardingCustomer.getAddressesByCustomerCode()!=null){
+                //Get addresses of onboarding customer
+                for (Address address:onboardingCustomer.getAddressesByCustomerCode()) {
+                    //If address has a district
+                    if(address.getDistrict()!=null){
+                        if(geoLocationRepository.existsByLocationName(address.getDistrict())) {
+
+                            GeoLocation geoLocation = geoLocationRepository.findByLocationName(address.getDistrict()).get();
+                            Address riskAddress1 = new Address();
+                            com.loits.fx.aml.GeoLocation ruleGeoLocation = new com.loits.fx.aml.GeoLocation();
+
+                            NullAwareBeanUtilsBean utilsBean = new NullAwareBeanUtilsBean();
+                            ignoreFields.clear();
+                            ignoreFields.add("parent");
+                            utilsBean.setIgnoreFields(ignoreFields);
+                            com.loits.fx.aml.GeoLocation tempGeoLocation = ruleGeoLocation;
+
+                            do{
+                                try {
+                                    utilsBean.copyProperties(tempGeoLocation, geoLocation);
+                                    geoLocation = geoLocation.getParent();
+                                    if(geoLocation!=null) {
+                                        tempGeoLocation.setParent(new com.loits.fx.aml.GeoLocation());
+                                        tempGeoLocation = tempGeoLocation.getParent();
+                                    }
+                                } catch (IllegalAccessException e) {
+                                    e.printStackTrace();
+                                } catch (InvocationTargetException e) {
+                                    e.printStackTrace();
+                                }
+                            }while(geoLocation!=null);
+
+
+
+
+//                        do{
+//                            ruleGeoLocation.
+//                            ruleGeoLocation.setLocationKey();
+//                        }while(geoLocation.getParent()!=null);
+
+                            riskAddress1.setGeoLocation(ruleGeoLocation);
+                            riskAddresses.add(riskAddress1);
+                        }
+                    }
+
+                }
+                riskCustomer.setAddressesByCustomerCode(riskAddresses);
+            }
 
             //Find module sent with onboarding customer
             com.loits.aml.domain.Module dbModule = moduleRepository.findByCode(onboardingCustomer.getModule()).get();
