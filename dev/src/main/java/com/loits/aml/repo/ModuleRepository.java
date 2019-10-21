@@ -15,7 +15,7 @@ import java.util.Optional;
  */
 
 @RepositoryRestResource(exported = false)
-public interface ModuleRepository extends PagingAndSortingRepository<Module, Long>, QuerydslPredicateExecutor<Module> {
+public interface ModuleRepository extends PagingAndSortingRepository<Module, String>, QuerydslPredicateExecutor<Module> {
     boolean existsByCode(String module);
 
     Optional<Module> findByCode(String module);
