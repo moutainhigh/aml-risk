@@ -141,14 +141,6 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                                 }
                             }while(geoLocation!=null);
 
-
-
-
-//                        do{
-//                            ruleGeoLocation.
-//                            ruleGeoLocation.setLocationKey();
-//                        }while(geoLocation.getParent()!=null);
-
                             riskAddress1.setGeoLocation(ruleGeoLocation);
                             riskAddresses.add(riskAddress1);
                         }
@@ -202,64 +194,64 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         String jsonString = null;
         List<Customer> customerList = null;
 
-        Module ruleModule=null;
-        if(!moduleRepository.existsById(module)){
-            throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"), new Date(), HttpStatus.BAD_REQUEST, false);
-        }else{
-            com.loits.aml.domain.Module dbModule = moduleRepository.findByCode(module).get();
-            ruleModule = new Module();
-            ruleModule.setCode(dbModule.getCode());
-            if (dbModule.getParent() != null) {
-                Module ruleModuleParent = new Module();
-                ruleModuleParent.setCode(dbModule.getParent().getCode());
-                ruleModule.setParent(ruleModuleParent);
-            }
-        }
+//        Module ruleModule=null;
+//        if(!moduleRepository.existsById(module)){
+//            throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"), new Date(), HttpStatus.BAD_REQUEST, false);
+//        }else{
+//            com.loits.aml.domain.Module dbModule = moduleRepository.findByCode(module).get();
+//            ruleModule = new Module();
+//            ruleModule.setCode(dbModule.getCode());
+//            if (dbModule.getParent() != null) {
+//                Module ruleModuleParent = new Module();
+//                ruleModuleParent.setCode(dbModule.getParent().getCode());
+//                ruleModule.setParent(ruleModuleParent);
+//            }
+//        }
+//
+//        CustomerRisk customerRisk = calculateCustomerRisk(customerCode, ruleModule, user);
+//
+//        ChannelRisk channelRisk = calculateChannelRisk(customerRisk.getCustomerCode(),  ruleModule,  user);
+//
+//        ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), ruleModule, user);
+//
+//        if (customerRisk.getCalculatedRisk() != null) {
+//            if (channelRisk.getCalculatedRisk() == null) {
+//                channelRisk.setCalculatedRisk(0.0);
+//            }
+//            if (productRisk.getCalculatedRisk() == null) {
+//                productRisk.setCalculatedRisk(0.0);
+//            }
+//            OverallRisk overallRisk = new OverallRisk(customerRisk.getCustomerCode(), ruleModule, customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(), channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
+//            overallRisk = kieService.getOverallRisk(overallRisk);
+//
+//
+//            AmlRisk amlRisk = new AmlRisk();
+//            amlRisk.setCreatedOn(new Timestamp(new Date().getTime()));
+//            amlRisk.setCreatedBy(user);
+//            amlRisk.setRiskRating(overallRisk.getRiskRating());
+//            amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
+//            amlRisk.setChannelRisk(overallRisk.getChannelRisk());
+//            amlRisk.setProductRisk(overallRisk.getProductRisk());
+//            amlRisk.setRisk(overallRisk.getCalculatedRisk());
+//            amlRisk.setCustomerRiskId(customerRisk.getId());
+//            amlRisk.setChannelRiskId(channelRisk.getId());
+//            amlRisk.setProductRiskId(productRisk.getId());
+//
+//            amlRiskRepository.save(amlRisk);
+//        return overallRisk;
+//        } else {
+//            throw new FXDefaultException();
+//        }
 
-        CustomerRisk customerRisk = calculateCustomerRisk(customerCode, ruleModule, user);
+        //Only for test purposes
+        Module ruleModule = new Module();
+        ruleModule.setCode("lending");
+        Module ruleModuleParent = new Module();
+        ruleModuleParent.setCode("lofc");
+        ruleModule.setParent(ruleModuleParent);
 
-        ChannelRisk channelRisk = calculateChannelRisk(customerRisk.getCustomerCode(),  ruleModule,  user);
-
-        ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), ruleModule, user);
-
-        if (customerRisk.getCalculatedRisk() != null) {
-            if (channelRisk.getCalculatedRisk() == null) {
-                channelRisk.setCalculatedRisk(0.0);
-            }
-            if (productRisk.getCalculatedRisk() == null) {
-                productRisk.setCalculatedRisk(0.0);
-            }
-            OverallRisk overallRisk = new OverallRisk(customerRisk.getCustomerCode(), ruleModule, customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(), channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
-            overallRisk = kieService.getOverallRisk(overallRisk);
-
-
-            AmlRisk amlRisk = new AmlRisk();
-            amlRisk.setCreatedOn(new Timestamp(new Date().getTime()));
-            amlRisk.setCreatedBy(user);
-            amlRisk.setRiskRating(overallRisk.getRiskRating());
-            amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
-            amlRisk.setChannelRisk(overallRisk.getChannelRisk());
-            amlRisk.setProductRisk(overallRisk.getProductRisk());
-            amlRisk.setRisk(overallRisk.getCalculatedRisk());
-            amlRisk.setCustomerRiskId(customerRisk.getId());
-            amlRisk.setChannelRiskId(channelRisk.getId());
-            amlRisk.setProductRiskId(productRisk.getId());
-
-            amlRiskRepository.save(amlRisk);
-        return overallRisk;
-        } else {
-            throw new FXDefaultException();
-        }
-
-//        //Only for test purposes
-//        Module ruleModule = new Module();
-//        ruleModule.setCode("lending");
-//        Module ruleModuleParent = new Module();
-//        ruleModuleParent.setCode("lofc");
-//        ruleModule.setParent(ruleModuleParent);
-
-//        OverallRisk overallRisk = new OverallRisk(Long.parseLong(customerCode), ruleModule, 36.5, 24.7, 66.0,  true, false, true);
-//        return kieService.getOverallRisk(overallRisk);
+        OverallRisk overallRisk = new OverallRisk(Long.parseLong(customerCode), ruleModule, 36.5, 24.7, 66.0,  true, false, true);
+        return kieService.getOverallRisk(overallRisk);
     }
 
 
