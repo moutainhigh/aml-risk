@@ -48,6 +48,23 @@ public class AmlRiskServiceImpl implements AmlRiskService {
     @Value("${loits.aml.anrkr.category-risk.url-key}")
     private String CATEGORY_RISK_URL_KEY;
 
+    @Value("${loits.aml.anrkr.module-customer.url-key}")
+    private String MODULE_CUSTOMER_URL_KEY;
+
+    @Value("${loits.aml.anrkr.product-risk.url-key}")
+    private String PRODUCT_RISK_URL_KEY;
+
+    @Value("${loits.aml.anrkr.channel-risk.url-key}")
+    private String CHANNEL_RISK_URL_KEY;
+
+    @Value("${loits.aml.anrkr.aml-transactions.url-key}")
+    private String AML_TRANSACTIONS_URL_KEY;
+
+    @Value("${loits.aml.anrkr.aml-customer-products.url-key}")
+    private String CUSTOMER_PRODUCTS_URL_KEY;
+
+
+
     @Autowired
     KieService kieService;
 
@@ -205,34 +222,34 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
         ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), ruleModule, user);
 
-//        if (customerRisk.getCalculatedRisk() != null) {
-//            if (channelRisk.getCalculatedRisk() == null) {
-//                channelRisk.setCalculatedRisk(0.0);
-//            }
-//            if (productRisk.getCalculatedRisk() == null) {
-//                productRisk.setCalculatedRisk(0.0);
-//            }
+        if (customerRisk.getCalculatedRisk() != null) {
+            if (channelRisk.getCalculatedRisk() == null) {
+                channelRisk.setCalculatedRisk(0.0);
+            }
+            if (productRisk.getCalculatedRisk() == null) {
+                productRisk.setCalculatedRisk(0.0);
+            }
             OverallRisk overallRisk = new OverallRisk(customerRisk.getCustomerCode(), ruleModule, customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(), channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
-//            overallRisk = kieService.getOverallRisk(overallRisk);
+            overallRisk = kieService.getOverallRisk(overallRisk);
 
 
-//            AmlRisk amlRisk = new AmlRisk();
-//            amlRisk.setCreatedOn(new Timestamp(new Date().getTime()));
-//            amlRisk.setCreatedBy(user);
-//            amlRisk.setRiskRating(overallRisk.getRiskRating());
-//            amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
-//            amlRisk.setChannelRisk(overallRisk.getChannelRisk());
-//            amlRisk.setProductRisk(overallRisk.getProductRisk());
-//            amlRisk.setRisk(overallRisk.getCalculatedRisk());
-//            amlRisk.setCustomerRiskId(customerRisk.getId());
-//            amlRisk.setChannelRiskId(channelRisk.getId());
-//            amlRisk.setProductRiskId(productRisk.getId());
-//
-//            amlRiskRepository.save(amlRisk);
-//        return overallRisk;
-//        } else {
-//            throw new FXDefaultException();
-//        }
+            AmlRisk amlRisk = new AmlRisk();
+            amlRisk.setCreatedOn(new Timestamp(new Date().getTime()));
+            amlRisk.setCreatedBy(user);
+            amlRisk.setRiskRating(overallRisk.getRiskRating());
+            amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
+            amlRisk.setChannelRisk(overallRisk.getChannelRisk());
+            amlRisk.setProductRisk(overallRisk.getProductRisk());
+            amlRisk.setRisk(overallRisk.getCalculatedRisk());
+            amlRisk.setCustomerRiskId(customerRisk.getId());
+            amlRisk.setChannelRiskId(channelRisk.getId());
+            amlRisk.setProductRiskId(productRisk.getId());
+
+            amlRiskRepository.save(amlRisk);
+        return overallRisk;
+        } else {
+            throw new FXDefaultException();
+        }
 
 //        //Only for test purposes
 //        Module ruleModule = new Module();
@@ -242,7 +259,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 //        ruleModule.setParent(ruleModuleParent);
 
 //        OverallRisk overallRisk = new OverallRisk(Long.parseLong(customerCode), ruleModule, 36.5, 24.7, 66.0,  true, false, true);
-        return kieService.getOverallRisk(overallRisk);
+//        return kieService.getOverallRisk(overallRisk);
     }
 
 
@@ -253,7 +270,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         ObjectMapper objectMapper = new ObjectMapper();
 
         //Request parameters to Customer Service
-        String customerServiceUrl = "http://localhost:8193/aml-customer/module-customer/v1/AnRkr?projection";
+        String customerServiceUrl = serviceMetadataService.getServiceMetadata(MODULE_CUSTOMER_URL_KEY).getMetaValue();
         HashMap<String, String> parameters = new HashMap<>();
         parameters.put("moduleCustomerCode", customerCode);
         parameters.put("module.code", ruleModule.getCode());
@@ -309,7 +326,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         }
         HashMap<String, String> headers = new HashMap<>();
         headers.put("user", user);
-        HttpResponse res = sendPostRequest(riskCustomer, "http://localhost:8095/aml-category-risk/v1/AnRkr?projection", "Aml-Category-Risk", headers);
+        HttpResponse res = sendPostRequest(riskCustomer, serviceMetadataService.getServiceMetadata(CATEGORY_RISK_URL_KEY).getMetaValue(), "Aml-Category-Risk", headers);
         CustomerRisk customerRisk = null;
         try {
             String jsonString = EntityUtils.toString(res.getEntity());
@@ -331,7 +348,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
         //Get the products for customer
         //Request parameters to AML Service
-        String amlServiceProductsUrl = "http://localhost:8090/aml/customer-product/v1/AnRkr?projection";
+        String amlServiceProductsUrl = serviceMetadataService.getServiceMetadata(CUSTOMER_PRODUCTS_URL_KEY).getMetaValue();
         HashMap<String, String> productsParameters = new HashMap<>();
         productsParameters.put("customer.id", customerId.toString());
 
@@ -368,7 +385,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             }
             productRisk.setProducts(productList);
 
-            HttpResponse httpResponse = sendPostRequest(productRisk, "http://localhost:8099/aml-product-risk/v1/AnRkr?projection", "ProductRisk", null);
+            HttpResponse httpResponse = sendPostRequest(productRisk, serviceMetadataService.getServiceMetadata(PRODUCT_RISK_URL_KEY).getMetaValue(), "ProductRisk", null);
             try {
                 String jsonString = EntityUtils.toString(httpResponse.getEntity());
                 productRisk = objectMapper.readValue(jsonString, ProductRisk.class);
@@ -389,7 +406,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
         //Get the transactions for customer
         //Request parameters to AML Service
-        String amlServiceTransactionUrl = "http://localhost:8090/aml/transaction/v1/AnRkr?projection";
+        String amlServiceTransactionUrl = serviceMetadataService.getServiceMetadata(AML_TRANSACTIONS_URL_KEY).getMetaValue();
         HashMap<String, String> transactionParameters = new HashMap<>();
         transactionParameters.put("customer.id", customerId.toString());
 
@@ -425,7 +442,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
             HashMap<String, String> headers = new HashMap<>();
             headers.put("user", user);
-            HttpResponse httpResponse = sendPostRequest(channelRisk, "http://localhost:8100/aml-channel-risk/v1/AnRkr?projection&timestamp=2019-05-29%2013%3A00%3A14", "ChannelRisk", headers);
+            HttpResponse httpResponse = sendPostRequest(channelRisk, serviceMetadataService.getServiceMetadata(CHANNEL_RISK_URL_KEY).getMetaValue(), "ChannelRisk", headers);
 
             try {
                 String jsonString = EntityUtils.toString(httpResponse.getEntity());
