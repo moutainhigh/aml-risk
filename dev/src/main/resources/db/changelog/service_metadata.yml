@@ -60,3 +60,106 @@ databaseChangeLog:
               - column:
                   name: created_date
                   value: "${now}"
+
+  - changeSet:
+      id: 3
+      author: minolid@i360.lk
+      changes:
+        - insert:
+            tableName: service_metadata
+            columns:
+              - column:
+                  name: meta_key
+                  value: "AML_ANRKR_PRODUCT_RISK"
+              - column:
+                  name: meta_value
+                  value: "http://localhost:8099/aml-product-risk/v1/AnRkr?projection"
+              - column:
+                  name: type
+                  value: "url"
+              - column:
+                  name: created_date
+                  value: "${now}"
+
+  - changeSet:
+      id: 8
+      author: minolid@i360.lk
+      changes:
+        - insert:
+            tableName: service_metadata
+            columns:
+              - column:
+                  name: meta_key
+                  value: "AML_ANRKR_CHANNEL_RISK"
+              - column:
+                  name: meta_value
+                  value: "http://localhost:8100/aml-channel-risk/v1/AnRkr?projection"
+              - column:
+                  name: type
+                  value: "url"
+              - column:
+                  name: created_date
+                  value: "${now}"
+
+  - changeSet:
+      id: 5
+      author: minolid@i360.lk
+      changes:
+        - insert:
+            tableName: service_metadata
+            columns:
+              - column:
+                  name: meta_key
+                  value: "AML_ANRKR_AML_TRANSACTIONS"
+              - column:
+                  name: meta_value
+                  value: "http://localhost:8090/aml/transaction/v1/AnRkr?projection"
+              - column:
+                  name: type
+                  value: "url"
+              - column:
+                  name: created_date
+                  value: "${now}"
+
+  - changeSet:
+      id: 6
+      author: minolid@i360.lk
+      changes:
+        - insert:
+            tableName: service_metadata
+            columns:
+              - column:
+                  name: meta_key
+                  value: "AML_ANRKR_AML_CUSTOMER_PRODUCTS"
+              - column:
+                  name: meta_value
+                  value: "http://localhost:8090/aml/customer-product/v1/AnRkr?projection"
+              - column:
+                  name: type
+                  value: "url"
+              - column:
+                  name: created_date
+                  value: "${now}"
+
+  - changeSet:
+      id: 7
+      author: minolid@i360.lk
+      changes:
+        - insert:
+            tableName: service_metadata
+            columns:
+              - column:
+                  name: meta_key
+                  value: "AML_ANRKR_MODULE_CUSTOMER"
+              - column:
+                  name: meta_value
+                  value: "http://localhost:8193/aml-customer/module-customer/v1/AnRkr?projection"
+              - column:
+                  name: type
+                  value: "url"
+              - column:
+                  name: created_date
+                  value: "${now}"
+
+
+
