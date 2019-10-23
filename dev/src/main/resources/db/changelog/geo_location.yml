@@ -35,17 +35,6 @@ databaseChangeLog:
             name: status
             type: TINYINT(3)
         - column:
-            name: created_by
-            type: VARCHAR(45)
-        - column:
-            name: created_on
-            type: datetime
-        - column:
-            constraints:
-              nullable: false
-            name: module
-            type: VARCHAR(45)
-        - column:
             name: version
             type: BIGINT
         tableName: geo_location
@@ -74,30 +63,3 @@ databaseChangeLog:
                 referencedColumnNames: id
                 referencedTableName: geo_location
                 validate: true
-- changeSet:
-    id: 4
-    author: minolid@i360.lk
-    changes:
-      - createIndex:
-          columns:
-            - column:
-                name: module
-          indexName: fk_geo_location_module_idx
-          tableName: geo_location
-- changeSet:
-    id: 5
-    author: minolid@i360.lk
-    changes:
-      - addForeignKeyConstraint:
-          baseColumnNames: module
-          baseTableName: geo_location
-          constraintName: fk_geo_location_module
-          deferrable: false
-          initiallyDeferred: false
-          onDelete: NO ACTION
-          onUpdate: NO ACTION
-          referencedColumnNames: code
-          referencedTableName: module
-          validate: true
-
-

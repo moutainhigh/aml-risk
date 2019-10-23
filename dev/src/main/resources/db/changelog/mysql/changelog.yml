@@ -9,3 +9,5 @@ databaseChangeLog:
       file: "db/changelog/geo_location.yml"
   - include:
       file: "db/changelog/service_metadata.yml"
+  - include:
+      file: "db/changelog/kafka_error_log.yml"

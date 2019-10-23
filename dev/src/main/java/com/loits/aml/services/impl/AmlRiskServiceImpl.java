@@ -11,6 +11,7 @@ import com.loits.aml.domain.AmlRisk;
 import com.loits.aml.domain.GeoLocation;
 import com.loits.aml.dto.*;
 import com.loits.aml.dto.Transaction;
+import com.loits.aml.kafka.services.KafkaProducer;
 import com.loits.aml.repo.AmlRiskRepository;
 import com.loits.aml.repo.GeoLocationRepository;
 import com.loits.aml.repo.ModuleRepository;
@@ -20,7 +21,6 @@ import com.loits.aml.services.ServiceMetadataService;
 import com.loits.fx.aml.*;
 import com.loits.fx.aml.Module;
 import com.loits.fx.aml.Product;
-import net.bytebuddy.asm.Advice;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -63,8 +63,6 @@ public class AmlRiskServiceImpl implements AmlRiskService {
     @Value("${loits.aml.anrkr.aml-customer-products.url-key}")
     private String CUSTOMER_PRODUCTS_URL_KEY;
 
-
-
     @Autowired
     KieService kieService;
 
@@ -80,8 +78,11 @@ public class AmlRiskServiceImpl implements AmlRiskService {
     @Autowired
     GeoLocationRepository geoLocationRepository;
 
+    @Autowired
+    KafkaProducer kafkaProducer;
+
     @Override
-    public Object calcOnboardingRisk(OnboardingCustomer onboardingCustomer, String user) throws FXDefaultException {
+    public Object calcOnboardingRisk(OnboardingCustomer onboardingCustomer, String user, String tenent) throws FXDefaultException {
         ObjectMapper objectMapper = null;
         RiskCustomer riskCustomer = null;
 
@@ -187,71 +188,132 @@ public class AmlRiskServiceImpl implements AmlRiskService {
     }
 
     @Override
-    public Object calcRisk(String customerCode, String module, String otherIdentity, String user) throws FXDefaultException {
+    public Object getCustomerRisk(String customerCode, String module, String otherIdentity, String user, String tenent) throws FXDefaultException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        HttpResponse httpResponse = null;
+        String content = null;
+        String jsonString = null;
+        List<Customer> customerList = null;
+        Customer customer = null;
+
+        Module ruleModule=null;
+        if(!moduleRepository.existsById(module)){
+            throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"), new Date(), HttpStatus.BAD_REQUEST, false);
+        }else {
+            com.loits.aml.domain.Module dbModule = moduleRepository.findByCode(module).get();
+            ruleModule = new Module();
+            ruleModule.setCode(dbModule.getCode());
+            if (dbModule.getParent() != null) {
+                Module ruleModuleParent = new Module();
+                ruleModuleParent.setCode(dbModule.getParent().getCode());
+                ruleModule.setParent(ruleModuleParent);
+            }
+
+            List<ModuleCustomer> moduleCustomerList = null;
+            ModuleCustomer moduleCustomer = null;
+
+            //Request parameters to Customer Service
+            String customerServiceUrl = serviceMetadataService.getServiceMetadata(MODULE_CUSTOMER_URL_KEY).getMetaValue();
+            HashMap<String, String> parameters = new HashMap<>();
+            parameters.put("moduleCustomerCode", customerCode);
+            parameters.put("module.code", ruleModule.getCode());
+
+            //Send request to Customer Service
+            RestResponsePage customerResultPage = sendServiceRequest(customerServiceUrl, parameters, null, "Customer");
+
+            try {
+                moduleCustomerList = customerResultPage.getContent();
+                moduleCustomer = objectMapper.convertValue(moduleCustomerList.get(0), ModuleCustomer.class);
+                customer = moduleCustomer.getCustomer();
+            } catch (Exception e) {
+                throw new FXDefaultException("3001", "INVALID_ATTEMPT", "Customer not found", new Date(), HttpStatus.BAD_REQUEST);
+            }
+        }
+
+        if(amlRiskRepository.existsByCustomer(customer.getId())){
+            AmlRisk amlRisk = amlRiskRepository.findTopByCustomerOrderByCreatedOnDesc(customer.getId()).get();
+            OverallRisk overallRisk = new OverallRisk();
+            overallRisk.setCustomerCode(amlRisk.getCustomer());
+            overallRisk.setModule(ruleModule);
+            overallRisk.setRiskRating(amlRisk.getRiskRating());
+            overallRisk.setCalculatedRisk(amlRisk.getRisk());
+            overallRisk.setChannelRisk(amlRisk.getChannelRisk());
+            overallRisk.setProductRisk(amlRisk.getProductRisk());
+            overallRisk.setCustomerRisk(amlRisk.getCustomerRisk());
+            return overallRisk;
+        }else{
+            throw new FXDefaultException("3003", "NO_DATA_AVAILABLE", Translator.toLocale("NO_RISK_DATA"), new Date(), HttpStatus.BAD_REQUEST, false);
+        }
+
+//        //Only for test purposes
+//        Module ruleModule = new Module();
+//        ruleModule.setCode("lending");
+//        Module ruleModuleParent = new Module();
+//        ruleModuleParent.setCode("lofc");
+//        ruleModule.setParent(ruleModuleParent);
+
+//        OverallRisk overallRisk = new OverallRisk(Long.parseLong(customerCode), ruleModule, 36.5, 24.7, 66.0,  true, false, true);
+//        return kieService.getOverallRisk(overallRisk);
+    }
+
+    public OverallRisk runRiskCronJob(String customerCode, String module, String otherIdentity, String user, String tenent) throws FXDefaultException{
         ObjectMapper objectMapper = new ObjectMapper();
         HttpResponse httpResponse = null;
         String content = null;
         String jsonString = null;
         List<Customer> customerList = null;
 
-//        Module ruleModule=null;
-//        if(!moduleRepository.existsById(module)){
-//            throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"), new Date(), HttpStatus.BAD_REQUEST, false);
-//        }else{
-//            com.loits.aml.domain.Module dbModule = moduleRepository.findByCode(module).get();
-//            ruleModule = new Module();
-//            ruleModule.setCode(dbModule.getCode());
-//            if (dbModule.getParent() != null) {
-//                Module ruleModuleParent = new Module();
-//                ruleModuleParent.setCode(dbModule.getParent().getCode());
-//                ruleModule.setParent(ruleModuleParent);
-//            }
-//        }
-//
-//        CustomerRisk customerRisk = calculateCustomerRisk(customerCode, ruleModule, user);
-//
-//        ChannelRisk channelRisk = calculateChannelRisk(customerRisk.getCustomerCode(),  ruleModule,  user);
-//
-//        ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), ruleModule, user);
-//
-//        if (customerRisk.getCalculatedRisk() != null) {
-//            if (channelRisk.getCalculatedRisk() == null) {
-//                channelRisk.setCalculatedRisk(0.0);
-//            }
-//            if (productRisk.getCalculatedRisk() == null) {
-//                productRisk.setCalculatedRisk(0.0);
-//            }
-//            OverallRisk overallRisk = new OverallRisk(customerRisk.getCustomerCode(), ruleModule, customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(), channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
-//            overallRisk = kieService.getOverallRisk(overallRisk);
-//
-//
-//            AmlRisk amlRisk = new AmlRisk();
-//            amlRisk.setCreatedOn(new Timestamp(new Date().getTime()));
-//            amlRisk.setCreatedBy(user);
-//            amlRisk.setRiskRating(overallRisk.getRiskRating());
-//            amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
-//            amlRisk.setChannelRisk(overallRisk.getChannelRisk());
-//            amlRisk.setProductRisk(overallRisk.getProductRisk());
-//            amlRisk.setRisk(overallRisk.getCalculatedRisk());
-//            amlRisk.setCustomerRiskId(customerRisk.getId());
-//            amlRisk.setChannelRiskId(channelRisk.getId());
-//            amlRisk.setProductRiskId(productRisk.getId());
-//
-//            amlRiskRepository.save(amlRisk);
-//        return overallRisk;
-//        } else {
-//            throw new FXDefaultException();
-//        }
+        Module ruleModule=null;
+        if(!moduleRepository.existsById(module)){
+            throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"), new Date(), HttpStatus.BAD_REQUEST, false);
+        }else{
+            com.loits.aml.domain.Module dbModule = moduleRepository.findByCode(module).get();
+            ruleModule = new Module();
+            ruleModule.setCode(dbModule.getCode());
+            if (dbModule.getParent() != null) {
+                Module ruleModuleParent = new Module();
+                ruleModuleParent.setCode(dbModule.getParent().getCode());
+                ruleModule.setParent(ruleModuleParent);
+            }
+        }
 
-        //Only for test purposes
-        Module ruleModule = new Module();
-        ruleModule.setCode("lending");
-        Module ruleModuleParent = new Module();
-        ruleModuleParent.setCode("lofc");
-        ruleModule.setParent(ruleModuleParent);
+        CustomerRisk customerRisk = calculateCustomerRisk(customerCode, ruleModule, user);
 
-        OverallRisk overallRisk = new OverallRisk(Long.parseLong(customerCode), ruleModule, 36.5, 24.7, 66.0,  true, false, true);
-        return kieService.getOverallRisk(overallRisk);
+        ChannelRisk channelRisk = calculateChannelRisk(customerRisk.getCustomerCode(),  ruleModule,  user);
+
+        ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), ruleModule, user);
+
+        if (customerRisk.getCalculatedRisk() != null) {
+            if (channelRisk.getCalculatedRisk() == null) {
+                channelRisk.setCalculatedRisk(0.0);
+            }
+            if (productRisk.getCalculatedRisk() == null) {
+                productRisk.setCalculatedRisk(0.0);
+            }
+            OverallRisk overallRisk = new OverallRisk(customerRisk.getCustomerCode(), ruleModule, customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(), channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
+            overallRisk = kieService.getOverallRisk(overallRisk);
+
+
+            AmlRisk amlRisk = new AmlRisk();
+            amlRisk.setCreatedOn(new Timestamp(new Date().getTime()));
+            amlRisk.setCreatedBy(user);
+            amlRisk.setRiskRating(overallRisk.getRiskRating());
+            amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
+            amlRisk.setChannelRisk(overallRisk.getChannelRisk());
+            amlRisk.setProductRisk(overallRisk.getProductRisk());
+            amlRisk.setRisk(overallRisk.getCalculatedRisk());
+            amlRisk.setCustomerRiskId(customerRisk.getId());
+            amlRisk.setChannelRiskId(channelRisk.getId());
+            amlRisk.setProductRiskId(productRisk.getId());
+            amlRisk.setTenent(tenent);
+
+            amlRiskRepository.save(amlRisk);
+            kafkaProducer.publishToTopic("aml-risk-create", amlRisk);
+
+            return overallRisk;
+        } else {
+            throw new FXDefaultException();
+        }
     }
 
 
@@ -302,7 +364,6 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                     }
                 }
             }
-
 
             riskCustomer.setAnnualTurnover(customer.getAnnualTurnover());
             riskCustomer.setAddressesByCustomerCode((Collection<Address>) customer.getAddresses());

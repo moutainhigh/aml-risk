@@ -6,6 +6,8 @@ import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
+import java.util.Optional;
+
 /**
  * @author Minoli De Silva - Infinitum360
  * @version 1.0.0
@@ -13,4 +15,8 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 @RepositoryRestResource(exported = false)
 public interface AmlRiskRepository extends PagingAndSortingRepository<AmlRisk, Long>, QuerydslPredicateExecutor<AmlRisk> {
+    boolean existsByCustomer(Long id);
+
+    Optional<AmlRisk> findTopByCustomerOrderByCreatedOnDesc(Long id);
+
 }
