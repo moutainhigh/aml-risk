@@ -3,7 +3,6 @@ package com.loits.aml.controller;
 import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.dto.OnboardingCustomer;
 import com.loits.aml.services.AmlRiskService;
-import com.loits.aml.dto.RiskCustomer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +39,7 @@ public class AmlRiskController {
                                            @RequestParam(value= "other_identity") String otherIdentity,
                                            @RequestHeader(value = "user", defaultValue = "sysUser") String user
     ) throws FXDefaultException {
-        Resource resource = new Resource(amlRiskService.calcRisk(customerCode, module, otherIdentity, user));
+        Resource resource = new Resource(amlRiskService.getCustomerRisk(customerCode, module, otherIdentity, user, tenent));
         return ResponseEntity.ok(resource);
     }
 
@@ -50,7 +49,7 @@ public class AmlRiskController {
                                                        @RequestBody @Valid OnboardingCustomer customer,
                                                        @RequestHeader(value = "user", defaultValue = "sysUser") String user
     ) throws FXDefaultException {
-        Resource resource = new Resource(amlRiskService.calcOnboardingRisk(customer, user));
+        Resource resource = new Resource(amlRiskService.calcOnboardingRisk(customer, user, tenent));
         return ResponseEntity.ok(resource);
     }
 }

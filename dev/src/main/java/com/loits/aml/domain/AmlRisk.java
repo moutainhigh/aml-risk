@@ -3,10 +3,7 @@ package com.loits.aml.domain;
 import com.loits.aml.core.BaseEntity;
 import lombok.Data;
 
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.sql.Timestamp;
 
 @Data
@@ -61,5 +58,8 @@ public class AmlRisk extends BaseEntity {
     @Basic
     @Column(name = "risk", nullable = true, precision = 0)
     private Double risk;
+
+    @Transient
+    private String tenent;
 
 }
