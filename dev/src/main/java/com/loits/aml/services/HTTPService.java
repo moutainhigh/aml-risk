@@ -15,7 +15,7 @@ import java.util.Map;
 
 public interface HTTPService {
 
-  public <T, classType, binderType> List<classType> getUserGroups(String key, String url, Map<String,
+  public <T, classType, binderType> List<classType> getData(String key, String url, Map<String,
           String> queryParam, String method, TypeReference typeReference) throws FXDefaultException,
           IOException, ClassNotFoundException;
 

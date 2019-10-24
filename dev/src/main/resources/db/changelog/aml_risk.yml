@@ -55,6 +55,9 @@ databaseChangeLog:
             - column:
                 name: risk_rating
                 type: VARCHAR(45)
+            - column:
+                name: risk_text
+                type: TEXT
             tableName: aml_risk
 
 

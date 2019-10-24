@@ -33,6 +33,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -44,24 +45,6 @@ import java.util.*;
 
 @Service
 public class AmlRiskServiceImpl implements AmlRiskService {
-
-    @Value("${loits.aml.anrkr.category-risk.url-key}")
-    private String CATEGORY_RISK_URL_KEY;
-
-    @Value("${loits.aml.anrkr.module-customer.url-key}")
-    private String MODULE_CUSTOMER_URL_KEY;
-
-    @Value("${loits.aml.anrkr.product-risk.url-key}")
-    private String PRODUCT_RISK_URL_KEY;
-
-    @Value("${loits.aml.anrkr.channel-risk.url-key}")
-    private String CHANNEL_RISK_URL_KEY;
-
-    @Value("${loits.aml.anrkr.aml-transactions.url-key}")
-    private String AML_TRANSACTIONS_URL_KEY;
-
-    @Value("${loits.aml.anrkr.aml-customer-products.url-key}")
-    private String CUSTOMER_PRODUCTS_URL_KEY;
 
     @Autowired
     KieService kieService;
@@ -80,6 +63,9 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
     @Autowired
     KafkaProducer kafkaProducer;
+
+    @Autowired
+    Environment env;
 
     @Override
     public Object calcOnboardingRisk(OnboardingCustomer onboardingCustomer, String user, String tenent) throws FXDefaultException {
@@ -114,8 +100,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 //Get addresses of onboarding customer
                 for (Address address:onboardingCustomer.getAddressesByCustomerCode()) {
                     //If address has a district
-                    if(address.getDistrict()!=null){
-                        if(geoLocationRepository.existsByLocationName(address.getDistrict())) {
+                    if(address.getDistrict()!=null && geoLocationRepository.existsByLocationName(address.getDistrict())){
 
                             GeoLocation geoLocation = geoLocationRepository.findByLocationName(address.getDistrict()).get();
                             Address riskAddress1 = new Address();
@@ -144,6 +129,26 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
                             riskAddress1.setGeoLocation(ruleGeoLocation);
                             riskAddresses.add(riskAddress1);
+                    }else{
+                        if(geoLocationRepository.existsByLocationName(address.getCountry())){
+                            GeoLocation countryGeo = geoLocationRepository.findByLocationName(address.getCountry()).get();
+                            Address riskAddress1 = new Address();
+                            com.loits.fx.aml.GeoLocation ruleGeoLocation = new com.loits.fx.aml.GeoLocation();
+
+                            NullAwareBeanUtilsBean utilsBean = new NullAwareBeanUtilsBean();
+                            ignoreFields.clear();
+                            ignoreFields.add("parent");
+                            utilsBean.setIgnoreFields(ignoreFields);
+                            try {
+                                utilsBean.copyProperties(ruleGeoLocation, countryGeo);
+                            } catch (IllegalAccessException e) {
+                                e.printStackTrace();
+                            } catch (InvocationTargetException e) {
+                                e.printStackTrace();
+                            }
+
+                            riskAddress1.setGeoLocation(ruleGeoLocation);
+                            riskAddresses.add(riskAddress1);
                         }
                     }
 
@@ -169,7 +174,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         HashMap<String, String> headers = new HashMap<>();
         headers.put("user", user);
 
-        HttpResponse httpResponse = sendPostRequest(riskCustomer, serviceMetadataService.getServiceMetadata(CATEGORY_RISK_URL_KEY).getMetaValue(), "Aml-Category-Risk", headers);
+        HttpResponse httpResponse = sendPostRequest(riskCustomer, String.format(env.getProperty("http://localhost:8095/aml-category-risk/v1/%s?projection"), tenent), "Aml-Category-Risk", headers);
         if (httpResponse.getStatusLine().getStatusCode() == 200) {
             objectMapper = new ObjectMapper();
             String jsonString = null;
@@ -213,7 +218,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             ModuleCustomer moduleCustomer = null;
 
             //Request parameters to Customer Service
-            String customerServiceUrl = serviceMetadataService.getServiceMetadata(MODULE_CUSTOMER_URL_KEY).getMetaValue();
+            String customerServiceUrl = String.format(env.getProperty("aml.api.customer-module-customer"), tenent);
             HashMap<String, String> parameters = new HashMap<>();
             parameters.put("moduleCustomerCode", customerCode);
             parameters.put("module.code", ruleModule.getCode());
@@ -277,11 +282,11 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             }
         }
 
-        CustomerRisk customerRisk = calculateCustomerRisk(customerCode, ruleModule, user);
+        CustomerRisk customerRisk = calculateCustomerRisk(customerCode, ruleModule, user, tenent);
 
-        ChannelRisk channelRisk = calculateChannelRisk(customerRisk.getCustomerCode(),  ruleModule,  user);
+        ChannelRisk channelRisk = calculateChannelRisk(customerRisk.getCustomerCode(),  ruleModule,  user, tenent);
 
-        ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), ruleModule, user);
+        ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), ruleModule, user, tenent);
 
         if (customerRisk.getCalculatedRisk() != null) {
             if (channelRisk.getCalculatedRisk() == null) {
@@ -306,6 +311,31 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             amlRisk.setChannelRiskId(channelRisk.getId());
             amlRisk.setProductRiskId(productRisk.getId());
             amlRisk.setTenent(tenent);
+            StringBuilder stringBuilder = new StringBuilder();
+
+            if(overallRisk.getPepsEnabled()){
+                stringBuilder.append("A politically exposed person");
+            }
+            if(overallRisk.getHighRiskCustomerType()){
+                if(stringBuilder.length()!=0){
+                    stringBuilder.append(" with");
+                }else{
+                    stringBuilder.append("Customer has");
+                }
+                stringBuilder.append(" a high risk customer-type");
+            }else{
+
+            }
+            if(overallRisk.getHighRiskOccupation()){
+                if(stringBuilder.length()!=0){
+                    stringBuilder.append(" and");
+                }else{
+                    stringBuilder.append("Customer has");
+                }
+                stringBuilder.append(" a high risk occupation");
+            }
+
+            amlRisk.setRiskText(stringBuilder.toString());
 
             amlRiskRepository.save(amlRisk);
             kafkaProducer.publishToTopic("aml-risk-create", amlRisk);
@@ -317,14 +347,14 @@ public class AmlRiskServiceImpl implements AmlRiskService {
     }
 
 
-    public CustomerRisk calculateCustomerRisk(String customerCode, Module ruleModule, String user) throws FXDefaultException {
+    public CustomerRisk calculateCustomerRisk(String customerCode, Module ruleModule, String user, String tenent) throws FXDefaultException {
         List<ModuleCustomer> moduleCustomerList = null;
         Customer customer = null;
         ModuleCustomer moduleCustomer = null;
         ObjectMapper objectMapper = new ObjectMapper();
 
         //Request parameters to Customer Service
-        String customerServiceUrl = serviceMetadataService.getServiceMetadata(MODULE_CUSTOMER_URL_KEY).getMetaValue();
+        String customerServiceUrl = String.format(env.getProperty("aml.api.customer-module-customer"),tenent);
         HashMap<String, String> parameters = new HashMap<>();
         parameters.put("moduleCustomerCode", customerCode);
         parameters.put("module.code", ruleModule.getCode());
@@ -379,7 +409,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         }
         HashMap<String, String> headers = new HashMap<>();
         headers.put("user", user);
-        HttpResponse res = sendPostRequest(riskCustomer, serviceMetadataService.getServiceMetadata(CATEGORY_RISK_URL_KEY).getMetaValue(), "Aml-Category-Risk", headers);
+        HttpResponse res = sendPostRequest(riskCustomer,String.format(env.getProperty("aml.api.category-risk"), tenent), "Aml-Category-Risk", headers);
         CustomerRisk customerRisk = null;
         try {
             String jsonString = EntityUtils.toString(res.getEntity());
@@ -394,14 +424,14 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         return customerRisk;
     }
 
-    public ProductRisk calculateProductRisk(Long customerId, Module ruleModule, String user) throws FXDefaultException {
+    public ProductRisk calculateProductRisk(Long customerId, Module ruleModule, String user, String tenent) throws FXDefaultException {
         List<CustomerProduct> customerProductList = null;
         ObjectMapper objectMapper = new ObjectMapper();
         ProductRisk productRisk = new ProductRisk();
 
         //Get the products for customer
         //Request parameters to AML Service
-        String amlServiceProductsUrl = serviceMetadataService.getServiceMetadata(CUSTOMER_PRODUCTS_URL_KEY).getMetaValue();
+        String amlServiceProductsUrl = String.format(env.getProperty("aml.api.aml-customer-products"),tenent);
         HashMap<String, String> productsParameters = new HashMap<>();
         productsParameters.put("customer.id", customerId.toString());
 
@@ -438,7 +468,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             }
             productRisk.setProducts(productList);
 
-            HttpResponse httpResponse = sendPostRequest(productRisk, serviceMetadataService.getServiceMetadata(PRODUCT_RISK_URL_KEY).getMetaValue(), "ProductRisk", null);
+            HttpResponse httpResponse = sendPostRequest(productRisk, String.format(env.getProperty("aml.api.product-risk"), tenent), "ProductRisk", null);
             try {
                 String jsonString = EntityUtils.toString(httpResponse.getEntity());
                 productRisk = objectMapper.readValue(jsonString, ProductRisk.class);
@@ -452,14 +482,14 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         return productRisk;
     }
 
-    public ChannelRisk calculateChannelRisk(Long customerId, Module module, String user) throws FXDefaultException {
+    public ChannelRisk calculateChannelRisk(Long customerId, Module module, String user, String tenent) throws FXDefaultException {
         ObjectMapper objectMapper = new ObjectMapper();
         List<Transaction> transactionList = null;
         ChannelRisk channelRisk = new ChannelRisk();
 
         //Get the transactions for customer
         //Request parameters to AML Service
-        String amlServiceTransactionUrl = serviceMetadataService.getServiceMetadata(AML_TRANSACTIONS_URL_KEY).getMetaValue();
+        String amlServiceTransactionUrl = String.format(env.getProperty("aml.api.aml-transactions"), tenent);
         HashMap<String, String> transactionParameters = new HashMap<>();
         transactionParameters.put("customer.id", customerId.toString());
 
@@ -495,7 +525,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
             HashMap<String, String> headers = new HashMap<>();
             headers.put("user", user);
-            HttpResponse httpResponse = sendPostRequest(channelRisk, serviceMetadataService.getServiceMetadata(CHANNEL_RISK_URL_KEY).getMetaValue(), "ChannelRisk", headers);
+            HttpResponse httpResponse = sendPostRequest(channelRisk, String.format(env.getProperty("aml.api.channel-risk"), tenent), "ChannelRisk", headers);
 
             try {
                 String jsonString = EntityUtils.toString(httpResponse.getEntity());

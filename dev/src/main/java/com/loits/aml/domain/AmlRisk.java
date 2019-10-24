@@ -59,6 +59,10 @@ public class AmlRisk extends BaseEntity {
     @Column(name = "risk", nullable = true, precision = 0)
     private Double risk;
 
+    @Basic
+    @Column(name="risk_text")
+    private String riskText;
+
     @Transient
     private String tenent;
 
