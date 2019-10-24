@@ -609,7 +609,6 @@
 
                 <!--Test properties-->
                 <app.port.name></app.port.name>
-                <app.port></app.port>
             </properties>
             <build>
                 <plugins>
@@ -660,11 +659,11 @@
                         <configuration>
                             <promptOnNonLocalDatabase>false</promptOnNonLocalDatabase>
                             <changeSetAuthor>admin</changeSetAuthor>
-                            <changeLogFile>src/main/resources/db/changelog/oracle/changelog.xml</changeLogFile>
-                            <driver>oracle.jdbc.driver.OracleDriver</driver>
-                            <url>jdbc:oracle:thin:@${DB_HOST}:${DB_PORT}/qadb_fra1x9.qadbvcnsubnet.qadbvcn.oraclevcn.com</url>
-                            <username>${DB_USER}</username>
-                            <password>${DB_PASSWORD}</password>
+                            <changeLogFile>src/main/resources/db/changelog/mysql/changelog.yml</changeLogFile>
+                            <driver>com.mysql.jdbc.Driver</driver>
+                            <url>jdbc:mysql://${CONF_DB_IP_PORT}/AnRkr_aml_risk?createDatabaseIfNotExist=true</url>
+                            <username>${CONF_DB_USER}</username>
+                            <password>${CONF_DB_PASS}</password>
                         </configuration>
                         <executions>
                             <execution>
@@ -707,18 +706,10 @@
                                 <version>${validation-api.version}</version>
                             </dependency>
                         </dependencies>
-
                     </plugin>
                 </plugins>
                 <pluginManagement>
                     <plugins>
-                        <plugin>
-                            <groupId>org.springframework.boot</groupId>
-                            <artifactId>spring-boot-maven-plugin</artifactId>
-                            <configuration>
-                                <includeSystemScope>true</includeSystemScope>
-                            </configuration>
-                        </plugin>
                         <plugin>
                             <groupId>org.eclipse.m2e</groupId>
                             <artifactId>lifecycle-mapping</artifactId>

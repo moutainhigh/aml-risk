@@ -19,4 +19,5 @@ public interface LovAmlRisk {
     public String getCreatedBy();
     public String getRiskRating();
     public Double getRisk();
+    public String getRiskText();
 }

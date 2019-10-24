@@ -44,7 +44,7 @@ public class HttpServiceImpl implements HTTPService {
   private final String template3 = "REST API request successful. Service : %s";
 
   @Override
-  public <T, classType, binderType> List<classType> getUserGroups(String key, String url,
+  public <T, classType, binderType> List<classType> getData(String key, String url,
                                                                   Map<String, String> queryParam,
                                                                   String method,
                                                                   TypeReference typeReference)
