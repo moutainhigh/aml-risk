@@ -10,7 +10,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.stereotype.Service;
 
@@ -50,11 +52,16 @@ public class AmlRiskHistoryServiceImpl implements AmlRiskHistoryService {
             //bb.and(amlRisk.id.in(ids));
         }
 
-        return amlRiskRepository.findAll(bb.getValue(), pageable).map(
-                amlrisk1 -> projectionFactory.createProjection(LovAmlRisk.class, amlrisk1)
-        );
+        if(projection.equals("crp")){
+           //return (Page<?>) amlRiskRepository.findTopByOrderByCreatedOnAsc(bb.getValue());
+            return amlRiskRepository.findAll(bb.getValue(), PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "createdOn")));
+            //TODO check if only 1 page's results are sorted
+
+        }else{
+            return amlRiskRepository.findAll(bb.getValue(), pageable).map(
+                    amlrisk1 -> projectionFactory.createProjection(LovAmlRisk.class, amlrisk1)
+            );
+        }
     }
-
-
 
 }

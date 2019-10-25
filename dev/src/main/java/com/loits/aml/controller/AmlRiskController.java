@@ -1,8 +1,8 @@
 package com.loits.aml.controller;
 
 import com.loits.aml.core.FXDefaultException;
+import com.loits.aml.dto.OnboardingCustomer;
 import com.loits.aml.services.AmlRiskService;
-import com.redhat.aml.RiskCustomer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
@@ -34,24 +34,22 @@ public class AmlRiskController {
      */
     @GetMapping(path= "/{tenent}", produces = "application/json")
     public ResponseEntity<?> calculateRisk(@PathVariable(value = "tenent") String tenent,
-                                           @RequestParam(value = "projection") String projection,
                                            @RequestParam(value= "customer_code", required = true) String customerCode,
                                            @RequestParam(value= "module" , required = true) String module,
                                            @RequestParam(value= "other_identity") String otherIdentity,
-                                           @RequestHeader("user") String user
+                                           @RequestHeader(value = "user", defaultValue = "sysUser") String user
     ) throws FXDefaultException {
-        Resource resource = new Resource(amlRiskService.calcRisk(customerCode, module, otherIdentity, user));
+        Resource resource = new Resource(amlRiskService.getCustomerRisk(customerCode, module, otherIdentity, user, tenent));
         return ResponseEntity.ok(resource);
     }
 
 
     @PostMapping(path= "/{tenent}", produces = "application/json")
     public ResponseEntity<?> calculateRiskOnOnboarding(@PathVariable(value = "tenent") String tenent,
-                                                       @RequestParam(value = "projection") String projection,
-                                                       @RequestBody @Valid RiskCustomer customer,
-                                                       @RequestHeader("user") String user
+                                                       @RequestBody @Valid OnboardingCustomer customer,
+                                                       @RequestHeader(value = "user", defaultValue = "sysUser") String user
     ) throws FXDefaultException {
-        Resource resource = new Resource(amlRiskService.calcOnboardingRisk(customer, user));
+        Resource resource = new Resource(amlRiskService.calcOnboardingRisk(customer, user, tenent));
         return ResponseEntity.ok(resource);
     }
 }
