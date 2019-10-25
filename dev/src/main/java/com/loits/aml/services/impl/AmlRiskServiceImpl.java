@@ -3,14 +3,24 @@ package com.loits.aml.services.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.loits.aml.config.NullAwareBeanUtilsBean;
 import com.loits.aml.config.RestResponsePage;
+import com.loits.aml.config.Translator;
 import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.domain.AmlRisk;
+import com.loits.aml.domain.GeoLocation;
 import com.loits.aml.dto.*;
 import com.loits.aml.dto.Transaction;
+import com.loits.aml.kafka.services.KafkaProducer;
+import com.loits.aml.repo.AmlRiskRepository;
+import com.loits.aml.repo.GeoLocationRepository;
+import com.loits.aml.repo.ModuleRepository;
 import com.loits.aml.services.AmlRiskService;
-import com.redhat.aml.*;
-import com.redhat.aml.Product;
+import com.loits.aml.services.KieService;
+import com.loits.aml.services.ServiceMetadataService;
+import com.loits.fx.aml.*;
+import com.loits.fx.aml.Module;
+import com.loits.fx.aml.Product;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -21,22 +31,14 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.drools.core.command.runtime.BatchExecutionCommandImpl;
-import org.drools.core.command.runtime.rule.FireAllRulesCommand;
-import org.drools.core.command.runtime.rule.InsertObjectCommand;
-import org.kie.api.KieServices;
-import org.kie.api.command.KieCommands;
-import org.kie.api.runtime.ExecutionResults;
-import org.kie.server.api.marshalling.MarshallingFormat;
-import org.kie.server.api.model.ServiceResponse;
-import org.kie.server.client.KieServicesClient;
-import org.kie.server.client.KieServicesConfiguration;
-import org.kie.server.client.KieServicesFactory;
-import org.kie.server.client.RuleServicesClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.sql.Timestamp;
 import java.util.*;
@@ -44,17 +46,137 @@ import java.util.*;
 @Service
 public class AmlRiskServiceImpl implements AmlRiskService {
 
-    private static KieServicesConfiguration conf;
-    private static KieServicesClient kieServicesClient;
-    private static final MarshallingFormat FORMAT = MarshallingFormat.JSON;
+    @Autowired
+    KieService kieService;
+
+    @Autowired
+    AmlRiskRepository amlRiskRepository;
+
+    @Autowired
+    ModuleRepository moduleRepository;
+
+    @Autowired
+    ServiceMetadataService serviceMetadataService;
+
+    @Autowired
+    GeoLocationRepository geoLocationRepository;
+
+    @Autowired
+    KafkaProducer kafkaProducer;
+
+    @Autowired
+    Environment env;
 
     @Override
-    public Object calcOnboardingRisk(RiskCustomer riskCustomer, String user) throws FXDefaultException {
+    public Object calcOnboardingRisk(OnboardingCustomer onboardingCustomer, String user, String tenent) throws FXDefaultException {
+        ObjectMapper objectMapper = null;
+        RiskCustomer riskCustomer = null;
+
+        //Check if a module exists by sent module code
+        if (moduleRepository.existsByCode(onboardingCustomer.getModule())) {
+            riskCustomer = new RiskCustomer();
+
+            //copy similar properties from onboarding customer to risk customer
+            //set id field to ignore when copying
+            HashSet<String> ignoreFields = new HashSet<String>();
+            ignoreFields.add("module");
+            ignoreFields.add("addressesByCustomerCode");
+
+
+            try {
+                NullAwareBeanUtilsBean utilsBean = new NullAwareBeanUtilsBean();
+                utilsBean.setIgnoreFields(ignoreFields);
+                utilsBean.copyProperties(riskCustomer, onboardingCustomer);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+
+            //List for creating onboarding customer Addresses by GeoLocation
+            List<Address> riskAddresses = new ArrayList<>();
+
+            if(onboardingCustomer.getAddressesByCustomerCode()!=null){
+                //Get addresses of onboarding customer
+                for (Address address:onboardingCustomer.getAddressesByCustomerCode()) {
+                    //If address has a district
+                    if(address.getDistrict()!=null && geoLocationRepository.existsByLocationName(address.getDistrict())){
+
+                            GeoLocation geoLocation = geoLocationRepository.findByLocationName(address.getDistrict()).get();
+                            Address riskAddress1 = new Address();
+                            com.loits.fx.aml.GeoLocation ruleGeoLocation = new com.loits.fx.aml.GeoLocation();
+
+                            NullAwareBeanUtilsBean utilsBean = new NullAwareBeanUtilsBean();
+                            ignoreFields.clear();
+                            ignoreFields.add("parent");
+                            utilsBean.setIgnoreFields(ignoreFields);
+                            com.loits.fx.aml.GeoLocation tempGeoLocation = ruleGeoLocation;
+
+                            do{
+                                try {
+                                    utilsBean.copyProperties(tempGeoLocation, geoLocation);
+                                    geoLocation = geoLocation.getParent();
+                                    if(geoLocation!=null) {
+                                        tempGeoLocation.setParent(new com.loits.fx.aml.GeoLocation());
+                                        tempGeoLocation = tempGeoLocation.getParent();
+                                    }
+                                } catch (IllegalAccessException e) {
+                                    e.printStackTrace();
+                                } catch (InvocationTargetException e) {
+                                    e.printStackTrace();
+                                }
+                            }while(geoLocation!=null);
+
+                            riskAddress1.setGeoLocation(ruleGeoLocation);
+                            riskAddresses.add(riskAddress1);
+                    }else{
+                        if(geoLocationRepository.existsByLocationName(address.getCountry())){
+                            GeoLocation countryGeo = geoLocationRepository.findByLocationName(address.getCountry()).get();
+                            Address riskAddress1 = new Address();
+                            com.loits.fx.aml.GeoLocation ruleGeoLocation = new com.loits.fx.aml.GeoLocation();
+
+                            NullAwareBeanUtilsBean utilsBean = new NullAwareBeanUtilsBean();
+                            ignoreFields.clear();
+                            ignoreFields.add("parent");
+                            utilsBean.setIgnoreFields(ignoreFields);
+                            try {
+                                utilsBean.copyProperties(ruleGeoLocation, countryGeo);
+                            } catch (IllegalAccessException e) {
+                                e.printStackTrace();
+                            } catch (InvocationTargetException e) {
+                                e.printStackTrace();
+                            }
+
+                            riskAddress1.setGeoLocation(ruleGeoLocation);
+                            riskAddresses.add(riskAddress1);
+                        }
+                    }
+
+                }
+                riskCustomer.setAddressesByCustomerCode(riskAddresses);
+            }
+
+            //Find module sent with onboarding customer
+            com.loits.aml.domain.Module dbModule = moduleRepository.findByCode(onboardingCustomer.getModule()).get();
+
+            Module ruleModule = new Module();
+            ruleModule.setCode(dbModule.getCode());
+            if (dbModule.getParent() != null) {
+                Module ruleModuleParent = new Module();
+                ruleModuleParent.setCode(dbModule.getParent().getCode());
+                ruleModule.setParent(ruleModuleParent);
+            }
+            riskCustomer.setModule(ruleModule);
+        } else {
+            throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"), new Date(), HttpStatus.BAD_REQUEST, false);
+        }
+
         HashMap<String, String> headers = new HashMap<>();
         headers.put("user", user);
-        HttpResponse httpResponse = sendPostRequest(riskCustomer, "http://localhost:8099/aml-category-risk/v1/AnRkr?projection", "Aml-Category-Risk", headers);
+
+        HttpResponse httpResponse = sendPostRequest(riskCustomer, String.format(env.getProperty("aml.api.category-risk"), tenent), "Aml-Category-Risk", headers);
         if (httpResponse.getStatusLine().getStatusCode() == 200) {
-            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper = new ObjectMapper();
             String jsonString = null;
             CustomerRisk customerRisk = null;
             try {
@@ -64,26 +186,108 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 throw new FXDefaultException();
             }
             OverallRisk overallRisk = new OverallRisk(riskCustomer.getId(), riskCustomer.getModule(), customerRisk.getCalculatedRisk(), 0.0, 0.0, customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
-            return calculateOverallRisk(overallRisk);
+            return kieService.getOverallRisk(overallRisk);
         } else {
             throw new FXDefaultException();
         }
     }
 
     @Override
-    public Object calcRisk(String customerCode, String module, String otherIdentity, String user) throws FXDefaultException {
+    public Object getCustomerRisk(String customerCode, String module, String otherIdentity, String user, String tenent) throws FXDefaultException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        HttpResponse httpResponse = null;
+        String content = null;
+        String jsonString = null;
+        List<Customer> customerList = null;
+        Customer customer = null;
+
+        Module ruleModule=null;
+        if(!moduleRepository.existsById(module)){
+            throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"), new Date(), HttpStatus.BAD_REQUEST, false);
+        }else {
+            com.loits.aml.domain.Module dbModule = moduleRepository.findByCode(module).get();
+            ruleModule = new Module();
+            ruleModule.setCode(dbModule.getCode());
+            if (dbModule.getParent() != null) {
+                Module ruleModuleParent = new Module();
+                ruleModuleParent.setCode(dbModule.getParent().getCode());
+                ruleModule.setParent(ruleModuleParent);
+            }
+
+            List<ModuleCustomer> moduleCustomerList = null;
+            ModuleCustomer moduleCustomer = null;
+
+            //Request parameters to Customer Service
+            String customerServiceUrl = String.format(env.getProperty("aml.api.customer-module-customer"), tenent);
+            HashMap<String, String> parameters = new HashMap<>();
+            parameters.put("moduleCustomerCode", customerCode);
+            parameters.put("module.code", ruleModule.getCode());
+
+            //Send request to Customer Service
+            RestResponsePage customerResultPage = sendServiceRequest(customerServiceUrl, parameters, null, "Customer");
+
+            try {
+                moduleCustomerList = customerResultPage.getContent();
+                moduleCustomer = objectMapper.convertValue(moduleCustomerList.get(0), ModuleCustomer.class);
+                customer = moduleCustomer.getCustomer();
+            } catch (Exception e) {
+                throw new FXDefaultException("3001", "INVALID_ATTEMPT", "Customer not found", new Date(), HttpStatus.BAD_REQUEST);
+            }
+        }
+
+        if(amlRiskRepository.existsByCustomer(customer.getId())){
+            AmlRisk amlRisk = amlRiskRepository.findTopByCustomerOrderByCreatedOnDesc(customer.getId()).get();
+            OverallRisk overallRisk = new OverallRisk();
+            overallRisk.setCustomerCode(amlRisk.getCustomer());
+            overallRisk.setModule(ruleModule);
+            overallRisk.setRiskRating(amlRisk.getRiskRating());
+            overallRisk.setCalculatedRisk(amlRisk.getRisk());
+            overallRisk.setChannelRisk(amlRisk.getChannelRisk());
+            overallRisk.setProductRisk(amlRisk.getProductRisk());
+            overallRisk.setCustomerRisk(amlRisk.getCustomerRisk());
+            return overallRisk;
+        }else{
+            throw new FXDefaultException("3003", "NO_DATA_AVAILABLE", Translator.toLocale("NO_RISK_DATA"), new Date(), HttpStatus.BAD_REQUEST, false);
+        }
+
+//        //Only for test purposes
+//        Module ruleModule = new Module();
+//        ruleModule.setCode("lending");
+//        Module ruleModuleParent = new Module();
+//        ruleModuleParent.setCode("lofc");
+//        ruleModule.setParent(ruleModuleParent);
+
+//        OverallRisk overallRisk = new OverallRisk(Long.parseLong(customerCode), ruleModule, 36.5, 24.7, 66.0,  true, false, true);
+//        return kieService.getOverallRisk(overallRisk);
+    }
+
+    public OverallRisk runRiskCronJob(String customerCode, String module, String otherIdentity, String user, String tenent) throws FXDefaultException{
         ObjectMapper objectMapper = new ObjectMapper();
         HttpResponse httpResponse = null;
         String content = null;
         String jsonString = null;
         List<Customer> customerList = null;
 
-        CustomerRisk customerRisk = calculateCustomerRisk(customerCode, module, user);
+        Module ruleModule=null;
+        if(!moduleRepository.existsById(module)){
+            throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"), new Date(), HttpStatus.BAD_REQUEST, false);
+        }else{
+            com.loits.aml.domain.Module dbModule = moduleRepository.findByCode(module).get();
+            ruleModule = new Module();
+            ruleModule.setCode(dbModule.getCode());
+            if (dbModule.getParent() != null) {
+                Module ruleModuleParent = new Module();
+                ruleModuleParent.setCode(dbModule.getParent().getCode());
+                ruleModule.setParent(ruleModuleParent);
+            }
+        }
 
-        ChannelRisk channelRisk = calculateChannelRisk(customerRisk.getCustomerCode(), module, user);
+        CustomerRisk customerRisk = calculateCustomerRisk(customerCode, ruleModule, user, tenent);
 
-        ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), module, user);
-        
+        ChannelRisk channelRisk = calculateChannelRisk(customerRisk.getCustomerCode(),  ruleModule,  user, tenent);
+
+        ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), ruleModule, user, tenent);
+
         if (customerRisk.getCalculatedRisk() != null) {
             if (channelRisk.getCalculatedRisk() == null) {
                 channelRisk.setCalculatedRisk(0.0);
@@ -91,40 +295,69 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             if (productRisk.getCalculatedRisk() == null) {
                 productRisk.setCalculatedRisk(0.0);
             }
-            OverallRisk overallRisk = new OverallRisk(customerRisk.getCustomerCode(), module, customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(), channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
-            overallRisk = calculateOverallRisk(overallRisk);
+            OverallRisk overallRisk = new OverallRisk(customerRisk.getCustomerCode(), ruleModule, customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(), channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
+            overallRisk = kieService.getOverallRisk(overallRisk);
+
 
             AmlRisk amlRisk = new AmlRisk();
             amlRisk.setCreatedOn(new Timestamp(new Date().getTime()));
-            amlRisk.setRiskRating(user);
+            amlRisk.setCreatedBy(user);
+            amlRisk.setRiskRating(overallRisk.getRiskRating());
             amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
             amlRisk.setChannelRisk(overallRisk.getChannelRisk());
             amlRisk.setProductRisk(overallRisk.getProductRisk());
             amlRisk.setRisk(overallRisk.getCalculatedRisk());
-            amlRisk.setRiskRating(overallRisk.getRiskRating());
             amlRisk.setCustomerRiskId(customerRisk.getId());
             amlRisk.setChannelRiskId(channelRisk.getId());
             amlRisk.setProductRiskId(productRisk.getId());
+            amlRisk.setTenent(tenent);
+            StringBuilder stringBuilder = new StringBuilder();
+
+            if(overallRisk.getPepsEnabled()){
+                stringBuilder.append("A politically exposed person");
+            }
+            if(overallRisk.getHighRiskCustomerType()){
+                if(stringBuilder.length()!=0){
+                    stringBuilder.append(" with");
+                }else{
+                    stringBuilder.append("Customer has");
+                }
+                stringBuilder.append(" a high risk customer-type");
+            }else{
+
+            }
+            if(overallRisk.getHighRiskOccupation()){
+                if(stringBuilder.length()!=0){
+                    stringBuilder.append(" and");
+                }else{
+                    stringBuilder.append("Customer has");
+                }
+                stringBuilder.append(" a high risk occupation");
+            }
+
+            amlRisk.setRiskText(stringBuilder.toString());
+
+            amlRiskRepository.save(amlRisk);
+            kafkaProducer.publishToTopic("aml-risk-create", amlRisk);
 
             return overallRisk;
-
         } else {
             throw new FXDefaultException();
         }
     }
 
 
-    public CustomerRisk calculateCustomerRisk(String customerCode, String module, String user) throws FXDefaultException {
+    public CustomerRisk calculateCustomerRisk(String customerCode, Module ruleModule, String user, String tenent) throws FXDefaultException {
         List<ModuleCustomer> moduleCustomerList = null;
         Customer customer = null;
         ModuleCustomer moduleCustomer = null;
         ObjectMapper objectMapper = new ObjectMapper();
 
         //Request parameters to Customer Service
-        String customerServiceUrl = "http://localhost:8091/aml-customer/module-customer/v1/AnRkr?projection";
+        String customerServiceUrl = String.format(env.getProperty("aml.api.customer-module-customer"),tenent);
         HashMap<String, String> parameters = new HashMap<>();
         parameters.put("moduleCustomerCode", customerCode);
-        parameters.put("module.code", module);
+        parameters.put("module.code", ruleModule.getCode());
 
         //Send request to Customer Service
         RestResponsePage customerResultPage = sendServiceRequest(customerServiceUrl, parameters, null, "Customer");
@@ -142,15 +375,32 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
         try {
             riskCustomer.setId(customer.getId());
-            riskCustomer.setClientCategory(customer.getClientCategory());
+            for (CustomerMeta customerMeta : customer.getCustomerMetaList()) {
+                if (customerMeta.getType().equalsIgnoreCase("clientCategory")) {
+                    riskCustomer.setClientCategory(customerMeta.getValue());
+                }
+                if (customerMeta.getType().equalsIgnoreCase("pepsEnabled")) {
+                    if(customerMeta.getValue().equalsIgnoreCase("Y")){
+                        riskCustomer.setPepsEnabled(Byte.parseByte("1"));
+                    }else{
+                        riskCustomer.setPepsEnabled(Byte.parseByte("0"));
+                    }
+                }
+                if (customerMeta.getType().equalsIgnoreCase("withinBranchServiceArea")) {
+                    if(customerMeta.getValue().equalsIgnoreCase("Y")){
+                        riskCustomer.setPepsEnabled(Byte.parseByte("1"));
+                    }else{
+                        riskCustomer.setPepsEnabled(Byte.parseByte("0"));
+                    }
+                }
+            }
+
             riskCustomer.setAnnualTurnover(customer.getAnnualTurnover());
-            riskCustomer.setAddressesByCustomerCode((Collection<Address>) customer.getAddressesByCustomerCode());
+            riskCustomer.setAddressesByCustomerCode((Collection<Address>) customer.getAddresses());
             riskCustomer.setCustomerType(customer.getCustomerType().getCode());
             riskCustomer.setIndustry(customer.getIndustry().getIsoCode());
             riskCustomer.setOccupation(customer.getOccupation().getIsoCode());
-            riskCustomer.setModule(moduleCustomer.getModule().getCode());
-            riskCustomer.setPepsEnabled(customer.getPepsEnabled());
-            riskCustomer.setWithinBranchServiceArea(customer.getWithinBranchServiceArea());
+            riskCustomer.setModule(ruleModule);
             riskCustomer.setIndustryId(customer.getIndustry().getId());
             riskCustomer.setCustomerTypeId(customer.getCustomerType().getId());
             riskCustomer.setOccupationId(customer.getOccupation().getId());
@@ -159,7 +409,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         }
         HashMap<String, String> headers = new HashMap<>();
         headers.put("user", user);
-        HttpResponse res = sendPostRequest(riskCustomer, "http://localhost:8099/aml-category-risk/v1/AnRkr?projection", "Aml-Category-Risk", headers);
+        HttpResponse res = sendPostRequest(riskCustomer,String.format(env.getProperty("aml.api.category-risk"), tenent), "Aml-Category-Risk", headers);
         CustomerRisk customerRisk = null;
         try {
             String jsonString = EntityUtils.toString(res.getEntity());
@@ -174,13 +424,14 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         return customerRisk;
     }
 
-    public ProductRisk calculateProductRisk(Long customerId, String module, String user) throws FXDefaultException {
+    public ProductRisk calculateProductRisk(Long customerId, Module ruleModule, String user, String tenent) throws FXDefaultException {
         List<CustomerProduct> customerProductList = null;
         ObjectMapper objectMapper = new ObjectMapper();
+        ProductRisk productRisk = new ProductRisk();
 
         //Get the products for customer
         //Request parameters to AML Service
-        String amlServiceProductsUrl = "http://localhost:8090/aml/customer-product/v1/AnRkr?projection";
+        String amlServiceProductsUrl = String.format(env.getProperty("aml.api.aml-customer-products"),tenent);
         HashMap<String, String> productsParameters = new HashMap<>();
         productsParameters.put("customer.id", customerId.toString());
 
@@ -190,51 +441,55 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         customerProductList = objectMapper.convertValue(list, new TypeReference<List<CustomerProduct>>() {
         });
 
-        ProductRisk productRisk = new ProductRisk();
-        productRisk.setCustomerCode(customerId);
-        productRisk.setModule(module);
-        productRisk.setToday(new Date());
+        if (customerProductList.size() > 0) {
+            productRisk.setCustomerCode(customerId);
+            productRisk.setModule(ruleModule);
+            productRisk.setToday(new Date());
 
-        List<Product> productList = new ArrayList<>();
-        for (CustomerProduct cp : customerProductList) {
-            Product product = new Product();
-            product.setCode(cp.getProduct().getCode());
-            product.setCommencedDate(cp.getCommenceDate());
-            product.setTerminatedDate(cp.getTerminateDate());
-            product.setInterestRate(cp.getRate());
-            product.setValue(cp.getValue());
-            product.setDefaultRate(cp.getProduct().getDefaultRate());  //TODO uncomment when data added
-            //product.setDefaultRate(1.0);
-            List<com.redhat.aml.Transaction> ruleTransactionsList = new ArrayList<>();
-            for (Transaction tr : cp.getTransactions()) {
-                com.redhat.aml.Transaction transaction = new com.redhat.aml.Transaction();
-                transaction.setType(tr.getTxnType());
-                transaction.setAmount(tr.getAmount());
-                transaction.setDate(tr.getTxnDate());
-                ruleTransactionsList.add(transaction);
+            List<Product> productList = new ArrayList<>();
+            for (CustomerProduct cp : customerProductList) {
+                Product product = new Product();
+                product.setCode(cp.getProduct().getCode());
+                product.setCommencedDate(cp.getCommenceDate());
+                product.setTerminatedDate(cp.getTerminateDate());
+                product.setInterestRate(cp.getRate());
+                product.setValue(cp.getValue());
+                product.setDefaultRate(cp.getProduct().getDefaultRate());
+                List<com.loits.fx.aml.Transaction> ruleTransactionsList = new ArrayList<>();
+                for (Transaction tr : cp.getTransactions()) {
+                    com.loits.fx.aml.Transaction transaction = new com.loits.fx.aml.Transaction();
+                    transaction.setType(tr.getTxnType());
+                    transaction.setAmount(tr.getAmount());
+                    transaction.setDate(tr.getTxnDate());
+                    ruleTransactionsList.add(transaction);
+                }
+                product.setTransactions(ruleTransactionsList);
+                productList.add(product);
             }
-            product.setTransactions(ruleTransactionsList);
-            productList.add(product);
-        }
-        productRisk.setProducts(productList);
+            productRisk.setProducts(productList);
 
-        HttpResponse httpResponse = sendPostRequest(productRisk, "http://localhost:8095/aml-product-risk/v1/AnRkr?projection", "ProductRisk", null);
-        try {
-            String jsonString = EntityUtils.toString(httpResponse.getEntity());
-            productRisk = objectMapper.readValue(jsonString, ProductRisk.class);
-        } catch (IOException e) {
-            e.printStackTrace();
+            HttpResponse httpResponse = sendPostRequest(productRisk, String.format(env.getProperty("aml.api.product-risk"), tenent), "ProductRisk", null);
+            try {
+                String jsonString = EntityUtils.toString(httpResponse.getEntity());
+                productRisk = objectMapper.readValue(jsonString, ProductRisk.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            productRisk.setCalculatedRisk(0.0);
         }
+
         return productRisk;
     }
 
-    public ChannelRisk calculateChannelRisk(Long customerId, String module, String user) throws FXDefaultException {
+    public ChannelRisk calculateChannelRisk(Long customerId, Module module, String user, String tenent) throws FXDefaultException {
         ObjectMapper objectMapper = new ObjectMapper();
         List<Transaction> transactionList = null;
+        ChannelRisk channelRisk = new ChannelRisk();
 
         //Get the transactions for customer
         //Request parameters to AML Service
-        String amlServiceTransactionUrl = "http://localhost:8090/aml/transaction/v1/AnRkr?projection";
+        String amlServiceTransactionUrl = String.format(env.getProperty("aml.api.aml-transactions"), tenent);
         HashMap<String, String> transactionParameters = new HashMap<>();
         transactionParameters.put("customer.id", customerId.toString());
 
@@ -247,70 +502,42 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             throw new FXDefaultException();
         }
 
-        //send Transaction list to ChannelRisk
-        List<ChannelUsage> channelUsageList = new ArrayList<>();
+        if (transactionList.size() > 0) {
+            //send Transaction list to ChannelRisk
+            List<ChannelUsage> channelUsageList = new ArrayList<>();
 
-        for (Transaction t : transactionList) {
-            ChannelUsage channelUsage = new ChannelUsage();
-            channelUsage.setDate(t.getTxnDate());
-            channelUsage.setChannel(t.getChannel().getCode());
-            channelUsageList.add(channelUsage);
-            channelUsage.setAmount(t.getAmount());
-            channelUsage.setTxnReference(t.getTxnReference());
-            channelUsage.setTxnId(t.getId());
-            channelUsage.setRemark(t.getRemarks());
-        }
-        ChannelRisk channelRisk = new ChannelRisk();
-        channelRisk.setModule(module);
-        channelRisk.setChannelUsage(channelUsageList);
-        channelRisk.setCustomerCode(customerId);
-        channelRisk.setToday(new Timestamp(new Date().getTime()));
+            for (Transaction t : transactionList) {
+                ChannelUsage channelUsage = new ChannelUsage();
+                channelUsage.setChannelId(t.getChannel().getId());
+                channelUsage.setChannel(t.getChannel().getCode());
+                channelUsage.setChannelName(t.getChannel().getChannelName());
+                channelUsage.setChannelDescription(t.getChannel().getChannelDescription());
+                channelUsage.setDate(t.getTxnDate());
+                channelUsage.setAmount(t.getAmount());
 
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put("user", user);
-        HttpResponse httpResponse = sendPostRequest(channelRisk, "http://localhost:8096/aml-channel-risk/v1/AnRkr?projection&timestamp=2019-05-29%2013%3A00%3A14", "ChannelRisk", headers);
+                channelUsageList.add(channelUsage);
 
-        try {
-            String jsonString = EntityUtils.toString(httpResponse.getEntity());
-            channelRisk = objectMapper.readValue(jsonString, ChannelRisk.class);
-        } catch (IOException e) {
-            e.printStackTrace();
+            }
+            channelRisk.setModule(module);
+            channelRisk.setChannelUsage(channelUsageList);
+            channelRisk.setCustomerCode(customerId);
+            channelRisk.setToday(new Timestamp(new Date().getTime()));
+
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("user", user);
+            HttpResponse httpResponse = sendPostRequest(channelRisk, String.format(env.getProperty("aml.api.channel-risk"), tenent), "ChannelRisk", headers);
+
+            try {
+                String jsonString = EntityUtils.toString(httpResponse.getEntity());
+                channelRisk = objectMapper.readValue(jsonString, ChannelRisk.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        } else {
+            channelRisk.setCalculatedRisk(0.0);
         }
         return channelRisk;
-    }
-
-
-    public OverallRisk calculateOverallRisk(OverallRisk overallRisk) throws FXDefaultException {
-        conf = KieServicesFactory.newRestConfiguration("http://130.61.87.156:8080/kie-server/services/rest/server", "capi", "apic123");
-        conf.setMarshallingFormat(FORMAT);
-        kieServicesClient = KieServicesFactory.newKieServicesClient(conf);
-
-        //Kie API
-        String containerId = "AML_1.0.0-SNAPSHOT";
-        System.out.println("== Sending commands to the server ==");
-        RuleServicesClient rulesClient = kieServicesClient.getServicesClient(RuleServicesClient.class);
-        KieCommands commandsFactory = KieServices.Factory.get().getCommands();
-
-        BatchExecutionCommandImpl command = new BatchExecutionCommandImpl();
-        command.setLookup("kie-session");
-
-        InsertObjectCommand insertObjectCommand = new InsertObjectCommand(overallRisk);
-        FireAllRulesCommand fireAllRulesCommand = new FireAllRulesCommand();
-
-        command.addCommand(insertObjectCommand);
-        command.addCommand(fireAllRulesCommand);
-        command.addCommand(commandsFactory.newGetObjects("OverallRisk"));
-
-        ServiceResponse<ExecutionResults> response = rulesClient.executeCommandsWithResults(containerId, command);
-        ArrayList obj = (ArrayList) response.getResult().getValue("OverallRisk");
-        System.out.println();
-        OverallRisk calculatedOverallRisk = (OverallRisk) obj.get(0);
-
-        if (calculatedOverallRisk.getCalculatedRisk() == null) {
-            throw new FXDefaultException();
-        }
-
-        return calculatedOverallRisk;
     }
 
 
@@ -426,5 +653,4 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             throw new FXDefaultException("", "", "", new Date(), HttpStatus.BAD_REQUEST);
         }
     }
-
 }

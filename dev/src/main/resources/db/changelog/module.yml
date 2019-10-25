@@ -1,0 +1,81 @@
+databaseChangeLog:
+- changeSet:
+    id: 1
+    author: minolid@i360.lk (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+                primaryKey: true
+                nullable: false
+            name: code
+            type: VARCHAR(45)
+        - column:
+            constraints:
+                nullable: false
+            name: name
+            type: VARCHAR(60)
+        - column:
+            constraints:
+                nullable: false
+            name: type
+            type: VARCHAR(30)
+        - column:
+            constraints:
+                nullable: false
+            name: country
+            type: VARCHAR(45)
+        - column:
+              name: parent
+              type: VARCHAR(45)
+        - column:
+            constraints:
+                nullable: false
+            name: created_by
+            type: VARCHAR(45)
+        - column:
+            constraints:
+                nullable: false
+            name: created_on
+            type: DATETIME
+        - column:
+            constraints:
+                nullable: false
+            name: version
+            type: BIGINT
+        tableName: module
+- changeSet:
+      id: 2
+      author: minolid@i360.lk
+      changes:
+          - createIndex:
+                columns:
+                    - column:
+                          name: parent
+                indexName: fk_module_parent_idx
+                tableName: module
+- changeSet:
+      id: 3
+      author: minolid@i360.lk
+      changes:
+          - addForeignKeyConstraint:
+                baseColumnNames: parent
+                baseTableName: module
+                constraintName: fk_module_parent
+                deferrable: false
+                initiallyDeferred: false
+                onDelete: NO ACTION
+                onUpdate: NO ACTION
+                referencedColumnNames: code
+                referencedTableName: module
+                validate: true
+
+
+
+
+
+
+
+
+
