@@ -17,7 +17,7 @@ spec:
         version: v1
     spec:
       imagePullSecrets:
-      - name: lolc-secret-uat
+      - name: lolc-secret-dev
       containers:
       - name: aml-risk-uat
         image: fra.ocir.io/lolctech/fxapiuser/aml-risk-uat:latest
