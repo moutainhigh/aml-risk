@@ -37,7 +37,7 @@ public class KafkaConfiguration {
     @Value("${com.loits.aml.kafka.buffer.memory}")
     private Long bufferMemory;
 
-    @Value("${com.loits.aml.kafka.consumergroup}")
+    @Value("${com.loits.aml.kafka.aml-risk.consumergroup}")
     private String consumerGroup;
 
     @Value("${com.loits.aml.kafka.trustedpackages}")
