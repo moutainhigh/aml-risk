@@ -174,7 +174,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         HashMap<String, String> headers = new HashMap<>();
         headers.put("user", user);
 
-        HttpResponse httpResponse = sendPostRequest(riskCustomer, String.format(env.getProperty("http://localhost:8095/aml-category-risk/v1/%s?projection"), tenent), "Aml-Category-Risk", headers);
+        HttpResponse httpResponse = sendPostRequest(riskCustomer, String.format(env.getProperty("aml.api.category-risk"), tenent), "Aml-Category-Risk", headers);
         if (httpResponse.getStatusLine().getStatusCode() == 200) {
             objectMapper = new ObjectMapper();
             String jsonString = null;
