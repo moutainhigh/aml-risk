@@ -43,9 +43,9 @@ public class KieServiceImpl implements KieService {
     @PostConstruct
     public void init(){
         //Connect to the RedHat Server
-//        conf = KieServicesFactory.newRestConfiguration(redhatServerUrl, username, password);
-//        conf.setMarshallingFormat(FORMAT);
-//        kieServicesClient = KieServicesFactory.newKieServicesClient(conf);
+        conf = KieServicesFactory.newRestConfiguration(redhatServerUrl, username, password);
+        conf.setMarshallingFormat(FORMAT);
+        kieServicesClient = KieServicesFactory.newKieServicesClient(conf);
     }
 
     @Override
