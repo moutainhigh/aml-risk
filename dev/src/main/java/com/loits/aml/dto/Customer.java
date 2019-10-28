@@ -31,5 +31,6 @@ public class Customer {
 
     private List<CustomerIdentification> customerIdentificationList;
 
+    private AMLCustomerModule customerModule;
 
 }
