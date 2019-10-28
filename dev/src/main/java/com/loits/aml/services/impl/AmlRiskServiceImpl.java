@@ -460,8 +460,8 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 List<com.loits.fx.aml.Transaction> ruleTransactionsList = new ArrayList<>();
                 for (Transaction tr : cp.getTransactions()) {
                     com.loits.fx.aml.Transaction transaction = new com.loits.fx.aml.Transaction();
-                    transaction.setType(tr.getTxnType());
-                    transaction.setAmount(tr.getAmount());
+                    transaction.setType(tr.getTxnMode());
+                    transaction.setAmount(tr.getTxnAmount().doubleValue());
                     transaction.setDate(tr.getTxnDate());
                     ruleTransactionsList.add(transaction);
                 }
@@ -516,7 +516,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 channelUsage.setChannelName(t.getChannel().getChannelName());
                 channelUsage.setChannelDescription(t.getChannel().getChannelDescription());
                 channelUsage.setDate(t.getTxnDate());
-                channelUsage.setAmount(t.getAmount());
+                channelUsage.setAmount(t.getTxnAmount().doubleValue());
 
                 channelUsageList.add(channelUsage);
 
