@@ -42,6 +42,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class AmlRiskServiceImpl implements AmlRiskService {
@@ -260,6 +261,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 //        OverallRisk overallRisk = new OverallRisk(Long.parseLong(customerCode), ruleModule, 36.5, 24.7, 66.0,  true, false, true);
 //        return kieService.getOverallRisk(overallRisk);
     }
+
 
     public OverallRisk runRiskCronJob(String user, String tenent) throws FXDefaultException {
 
@@ -597,6 +599,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
     }
 
 
+    @Override
     public RestResponsePage sendServiceRequest(String
                                                        serviceUrl, HashMap<String, String> parameters, HashMap<String, String> headers, String service) throws
             FXDefaultException {

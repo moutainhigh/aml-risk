@@ -15,6 +15,12 @@ databaseChangeLog:
             name: type
             type: VARCHAR(45)
         - column:
+            name: page
+            type: INT
+        - column:
+            name: size
+            type: INT
+        - column:
             name: s_date
             type: datetime
         - column:
@@ -31,9 +37,4 @@ databaseChangeLog:
               nullable: false
             name: cron_status
             type: VARCHAR(1)
-        - column:
-            constraints:
-              nullable: false
-            name: module
-            type: VARCHAR(35)
         tableName: sync_status

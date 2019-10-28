@@ -2,8 +2,6 @@ package com.loits.aml.services;
 
 import com.loits.aml.domain.SyncStatus;
 
-import java.util.Date;
-
 /**
  * @author Lahiru Bandara - Infinitum360
  * @version 1.0.0
@@ -11,12 +9,10 @@ import java.util.Date;
 
 public interface SyncStatusService {
 
-  SyncStatus updateSyncStatus(String module, SyncStatus lastSyncStatus,
-                              String currentStatus,
-                              String type);
+  SyncStatus updateSyncStatus(SyncStatus lastSyncStatus,
+                              String currentStatus );
 
-  Date getLastSuccessfulAMLDataSyncDate(String type, String module, SyncStatus thisSync);
+  SyncStatus saveSyncStatus(String currentStatus,
+                            String type, int page, int size);
 
-
-  SyncStatus getSyncStartDayPopulated(String KEY, String type);
 }
