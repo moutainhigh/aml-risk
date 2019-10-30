@@ -23,24 +23,18 @@ databaseChangeLog:
                   name: customer_risk
                   type: DOUBLE
             - column:
-                  constraints:
-                      nullable: false
                   name: customer_risk_id
                   type: BIGINT
             - column:
                   name: product_risk
                   type: DOUBLE
             - column:
-                  constraints:
-                      nullable: false
                   name: product_risk_id
                   type: BIGINT
             - column:
                   name: channel_risk
                   type: DOUBLE
             - column:
-                  constraints:
-                      nullable: false
                   name: channel_risk_id
                   type: BIGINT
             - column:
