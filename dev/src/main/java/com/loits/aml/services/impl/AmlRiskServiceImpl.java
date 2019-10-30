@@ -286,7 +286,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         }
 
 
-        String module = customer.getCustomerModule().getModule();
+        String module = "lending";//TODO customer.getCustomerModule().getModule();
         Module ruleModule = null;
         if (!moduleRepository.existsById(module)) {
             throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"), new Date(), HttpStatus.BAD_REQUEST, false);
@@ -330,6 +330,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 amlRisk.setChannelRiskId(channelRisk.getId());
                 amlRisk.setProductRiskId(productRisk.getId());
                 amlRisk.setTenent(tenent);
+                amlRisk.setCustomer(overallRisk.getCustomerCode());
                 StringBuilder stringBuilder = new StringBuilder();
 
                 if (overallRisk.getPepsEnabled()) {
@@ -494,7 +495,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         //Request parameters to AML Service
         String amlServiceTransactionUrl = String.format(env.getProperty("aml.api.aml-transactions"), tenent);
         HashMap<String, String> transactionParameters = new HashMap<>();
-        transactionParameters.put("customer.id", customerId.toString());
+        transactionParameters.put("customerProduct.customer.id", customerId.toString());
 
         //Send request to Customer Service
         ArrayList<Object> list = sendServiceRequest2(amlServiceTransactionUrl, transactionParameters, null, "AML");
