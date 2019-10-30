@@ -52,4 +52,12 @@ public class AmlRiskController {
         Resource resource = new Resource(amlRiskService.calcOnboardingRisk(customer, user, tenent));
         return ResponseEntity.ok(resource);
     }
+
+    @GetMapping(path= "/risk-calc/{tenent}", produces = "application/json")
+    public ResponseEntity<?> calculateAllRisk(@PathVariable(value = "tenent") String tenent,
+                                           @RequestHeader(value = "user", defaultValue = "sysUser") String user
+    ) throws FXDefaultException {
+        Resource resource = new Resource(amlRiskService.runRiskCronJob(user, tenent));
+        return ResponseEntity.ok(resource);
+    }
 }

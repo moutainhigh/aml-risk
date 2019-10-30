@@ -38,7 +38,7 @@ public abstract class BaseException extends Exception {
 	private List<String> errors;
 
 	public BaseException(HttpStatus status, String errorShortDescription, String errorDescription, List<String> errors) {
-		super();
+		super(errorDescription);
 		this.httpStatus = status;
 		this.errorShortDescription = errorShortDescription;
 		this.errorDescription = errorDescription;
@@ -61,7 +61,7 @@ public abstract class BaseException extends Exception {
 	}
 
 	protected BaseException(String errorCode, String errorShortDescription, String errorDescription, Date errorDate) {
-		super();
+		super(errorDescription);
 		this.errorCode = errorCode;
 		this.errorShortDescription = errorShortDescription;
 		this.errorDescription = errorDescription;
@@ -73,7 +73,7 @@ public abstract class BaseException extends Exception {
 
 	protected BaseException(String errorCode, String errorShortDescription, String errorDescription, Date errorDate,
 							HttpStatus status) {
-		super();
+		super(errorDescription);
 		this.errorCode = errorCode;
 		this.errorShortDescription = errorShortDescription;
 		this.errorDescription = errorDescription;
@@ -85,8 +85,8 @@ public abstract class BaseException extends Exception {
 	}
 
 	protected BaseException(String errorCode, String errorShortDescription, String errorDescription, Date errorDate,
-			HttpStatus status, Boolean severity) {
-		super();
+							HttpStatus status, Boolean severity) {
+		super(errorDescription);
 		this.errorCode = errorCode;
 		this.errorShortDescription = errorShortDescription;
 		this.errorDescription = errorDescription;
