@@ -183,48 +183,48 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         CustomerRisk customerRisk = (CustomerRisk) httpService.sendData("Category-risk",String.format(env.getProperty("aml.api.category-risk"), tenent),
                 null,headers,  CustomerRisk.class, riskCustomer );
 
-        //TODO make this async
-        //Calculate overallrisk by sending request to rule-engine
+//        //TODO make this async
+//        //Calculate overallrisk by sending request to rule-engine
         OverallRisk overallRisk = new OverallRisk(riskCustomer.getId(), riskCustomer.getModule(), customerRisk.getCalculatedRisk(), 0.0, 0.0, customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
-        AmlRisk amlRisk = new AmlRisk();
-        amlRisk.setCreatedOn(new Timestamp(new Date().getTime()));
-        amlRisk.setCreatedBy(user);
-        amlRisk.setRiskRating(overallRisk.getRiskRating());
-        amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
-        amlRisk.setChannelRisk(overallRisk.getChannelRisk());
-        amlRisk.setProductRisk(overallRisk.getProductRisk());
-        amlRisk.setRisk(overallRisk.getCalculatedRisk());
-        amlRisk.setCustomerRiskId(customerRisk.getId());
-        amlRisk.setTenent(tenent);
-        amlRisk.setCustomer(overallRisk.getCustomerCode());
-        StringBuilder stringBuilder = new StringBuilder();
-
-        if (overallRisk.getPepsEnabled()) {
-            stringBuilder.append("A politically exposed person");
-        }
-        if (overallRisk.getHighRiskCustomerType()) {
-            if (stringBuilder.length() != 0) {
-                stringBuilder.append(" with");
-            } else {
-                stringBuilder.append("Customer has");
-            }
-            stringBuilder.append(" a high risk customer-type");
-        } else {
-
-        }
-        if (overallRisk.getHighRiskOccupation()) {
-            if (stringBuilder.length() != 0) {
-                stringBuilder.append(" and");
-            } else {
-                stringBuilder.append("Customer has");
-            }
-            stringBuilder.append(" a high risk occupation");
-        }
-
-        amlRisk.setRiskText(stringBuilder.toString());
-
-        amlRiskRepository.save(amlRisk);
-        kafkaProducer.publishToTopic("aml-risk-create", amlRisk);
+//        AmlRisk amlRisk = new AmlRisk();
+//        amlRisk.setCreatedOn(new Timestamp(new Date().getTime()));
+//        amlRisk.setCreatedBy(user);
+//        amlRisk.setRiskRating(overallRisk.getRiskRating());
+//        amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
+//        amlRisk.setChannelRisk(overallRisk.getChannelRisk());
+//        amlRisk.setProductRisk(overallRisk.getProductRisk());
+//        amlRisk.setRisk(overallRisk.getCalculatedRisk());
+//        amlRisk.setCustomerRiskId(customerRisk.getId());
+//        amlRisk.setTenent(tenent);
+//        amlRisk.setCustomer(overallRisk.getCustomerCode());
+//        StringBuilder stringBuilder = new StringBuilder();
+//
+//        if (overallRisk.getPepsEnabled()) {
+//            stringBuilder.append("A politically exposed person");
+//        }
+//        if (overallRisk.getHighRiskCustomerType()) {
+//            if (stringBuilder.length() != 0) {
+//                stringBuilder.append(" with");
+//            } else {
+//                stringBuilder.append("Customer has");
+//            }
+//            stringBuilder.append(" a high risk customer-type");
+//        } else {
+//
+//        }
+//        if (overallRisk.getHighRiskOccupation()) {
+//            if (stringBuilder.length() != 0) {
+//                stringBuilder.append(" and");
+//            } else {
+//                stringBuilder.append("Customer has");
+//            }
+//            stringBuilder.append(" a high risk occupation");
+//        }
+//
+//        amlRisk.setRiskText(stringBuilder.toString());
+//
+//        amlRiskRepository.save(amlRisk);
+//        kafkaProducer.publishToTopic("aml-risk-create", amlRisk);
 
         return kieService.getOverallRisk(overallRisk);
     }
@@ -258,7 +258,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             String customerServiceUrl = String.format(env.getProperty("aml.api.customer-module-customer"), tenent);
             HashMap<String, String> parameters = new HashMap<>();
             parameters.put("moduleCustomerCode", customerCode);
-            parameters.put("module.code", ruleModule.getCode());
+            parameters.put("module.code", module);
 
             //Send request to Customer Service
             RestResponsePage customerResultPage = sendServiceRequest(customerServiceUrl, parameters, null, "Customer");
