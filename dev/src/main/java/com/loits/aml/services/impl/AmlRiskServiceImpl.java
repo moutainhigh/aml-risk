@@ -16,6 +16,7 @@ import com.loits.aml.repo.AmlRiskRepository;
 import com.loits.aml.repo.GeoLocationRepository;
 import com.loits.aml.repo.ModuleRepository;
 import com.loits.aml.services.AmlRiskService;
+import com.loits.aml.services.HTTPService;
 import com.loits.aml.services.KieService;
 import com.loits.aml.services.ServiceMetadataService;
 import com.loits.fx.aml.*;
@@ -67,42 +68,89 @@ public class AmlRiskServiceImpl implements AmlRiskService {
     @Autowired
     Environment env;
 
+    @Autowired
+    HTTPService httpService;
+
     @Override
-    public Object calcOnboardingRisk(OnboardingCustomer onboardingCustomer, String user, String tenent) throws FXDefaultException {
-        ObjectMapper objectMapper = null;
-        RiskCustomer riskCustomer = null;
+    public Object calcOnboardingRisk(OnboardingCustomer onboardingCustomer, String user, String tenent) throws FXDefaultException, IOException, ClassNotFoundException {
 
         //Check if a module exists by sent module code
-        if (moduleRepository.existsByCode(onboardingCustomer.getModule())) {
-            riskCustomer = new RiskCustomer();
+        if (!moduleRepository.existsByCode(onboardingCustomer.getModule())) {
+            throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"), new Date(), HttpStatus.BAD_REQUEST, false);
+        }
 
-            //copy similar properties from onboarding customer to risk customer
-            //set id field to ignore when copying
-            HashSet<String> ignoreFields = new HashSet<String>();
-            ignoreFields.add("module");
-            ignoreFields.add("addressesByCustomerCode");
+        //Create new object to be sent to Category Risk server for risk calculation
+        RiskCustomer riskCustomer = new RiskCustomer();
 
+        //Find module sent with onboarding customer
+        com.loits.aml.domain.Module dbModule = moduleRepository.findByCode(onboardingCustomer.getModule()).get();
 
-            try {
-                NullAwareBeanUtilsBean utilsBean = new NullAwareBeanUtilsBean();
-                utilsBean.setIgnoreFields(ignoreFields);
-                utilsBean.copyProperties(riskCustomer, onboardingCustomer);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            }
+        Module ruleModule = new Module();
+        ruleModule.setCode(dbModule.getCode());
+        if (dbModule.getParent() != null) {
+            Module ruleModuleParent = new Module();
+            ruleModuleParent.setCode(dbModule.getParent().getCode());
+            ruleModule.setParent(ruleModuleParent);
+        }
+        //set module to RiskCustomer object
+        riskCustomer.setModule(ruleModule);
 
-            //List for creating onboarding customer Addresses by GeoLocation
-            List<Address> riskAddresses = new ArrayList<>();
+        //copy similar properties from onboarding customer to risk customer
+        //set id field to ignore when copying
+        HashSet<String> ignoreFields = new HashSet<String>();
+        //ignore module field and addresses on property transfer (Similar reference but data type different)
+        ignoreFields.add("module");
+        ignoreFields.add("addressesByCustomerCode");
 
-            if (onboardingCustomer.getAddressesByCustomerCode() != null) {
-                //Get addresses of onboarding customer
-                for (Address address : onboardingCustomer.getAddressesByCustomerCode()) {
-                    //If address has a district
-                    if (address.getDistrict() != null && geoLocationRepository.existsByLocationName(address.getDistrict())) {
+        try {
+            NullAwareBeanUtilsBean utilsBean = new NullAwareBeanUtilsBean();
+            utilsBean.setIgnoreFields(ignoreFields);
+            utilsBean.copyProperties(riskCustomer, onboardingCustomer);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
 
-                        GeoLocation geoLocation = geoLocationRepository.findByLocationName(address.getDistrict()).get();
+        //List for creating onboarding customer Addresses by GeoLocation
+        List<Address> riskAddresses = new ArrayList<>();
+
+        if (onboardingCustomer.getAddressesByCustomerCode() != null) {
+            //Get addresses of onboarding customer
+            for (Address address : onboardingCustomer.getAddressesByCustomerCode()) {
+                //If address has a district
+                if (address.getDistrict() != null && geoLocationRepository.existsByLocationName(address.getDistrict())) {
+
+                    GeoLocation geoLocation = geoLocationRepository.findTopByLocationName(address.getDistrict()).get();
+                    Address riskAddress1 = new Address();
+                    com.loits.fx.aml.GeoLocation ruleGeoLocation = new com.loits.fx.aml.GeoLocation();
+
+                    NullAwareBeanUtilsBean utilsBean = new NullAwareBeanUtilsBean();
+                    ignoreFields.clear();
+                    ignoreFields.add("parent");
+                    utilsBean.setIgnoreFields(ignoreFields);
+                    com.loits.fx.aml.GeoLocation tempGeoLocation = ruleGeoLocation;
+
+                    do {
+                        try {
+                            utilsBean.copyProperties(tempGeoLocation, geoLocation);
+                            geoLocation = geoLocation.getParent();
+                            if (geoLocation != null) {
+                                tempGeoLocation.setParent(new com.loits.fx.aml.GeoLocation());
+                                tempGeoLocation = tempGeoLocation.getParent();
+                            }
+                        } catch (IllegalAccessException e) {
+                            e.printStackTrace();
+                        } catch (InvocationTargetException e) {
+                            e.printStackTrace();
+                        }
+                    } while (geoLocation != null);
+
+                    riskAddress1.setGeoLocation(ruleGeoLocation);
+                    riskAddresses.add(riskAddress1);
+                } else {
+                    if (geoLocationRepository.existsByLocationName(address.getCountry())) {
+                        GeoLocation countryGeo = geoLocationRepository.findTopByLocationName(address.getCountry()).get();
                         Address riskAddress1 = new Address();
                         com.loits.fx.aml.GeoLocation ruleGeoLocation = new com.loits.fx.aml.GeoLocation();
 
@@ -110,86 +158,75 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                         ignoreFields.clear();
                         ignoreFields.add("parent");
                         utilsBean.setIgnoreFields(ignoreFields);
-                        com.loits.fx.aml.GeoLocation tempGeoLocation = ruleGeoLocation;
-
-                        do {
-                            try {
-                                utilsBean.copyProperties(tempGeoLocation, geoLocation);
-                                geoLocation = geoLocation.getParent();
-                                if (geoLocation != null) {
-                                    tempGeoLocation.setParent(new com.loits.fx.aml.GeoLocation());
-                                    tempGeoLocation = tempGeoLocation.getParent();
-                                }
-                            } catch (IllegalAccessException e) {
-                                e.printStackTrace();
-                            } catch (InvocationTargetException e) {
-                                e.printStackTrace();
-                            }
-                        } while (geoLocation != null);
+                        try {
+                            utilsBean.copyProperties(ruleGeoLocation, countryGeo);
+                        } catch (IllegalAccessException e) {
+                            e.printStackTrace();
+                        } catch (InvocationTargetException e) {
+                            e.printStackTrace();
+                        }
 
                         riskAddress1.setGeoLocation(ruleGeoLocation);
                         riskAddresses.add(riskAddress1);
-                    } else {
-                        if (geoLocationRepository.existsByLocationName(address.getCountry())) {
-                            GeoLocation countryGeo = geoLocationRepository.findByLocationName(address.getCountry()).get();
-                            Address riskAddress1 = new Address();
-                            com.loits.fx.aml.GeoLocation ruleGeoLocation = new com.loits.fx.aml.GeoLocation();
-
-                            NullAwareBeanUtilsBean utilsBean = new NullAwareBeanUtilsBean();
-                            ignoreFields.clear();
-                            ignoreFields.add("parent");
-                            utilsBean.setIgnoreFields(ignoreFields);
-                            try {
-                                utilsBean.copyProperties(ruleGeoLocation, countryGeo);
-                            } catch (IllegalAccessException e) {
-                                e.printStackTrace();
-                            } catch (InvocationTargetException e) {
-                                e.printStackTrace();
-                            }
-
-                            riskAddress1.setGeoLocation(ruleGeoLocation);
-                            riskAddresses.add(riskAddress1);
-                        }
                     }
-
                 }
-                riskCustomer.setAddressesByCustomerCode(riskAddresses);
-            }
 
-            //Find module sent with onboarding customer
-            com.loits.aml.domain.Module dbModule = moduleRepository.findByCode(onboardingCustomer.getModule()).get();
-
-            Module ruleModule = new Module();
-            ruleModule.setCode(dbModule.getCode());
-            if (dbModule.getParent() != null) {
-                Module ruleModuleParent = new Module();
-                ruleModuleParent.setCode(dbModule.getParent().getCode());
-                ruleModule.setParent(ruleModuleParent);
             }
-            riskCustomer.setModule(ruleModule);
-        } else {
-            throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"), new Date(), HttpStatus.BAD_REQUEST, false);
+            riskCustomer.setAddressesByCustomerCode(riskAddresses);
         }
 
+        //Headers for CategoryRisk POST Req
         HashMap<String, String> headers = new HashMap<>();
         headers.put("user", user);
 
-        HttpResponse httpResponse = sendPostRequest(riskCustomer, String.format(env.getProperty("aml.api.category-risk"), tenent), "Aml-Category-Risk", headers);
-        if (httpResponse.getStatusLine().getStatusCode() == 200) {
-            objectMapper = new ObjectMapper();
-            String jsonString = null;
-            CustomerRisk customerRisk = null;
-            try {
-                jsonString = EntityUtils.toString(httpResponse.getEntity());
-                customerRisk = objectMapper.readValue(jsonString, CustomerRisk.class);
-            } catch (IOException e) {
-                throw new FXDefaultException();
-            }
-            OverallRisk overallRisk = new OverallRisk(riskCustomer.getId(), riskCustomer.getModule(), customerRisk.getCalculatedRisk(), 0.0, 0.0, customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
-            return kieService.getOverallRisk(overallRisk);
-        } else {
-            throw new FXDefaultException();
+        //Calculate customer category risk by sending request to Category Risk Service
+        CustomerRisk customerRisk = (CustomerRisk) httpService.sendData("Category-risk",String.format(env.getProperty("aml.api.category-risk"), tenent),
+                null,headers,  CustomerRisk.class, riskCustomer );
+
+        //TODO make this async
+        //Calculate overallrisk by sending request to rule-engine
+        OverallRisk overallRisk = new OverallRisk(riskCustomer.getId(), riskCustomer.getModule(), customerRisk.getCalculatedRisk(), 0.0, 0.0, customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
+        AmlRisk amlRisk = new AmlRisk();
+        amlRisk.setCreatedOn(new Timestamp(new Date().getTime()));
+        amlRisk.setCreatedBy(user);
+        amlRisk.setRiskRating(overallRisk.getRiskRating());
+        amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
+        amlRisk.setChannelRisk(overallRisk.getChannelRisk());
+        amlRisk.setProductRisk(overallRisk.getProductRisk());
+        amlRisk.setRisk(overallRisk.getCalculatedRisk());
+        amlRisk.setCustomerRiskId(customerRisk.getId());
+        amlRisk.setTenent(tenent);
+        amlRisk.setCustomer(overallRisk.getCustomerCode());
+        StringBuilder stringBuilder = new StringBuilder();
+
+        if (overallRisk.getPepsEnabled()) {
+            stringBuilder.append("A politically exposed person");
         }
+        if (overallRisk.getHighRiskCustomerType()) {
+            if (stringBuilder.length() != 0) {
+                stringBuilder.append(" with");
+            } else {
+                stringBuilder.append("Customer has");
+            }
+            stringBuilder.append(" a high risk customer-type");
+        } else {
+
+        }
+        if (overallRisk.getHighRiskOccupation()) {
+            if (stringBuilder.length() != 0) {
+                stringBuilder.append(" and");
+            } else {
+                stringBuilder.append("Customer has");
+            }
+            stringBuilder.append(" a high risk occupation");
+        }
+
+        amlRisk.setRiskText(stringBuilder.toString());
+
+        amlRiskRepository.save(amlRisk);
+        kafkaProducer.publishToTopic("aml-risk-create", amlRisk);
+
+        return kieService.getOverallRisk(overallRisk);
     }
 
     @Override
@@ -249,16 +286,6 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         } else {
             throw new FXDefaultException("3003", "NO_DATA_AVAILABLE", Translator.toLocale("NO_RISK_DATA"), new Date(), HttpStatus.BAD_REQUEST, false);
         }
-
-//        //Only for test purposes
-//        Module ruleModule = new Module();
-//        ruleModule.setCode("lending");
-//        Module ruleModuleParent = new Module();
-//        ruleModuleParent.setCode("lofc");
-//        ruleModule.setParent(ruleModuleParent);
-
-//        OverallRisk overallRisk = new OverallRisk(Long.parseLong(customerCode), ruleModule, 36.5, 24.7, 66.0,  true, false, true);
-//        return kieService.getOverallRisk(overallRisk);
     }
 
     public OverallRisk runRiskCronJob(String user, String tenent) throws FXDefaultException {
@@ -270,7 +297,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         //Request parameters to Customer Service
         String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
         HashMap<String, String> parameters = new HashMap<>();
-        parameters.put("size","1");
+        parameters.put("size", "1");
 
 
         //Send request to Customer Service
@@ -282,7 +309,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             customerList = customerResultPage.getContent();
             customer = objectMapper.convertValue(customerList.get(0), Customer.class);
         } catch (Exception e) {
-            throw new FXDefaultException();
+            throw new FXDefaultException("-1", "NO_DATA_FOUND", "No customers found", new Date(), HttpStatus.BAD_REQUEST, false);
         }
 
 
