@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.io.IOException;
 
 /**
  * Managing Riskrelated operations
@@ -48,7 +49,7 @@ public class AmlRiskController {
     public ResponseEntity<?> calculateRiskOnOnboarding(@PathVariable(value = "tenent") String tenent,
                                                        @RequestBody @Valid OnboardingCustomer customer,
                                                        @RequestHeader(value = "user", defaultValue = "sysUser") String user
-    ) throws FXDefaultException {
+    ) throws FXDefaultException, IOException, ClassNotFoundException {
         Resource resource = new Resource(amlRiskService.calcOnboardingRisk(customer, user, tenent));
         return ResponseEntity.ok(resource);
     }

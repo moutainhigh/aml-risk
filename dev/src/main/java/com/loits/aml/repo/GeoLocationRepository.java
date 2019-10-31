@@ -6,6 +6,7 @@ import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -18,4 +19,6 @@ public interface GeoLocationRepository extends PagingAndSortingRepository<GeoLoc
     Optional<GeoLocation> findByLocationName(String district);
 
     boolean existsByLocationName(String district);
+
+    Optional<GeoLocation> findTopByLocationName(String country);
 }
