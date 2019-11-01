@@ -11,3 +11,5 @@ databaseChangeLog:
       file: "db/changelog/service_metadata.yml"
   - include:
       file: "db/changelog/kafka_error_log.yml"
+  - include:
+      file: "db/changelog/sync_status.yml"

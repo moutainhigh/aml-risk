@@ -43,6 +43,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class AmlRiskServiceImpl implements AmlRiskService {
@@ -284,6 +285,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         }
     }
 
+
     public OverallRisk runRiskCronJob(String user, String tenent) throws FXDefaultException {
 
         List<Customer> customerList = null;
@@ -410,9 +412,9 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 }
                 if (customerMeta.getType().equalsIgnoreCase("withinBranchServiceArea")) {
                     if (customerMeta.getValue().equalsIgnoreCase("Y")) {
-                        riskCustomer.setPepsEnabled(Byte.parseByte("1"));
+                        riskCustomer.setWithinBranchServiceArea(Byte.parseByte("1"));
                     } else {
-                        riskCustomer.setPepsEnabled(Byte.parseByte("0"));
+                        riskCustomer.setWithinBranchServiceArea(Byte.parseByte("0"));
                     }
                 }
             }
@@ -622,6 +624,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
     }
 
 
+    @Override
     public RestResponsePage sendServiceRequest(String
                                                        serviceUrl, HashMap<String, String> parameters, HashMap<String, String> headers, String service) throws
             FXDefaultException {
