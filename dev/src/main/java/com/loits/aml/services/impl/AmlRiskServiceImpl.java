@@ -43,6 +43,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class AmlRiskServiceImpl implements AmlRiskService {
@@ -283,6 +284,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             throw new FXDefaultException("3003", "NO_DATA_AVAILABLE", Translator.toLocale("NO_RISK_DATA"), new Date(), HttpStatus.BAD_REQUEST, false);
         }
     }
+
 
     public OverallRisk runRiskCronJob(String user, String tenent) throws FXDefaultException {
 
@@ -622,6 +624,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
     }
 
 
+    @Override
     public RestResponsePage sendServiceRequest(String
                                                        serviceUrl, HashMap<String, String> parameters, HashMap<String, String> headers, String service) throws
             FXDefaultException {

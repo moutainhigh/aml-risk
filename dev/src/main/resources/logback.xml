@@ -8,6 +8,7 @@
     <logger name="com.oracle.medrec" level="info" additivity="false">
         <appender-ref ref="stdout"/>
     </logger>
+<<<<<<< HEAD
 
     <logger name="com.loits.aml" level="debug" additivity="false">
         <appender-ref ref="stdout"/>
@@ -15,8 +16,11 @@
 
     <logger name="org.apache.kafka" level="warn" additivity="false">
         <appender-ref ref="stdout"/>
+=======
+    <logger name="com.loits.aml" level="debug" additivity="false">
+        <appender-ref ref="stdout"/>
+>>>>>>> feature/bulk-risk-calculation
     </logger>
-
     <root level="INFO">
         <appender-ref ref="stdout"/>
     </root>
