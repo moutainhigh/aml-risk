@@ -1,6 +1,5 @@
 package com.loits.aml.dto;
 
-import com.loits.aml.dto.Address;
 import com.loits.fx.aml.Module;
 import lombok.Data;
 
