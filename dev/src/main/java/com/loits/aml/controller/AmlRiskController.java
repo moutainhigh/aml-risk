@@ -26,9 +26,13 @@ import java.io.IOException;
 @SuppressWarnings("unchecked")
 public class AmlRiskController {
 
-<<<<<<< HEAD
+    Logger logger = LogManager.getLogger(AmlRiskController.class);
+
     @Autowired
     AmlRiskService amlRiskService;
+
+    @Autowired
+    RiskService riskService;
 
     /**
      * Overall Risk Calculation
@@ -65,46 +69,6 @@ public class AmlRiskController {
         Resource resource = new Resource(amlRiskService.runRiskCronJob(user, tenent));
         return ResponseEntity.ok(resource);
     }
-=======
-  Logger logger = LogManager.getLogger(AmlRiskController.class);
-
-  @Autowired
-  AmlRiskService amlRiskService;
-
-  @Autowired
-  RiskService riskService;
-
-  /**
-   * Overall Risk Calculation
-   *
-   * @param tenent
-   * @param user
-   * @return
-   * @throws FXDefaultException
-   */
-  @GetMapping(path = "/{tenent}", produces = "application/json")
-  public ResponseEntity<?> calculateRisk(@PathVariable(value = "tenent") String tenent,
-                                         @RequestParam(value = "customer_code", required = true) String customerCode,
-                                         @RequestParam(value = "module", required = true) String module,
-                                         @RequestParam(value = "other_identity") String otherIdentity,
-                                         @RequestHeader(value = "user", defaultValue = "sysUser") String user
-  ) throws FXDefaultException {
-    Resource resource = new Resource(amlRiskService.getCustomerRisk(customerCode, module,
-            otherIdentity, user, tenent));
-    return ResponseEntity.ok(resource);
-  }
-
-
-  @PostMapping(path = "/{tenent}", produces = "application/json")
-  public ResponseEntity<?> calculateRiskOnOnboarding(@PathVariable(value = "tenent") String tenent,
-                                                     @RequestBody @Valid OnboardingCustomer customer,
-                                                     @RequestHeader(value = "user", defaultValue
-                                                             = "sysUser") String user
-  ) throws FXDefaultException {
-    Resource resource = new Resource(amlRiskService.calcOnboardingRisk(customer, user, tenent));
-    return ResponseEntity.ok(resource);
-  }
-
 
   @PostMapping(path = "/{tenent}/calculate", produces = "application/json")
   public ResponseEntity<?> calculateRiskOnOnboarding(@PathVariable(value = "tenent") String tenent,
@@ -117,5 +81,4 @@ public class AmlRiskController {
     Resource resource = new Resource(riskService.calculateRiskForCustomerBase(user, tenent));
     return ResponseEntity.ok(resource);
   }
->>>>>>> feature/bulk-risk-calculation
 }

@@ -412,9 +412,9 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 }
                 if (customerMeta.getType().equalsIgnoreCase("withinBranchServiceArea")) {
                     if (customerMeta.getValue().equalsIgnoreCase("Y")) {
-                        riskCustomer.setPepsEnabled(Byte.parseByte("1"));
+                        riskCustomer.setWithinBranchServiceArea(Byte.parseByte("1"));
                     } else {
-                        riskCustomer.setPepsEnabled(Byte.parseByte("0"));
+                        riskCustomer.setWithinBranchServiceArea(Byte.parseByte("0"));
                     }
                 }
             }
