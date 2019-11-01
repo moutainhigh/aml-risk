@@ -8,7 +8,6 @@
     <logger name="com.oracle.medrec" level="info" additivity="false">
         <appender-ref ref="stdout"/>
     </logger>
-
     <logger name="com.loits.aml" level="debug" additivity="false">
         <appender-ref ref="stdout"/>
     </logger>
@@ -16,7 +15,6 @@
     <logger name="org.apache.kafka" level="warn" additivity="false">
         <appender-ref ref="stdout"/>
     </logger>
-
     <root level="INFO">
         <appender-ref ref="stdout"/>
     </root>
