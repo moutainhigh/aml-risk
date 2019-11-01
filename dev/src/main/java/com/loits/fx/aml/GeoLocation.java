@@ -1,5 +1,6 @@
 package com.loits.fx.aml;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
@@ -9,6 +10,7 @@ public class GeoLocation {
     private String locationKey;
     private String locationCategory;
     private GeoLocation parent;
+    @JsonIgnore
     private String module;
     private Double risk;
     private Double weightage;
