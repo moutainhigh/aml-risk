@@ -24,7 +24,7 @@ public class Transaction extends BaseEntity {
     private String sourceOfFunds;
     private String txnBranch;
     private String facilityBranch;
-    private Long otherpartyId;
+    private String otherpartyId;
     private String otherpartyRemark;
 
 }

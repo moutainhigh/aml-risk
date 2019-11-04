@@ -488,6 +488,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                     transaction.setDate(tr.getTxnDate());
                     ruleTransactionsList.add(transaction);
                 }
+                product.setModule(cp.getProduct().getModule().getCode());
                 product.setTransactions(ruleTransactionsList);
                 productList.add(product);
             }
