@@ -19,5 +19,5 @@ public class Product {
     private String productDescription;
     private Byte status;
     private Double defaultRate;
-
+    private Module module;
 }
