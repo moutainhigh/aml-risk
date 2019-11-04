@@ -300,7 +300,7 @@
         <profile>
             <id>dev</id>
             <activation>
-                <!-- <activeByDefault>true</activeByDefault> -->
+                 <activeByDefault>true</activeByDefault>
                 <!-- activate if system properties 'env=prod' -->
                 <property>
                     <name>env.CONF_ENV_NAME</name>
@@ -445,6 +445,44 @@
                     </plugins>
                 </pluginManagement>
             </build>
+            <!--GENERAL REPOS ARE NOT WORKING FOR DOMAIN PC DUE TO NETOWK ISSUES. -->
+            <!--ADDED THIS TO BYPASS THAT. -->
+            <repositories>
+                <repository>
+                    <id>central</id>
+                    <url>http://repo1.maven.org/maven2</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                </repository>
+                <repository>
+                    <id>codelds</id>
+                    <url>https://code.lds.org/nexus/content/groups/main-repo</url>
+                </repository>
+                <repository>
+                    <id>spring-releases</id>
+                    <url>https://repo.spring.io/libs-release</url>
+                </repository>
+                <!--END FUSION SPECIFIC DEPENDENCIES-->
+
+            </repositories>
+
+            <!--GENERAL REPOS ARE NOT WORKING FOR DOMAIN PC DUE TO NETOWK ISSUES. -->
+            <!--ADDED THIS TO BYPASS THAT. -->
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>central</id>
+                    <url>http://repo1.maven.org/maven2</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                </pluginRepository>
+                <pluginRepository>
+                    <id>spring-releases</id>
+                    <url>https://repo.spring.io/libs-release</url>
+                </pluginRepository>
+            </pluginRepositories>
+            <!--END FUSION SPECIFIC DEPENDENCIES-->
         </profile>
         <profile>
             <id>qa</id>
@@ -593,6 +631,7 @@
                     </plugins>
                 </pluginManagement>
             </build>
+
         </profile>
         <profile>
             <id>uat</id>
