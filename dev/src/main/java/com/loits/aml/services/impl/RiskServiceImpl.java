@@ -83,7 +83,7 @@ public class RiskServiceImpl implements RiskService {
           }
 
           // send customer fetch -- tenant, page, size
-          futuresList.add(this.calculateCustomerRisk(tenent, i, pageSize));
+          futuresList.add(this.calculateCustomerRisk(user, tenent, i, pageSize));
         }
 
         CompletableFuture.allOf(
@@ -104,7 +104,7 @@ public class RiskServiceImpl implements RiskService {
     });
   }
 
-  private CompletableFuture<?> calculateCustomerRisk(String tenent, int page, int size) {
+  private CompletableFuture<?> calculateCustomerRisk(String user, String tenent, int page, int size) {
     return CompletableFuture.runAsync(() -> {
 
       TenantHolder.setTenantId(tenent);
@@ -115,7 +115,7 @@ public class RiskServiceImpl implements RiskService {
         logger.debug(String.format("Starting to calculate risk for tenent : %s , page: %s , size:" +
                 " %s", tenent, page, size));
 
-        //TODO -- call your customer sync function from here.
+        amlRiskService.runRiskCronJob2(user,tenent,page, size);
 
         // Log sync status for this segment - completed status
         syncStatusService.updateSyncStatus(thisSync, SyncStatusCodes.SYNC_COMPLETED);

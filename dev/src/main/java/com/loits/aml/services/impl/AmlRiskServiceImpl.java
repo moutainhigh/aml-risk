@@ -526,7 +526,8 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             transactionList = objectMapper.convertValue(list, new TypeReference<List<Transaction>>() {
             });
         } catch (Exception e) {
-            //TODO log error
+            channelRisk.setCalculatedRisk(0.0);
+            return channelRisk;
         }
 
         if (transactionList.size() > 0) {
@@ -652,7 +653,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             }
             return restResponsePage;
         } else {
-            throw new FXDefaultException("", "", "", new Date(), HttpStatus.BAD_REQUEST);
+            throw new FXDefaultException("-1", "FAILED_REQUEST", "Service Request Failed to "+service, new Date(), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -685,7 +686,112 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             }
             return list;
         } else {
-            throw new FXDefaultException("", "", "", new Date(), HttpStatus.BAD_REQUEST);
+            throw new FXDefaultException("-1", "FAILED_REQUEST", "Service Request Failed to "+service, new Date(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    public OverallRisk runRiskCronJob2(String user, String tenent, int page, int size) throws FXDefaultException {
+
+        List<Customer> customerList = null;
+        Customer customer = null;
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        //Request parameters to Customer Service
+        String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
+        HashMap<String, String> parameters = new HashMap<>();
+        parameters.put("page", String.valueOf(page));
+        parameters.put("size", String.valueOf(size));
+
+        try {
+            customerList = httpService.getData("Customer", customerServiceUrl, parameters, new TypeReference<List<Customer>>(){});
+            customer = objectMapper.convertValue(customerList.get(0), Customer.class);
+        } catch (Exception e) {
+            throw new FXDefaultException("-1", "NO_DATA_FOUND", "No customers found", new Date(), HttpStatus.BAD_REQUEST, false);
+        }
+
+        String module = "lending";//TODO customer.getCustomerModule().getModule();
+        Module ruleModule = null;
+        if (!moduleRepository.existsById(module)) {
+            throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"), new Date(), HttpStatus.BAD_REQUEST, false);
+        } else {
+            com.loits.aml.domain.Module dbModule = moduleRepository.findByCode(module).get();
+            ruleModule = new Module();
+            ruleModule.setCode(dbModule.getCode());
+            if (dbModule.getParent() != null) {
+                Module ruleModuleParent = new Module();
+                ruleModuleParent.setCode(dbModule.getParent().getCode());
+                ruleModule.setParent(ruleModuleParent);
+            }
+
+            CustomerRisk customerRisk = calculateCustomerRisk(customer, ruleModule, user, tenent);
+
+            ChannelRisk channelRisk = calculateChannelRisk(customerRisk.getCustomerCode(), ruleModule, user, tenent);
+
+            ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), ruleModule, user, tenent);
+
+//            ChannelRisk channelRisk = new ChannelRisk();
+//            channelRisk.setCalculatedRisk(0.0);
+//            ProductRisk productRisk = new ProductRisk();
+//            productRisk.setCalculatedRisk(0.0);
+
+            if (customerRisk.getCalculatedRisk() != null) {
+                if (channelRisk.getCalculatedRisk() == null) {
+                    channelRisk.setCalculatedRisk(0.0);
+                }
+                if (productRisk.getCalculatedRisk() == null) {
+                    productRisk.setCalculatedRisk(0.0);
+                }
+                OverallRisk overallRisk = new OverallRisk(customerRisk.getCustomerCode(), ruleModule, customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(), channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
+                overallRisk = kieService.getOverallRisk(overallRisk);
+
+
+                AmlRisk amlRisk = new AmlRisk();
+                amlRisk.setCreatedOn(new Timestamp(new Date().getTime()));
+                amlRisk.setCreatedBy(user);
+                amlRisk.setRiskRating(overallRisk.getRiskRating());
+                amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
+                amlRisk.setChannelRisk(overallRisk.getChannelRisk());
+                amlRisk.setProductRisk(overallRisk.getProductRisk());
+                amlRisk.setRisk(overallRisk.getCalculatedRisk());
+                amlRisk.setCustomerRiskId(customerRisk.getId());
+                amlRisk.setChannelRiskId(channelRisk.getId());
+                amlRisk.setProductRiskId(productRisk.getId());
+                amlRisk.setTenent(tenent);
+                amlRisk.setCustomer(overallRisk.getCustomerCode());
+                StringBuilder stringBuilder = new StringBuilder();
+
+                if (overallRisk.getPepsEnabled()) {
+                    stringBuilder.append("A politically exposed person");
+                }
+                if (overallRisk.getHighRiskCustomerType()) {
+                    if (stringBuilder.length() != 0) {
+                        stringBuilder.append(" with");
+                    } else {
+                        stringBuilder.append("Customer has");
+                    }
+                    stringBuilder.append(" a high risk customer-type");
+                } else {
+
+                }
+                if (overallRisk.getHighRiskOccupation()) {
+                    if (stringBuilder.length() != 0) {
+                        stringBuilder.append(" and");
+                    } else {
+                        stringBuilder.append("Customer has");
+                    }
+                    stringBuilder.append(" a high risk occupation");
+                }
+
+                amlRisk.setRiskText(stringBuilder.toString());
+
+                amlRisk = amlRiskRepository.save(amlRisk);
+                amlRisk.setTenent(tenent);
+                kafkaProducer.publishToTopic("aml-risk-create", amlRisk);
+
+                return overallRisk;
+            } else {
+                throw new FXDefaultException();
+            }
         }
     }
 }
