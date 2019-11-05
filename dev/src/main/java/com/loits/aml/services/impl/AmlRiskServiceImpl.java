@@ -12,6 +12,7 @@ import com.loits.aml.domain.GeoLocation;
 import com.loits.aml.dto.*;
 import com.loits.aml.dto.Transaction;
 import com.loits.aml.kafka.services.KafkaProducer;
+import com.loits.aml.mt.TenantHolder;
 import com.loits.aml.repo.AmlRiskRepository;
 import com.loits.aml.repo.GeoLocationRepository;
 import com.loits.aml.repo.ModuleRepository;
@@ -35,15 +36,18 @@ import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -75,6 +79,19 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
     @Autowired
     HTTPService httpService;
+
+    @Value("${global.date.format}")
+    private String dateFormat;
+
+    @Value("${aml.transaction.default.back-months}")
+    private String DEFAULT_BACK_MONTHS_TRANSACTION;
+
+    SimpleDateFormat sdf;
+
+    @PostConstruct
+    public void init() {
+        this.sdf = new SimpleDateFormat(dateFormat);
+    }
 
     @Override
     public Object calcOnboardingRisk(OnboardingCustomer onboardingCustomer, String user, String tenent) throws FXDefaultException, IOException, ClassNotFoundException {
@@ -188,7 +205,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         CustomerRisk customerRisk = (CustomerRisk) httpService.sendData("Category-risk",String.format(env.getProperty("aml.api.category-risk"), tenent),
                 null,headers,  CustomerRisk.class, riskCustomer );
 
-//        //Calculate overallrisk by sending request to rule-engine
+        //Calculate overallrisk by sending request to rule-engine
         OverallRisk overallRisk = new OverallRisk(riskCustomer.getId(), riskCustomer.getModule(), customerRisk.getCalculatedRisk(), 0.0, 0.0, customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
 
         return kieService.getOverallRisk(overallRisk);
@@ -389,9 +406,14 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
         //Get the transactions for customer
         //Request parameters to AML Service
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(new Date());
+        cal.add(Calendar.MONTH, Integer.parseInt(DEFAULT_BACK_MONTHS_TRANSACTION));
+
         String amlServiceTransactionUrl = String.format(env.getProperty("aml.api.aml-transactions"), tenent);
         HashMap<String, String> transactionParameters = new HashMap<>();
         transactionParameters.put("customerProduct.customer.id", customerId.toString());
+        transactionParameters.put("txnDate", sdf.format(cal.getTime()));
 
         //Send request to Customer Service
         ArrayList<Object> list = sendServiceRequest2(amlServiceTransactionUrl, transactionParameters, null, "AML");
@@ -691,6 +713,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
     CompletableFuture<?> saveRiskRecord(OverallRisk overallRisk, Long customerRiskId, Long productRiskId, Long channelRiskId, String tenent, String user) throws FXDefaultException{
         return CompletableFuture.runAsync(() -> {
             logger.debug("AmlRisk record save stared");
+            TenantHolder.setTenantId(tenent);
             AmlRisk amlRisk = new AmlRisk();
             amlRisk.setCreatedOn(new Timestamp(new Date().getTime()));
             amlRisk.setCreatedBy(user);
