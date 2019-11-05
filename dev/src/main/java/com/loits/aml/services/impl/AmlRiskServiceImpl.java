@@ -32,6 +32,8 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
@@ -45,6 +47,8 @@ import java.util.*;
 
 @Service
 public class AmlRiskServiceImpl implements AmlRiskService {
+
+    Logger logger = LogManager.getLogger(AmlRiskServiceImpl.class);
 
     @Autowired
     KieService kieService;
@@ -284,7 +288,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
     }
 
 
-    public OverallRisk runRiskCronJob(String user, String tenent) throws FXDefaultException {
+    public OverallRisk runRiskCronJob(String user, String tenent, Long id) throws FXDefaultException {
 
         List<Customer> customerList = null;
         Customer customer = null;
@@ -293,7 +297,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         //Request parameters to Customer Service
         String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
         HashMap<String, String> parameters = new HashMap<>();
-        parameters.put("size", "1");
+        parameters.put("id", String.valueOf(id));
 
         try {
             customerList = httpService.getData("Customer", customerServiceUrl, parameters, new TypeReference<List<Customer>>(){});
@@ -321,11 +325,6 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             ChannelRisk channelRisk = calculateChannelRisk(customerRisk.getCustomerCode(), ruleModule, user, tenent);
 
             ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), ruleModule, user, tenent);
-
-//            ChannelRisk channelRisk = new ChannelRisk();
-//            channelRisk.setCalculatedRisk(0.0);
-//            ProductRisk productRisk = new ProductRisk();
-//            productRisk.setCalculatedRisk(0.0);
 
             if (customerRisk.getCalculatedRisk() != null) {
                 if (channelRisk.getCalculatedRisk() == null) {
@@ -417,15 +416,26 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 }
             }
 
-            riskCustomer.setAnnualTurnover(customer.getAnnualTurnover());
-            riskCustomer.setAddressesByCustomerCode((Collection<Address>) customer.getAddresses());
-            riskCustomer.setCustomerType(customer.getCustomerType().getCode());
-            riskCustomer.setIndustry(customer.getIndustry().getIsoCode());
-            riskCustomer.setOccupation(customer.getOccupation().getIsoCode());
+            if(customer.getAnnualTurnover()!=null){
+                riskCustomer.setAnnualTurnover(customer.getAnnualTurnover());
+            }
+            if(customer.getAddresses()!=null){
+                riskCustomer.setAddressesByCustomerCode((Collection<Address>) customer.getAddresses());
+            }
+            if(customer.getCustomerType()!=null){
+                riskCustomer.setCustomerType(customer.getCustomerType().getCode());
+                riskCustomer.setCustomerTypeId(customer.getCustomerType().getId());
+            }
+
+            if(customer.getIndustry()!=null){
+                riskCustomer.setIndustry(customer.getIndustry().getIsoCode());
+                riskCustomer.setIndustryId(customer.getIndustry().getId());
+            }
+            if(customer.getOccupation()!=null) {
+                riskCustomer.setOccupation(customer.getOccupation().getIsoCode());
+                riskCustomer.setOccupationId(customer.getOccupation().getId());
+            }
             riskCustomer.setModule(ruleModule);
-            riskCustomer.setIndustryId(customer.getIndustry().getId());
-            riskCustomer.setCustomerTypeId(customer.getCustomerType().getId());
-            riskCustomer.setOccupationId(customer.getOccupation().getId());
         } catch (Exception e) {
             throw new FXDefaultException("3001", "INVALID_ATTEMPT", "Incomplete Customer Category data for risk calculation", new Date(), HttpStatus.BAD_REQUEST, true);
         }
@@ -730,7 +740,8 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
             ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), ruleModule, user, tenent);
 
-//            ChannelRisk channelRisk = new ChannelRisk();
+//            ChannelRisk channelRisk =
+//            new ChannelRisk();
 //            channelRisk.setCalculatedRisk(0.0);
 //            ProductRisk productRisk = new ProductRisk();
 //            productRisk.setCalculatedRisk(0.0);

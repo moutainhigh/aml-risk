@@ -62,11 +62,12 @@ public class AmlRiskController {
         return ResponseEntity.ok(resource);
     }
 
-    @GetMapping(path= "/risk-calc/{tenent}", produces = "application/json")
+    @GetMapping(path= "/{tenent}/calculate-one/{id}", produces = "application/json")
     public ResponseEntity<?> calculateAllRisk(@PathVariable(value = "tenent") String tenent,
+                                              @PathVariable(value = "id") Long id,
                                            @RequestHeader(value = "user", defaultValue = "sysUser") String user
     ) throws FXDefaultException {
-        Resource resource = new Resource(amlRiskService.runRiskCronJob(user, tenent));
+        Resource resource = new Resource(amlRiskService.runRiskCronJob(user, tenent, id));
         return ResponseEntity.ok(resource);
     }
 
