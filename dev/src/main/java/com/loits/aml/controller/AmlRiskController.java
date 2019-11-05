@@ -67,7 +67,7 @@ public class AmlRiskController {
                                               @PathVariable(value = "id") Long id,
                                            @RequestHeader(value = "user", defaultValue = "sysUser") String user
     ) throws FXDefaultException {
-        Resource resource = new Resource(amlRiskService.runRiskCronJob(user, tenent, id));
+        Resource resource = new Resource(amlRiskService.calculateRiskByCustomer(user, tenent, id));
         return ResponseEntity.ok(resource);
     }
 

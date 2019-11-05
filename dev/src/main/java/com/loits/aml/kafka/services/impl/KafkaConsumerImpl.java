@@ -9,6 +9,8 @@ import com.loits.aml.mt.TenantHolder;
 import com.loits.aml.repo.GeoLocationRepository;
 import com.loits.aml.repo.KafkaErrorLogRepository;
 import com.loits.aml.repo.ModuleRepository;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +21,7 @@ import java.util.Date;
 
 @Service
 public class KafkaConsumerImpl implements KafkaConsumer {
+    Logger logger = LogManager.getLogger(KafkaConsumerImpl.class);
 
     @Autowired
     ModuleRepository moduleRepository;
@@ -60,11 +63,14 @@ public class KafkaConsumerImpl implements KafkaConsumer {
     }
 
     public void create(GeoLocation geoLocation){
+        logger.debug("Starting to consume geo-location data from Kafka");
         TenantHolder.setTenantId(geoLocation.getTenent());
         try{
             geolocationRepository.save(geoLocation);
+            logger.debug("Kafka consumption failed for topic geolocation-create");
         }catch (Exception e){
             logError(e, "geolocation-create", geoLocation);
+            logger.debug("Kafka consumption failed for topic geolocation-create");
         }
         TenantHolder.clear();
     }

@@ -12,7 +12,12 @@ import java.sql.Timestamp;
 @Entity
 @Table(name = "geo_location")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class GeoLocation extends BaseEntity {
+public class GeoLocation{
+
+  @Id
+  @Basic
+  @Column(name="id")
+  private Long id;
 
   @Column(name = "location_category", nullable = true, length = 45)
   private String locationCategory;

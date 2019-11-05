@@ -9,7 +9,12 @@ import java.sql.Timestamp;
 @Data
 @Entity
 @Table(name = "aml_risk")
-public class AmlRisk extends BaseEntity {
+public class AmlRisk {
+
+    @Id
+    @Basic
+    @Column(name="id")
+    private Long id;
 
     @Basic
     @Column(name = "customer", nullable = false)

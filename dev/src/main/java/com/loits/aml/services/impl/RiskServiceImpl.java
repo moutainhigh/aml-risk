@@ -75,7 +75,7 @@ public class RiskServiceImpl implements RiskService {
 
         //TODO comment later
         for(int i=0; i<totRecords; i++){
-          amlRiskService.runRiskCronJob2(user,tenent,i, 1);
+          amlRiskService.runRiskCronJob(user,tenent,i, 1);
         }
 
         //TODO uncomment later
@@ -121,7 +121,7 @@ public class RiskServiceImpl implements RiskService {
         logger.debug(String.format("Starting to calculate risk for tenent : %s , page: %s , size:" +
                 " %s", tenent, page, size));
 
-        amlRiskService.runRiskCronJob2(user,tenent,page, size);
+        amlRiskService.runRiskCronJob(user,tenent,page, size);
 
         // Log sync status for this segment - completed status
         syncStatusService.updateSyncStatus(thisSync, SyncStatusCodes.SYNC_COMPLETED);
