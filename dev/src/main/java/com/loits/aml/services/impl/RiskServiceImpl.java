@@ -82,8 +82,12 @@ public class RiskServiceImpl implements RiskService {
             pageSize += orphanRecordCount;
           }
 
+          //TODO remove later
+          futuresList.add(this.calculateCustomerRisk(user, tenent, i, Integer.MAX_VALUE));
+
           // send customer fetch -- tenant, page, size
-          futuresList.add(this.calculateCustomerRisk(user, tenent, i, pageSize));
+          //TODO uncomment later
+          //futuresList.add(this.calculateCustomerRisk(user, tenent, i, pageSize));
         }
 
         CompletableFuture.allOf(
