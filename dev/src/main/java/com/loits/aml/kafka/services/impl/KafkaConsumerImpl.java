@@ -67,7 +67,7 @@ public class KafkaConsumerImpl implements KafkaConsumer {
         TenantHolder.setTenantId(geoLocation.getTenent());
         try{
             geolocationRepository.save(geoLocation);
-            logger.debug("Kafka consumption failed for topic geolocation-create");
+            logger.debug("Kafka consumption successful for topic geolocation-create");
         }catch (Exception e){
             logError(e, "geolocation-create", geoLocation);
             logger.debug("Kafka consumption failed for topic geolocation-create");
