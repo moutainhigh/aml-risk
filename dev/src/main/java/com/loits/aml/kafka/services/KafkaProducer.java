@@ -14,6 +14,6 @@ import java.util.concurrent.CompletableFuture;
 public interface KafkaProducer {
 
   @Async
-  CompletableFuture<?> publishToTopic(String topic, AmlRisk amlRisk) throws FXDefaultException;
+  CompletableFuture<?> publishToTopic(String topic, AmlRisk amlRisk);
 
 }

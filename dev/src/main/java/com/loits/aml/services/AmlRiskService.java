@@ -17,7 +17,7 @@ public interface AmlRiskService {
     //temporary for testing
     OverallRisk calculateRiskByCustomer(String user, String tenent, Long id) throws FXDefaultException;
 
-    OverallRisk runRiskCronJob(String user, String tenent, int page, int size) throws FXDefaultException;
+    void runRiskCronJob(String user, String tenent, int page, int size) throws FXDefaultException;
 
      public RestResponsePage sendServiceRequest(String
                                                      serviceUrl,
