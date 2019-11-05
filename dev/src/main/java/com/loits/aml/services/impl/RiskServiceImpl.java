@@ -73,30 +73,32 @@ public class RiskServiceImpl implements RiskService {
         logger.debug(String.format("Task parameters. No of Async Tasks : %s, Page size : %s, " +
                 "Total Records : %s", noOfAsyncTasks, pageSize, totRecords));
 
-        for (int i = 0; i < noOfAsyncTasks; i++) {
-
-          // if last page, might need to make an adjustment
-          if (i == noOfAsyncTasks - 1 &&
-                  totRecords >= PARALLEL_THREADS) {
-            int orphanRecordCount = totRecords % PARALLEL_THREADS;
-            pageSize += orphanRecordCount;
-          }
-
-          //TODO remove later
-          futuresList.add(this.calculateCustomerRisk(user, tenent, i, Integer.MAX_VALUE));
-
-          // send customer fetch -- tenant, page, size
-          //TODO uncomment later
-          //futuresList.add(this.calculateCustomerRisk(user, tenent, i, pageSize));
+        //TODO comment later
+        for(int i=0; i<totRecords; i++){
+          amlRiskService.runRiskCronJob2(user,tenent,i, 1);
         }
 
-        CompletableFuture.allOf(
-                futuresList.toArray(new CompletableFuture[futuresList.size()]))
-                .whenComplete((result, ex) -> {
-                  if (ex != null) {
-                    logger.debug("All customer risk calculations processes error");
-                  } else logger.debug("All customer risk calculations processes completed");
-                });
+        //TODO uncomment later
+//        for (int i = 0; i < noOfAsyncTasks; i++) {
+//
+//          // if last page, might need to make an adjustment
+//          if (i == noOfAsyncTasks - 1 &&
+//                  totRecords >= PARALLEL_THREADS) {
+//            int orphanRecordCount = totRecords % PARALLEL_THREADS;
+//            pageSize += orphanRecordCount;
+//          }
+//
+//          // send customer fetch -- tenant, page, size
+//          futuresList.add(this.calculateCustomerRisk(user, tenent, i, pageSize));
+//        }
+//
+//        CompletableFuture.allOf(
+//                futuresList.toArray(new CompletableFuture[futuresList.size()]))
+//                .whenComplete((result, ex) -> {
+//                  if (ex != null) {
+//                    logger.debug("All customer risk calculations processes error");
+//                  } else logger.debug("All customer risk calculations processes completed");
+//                });
 
       } catch (Exception e) {
         logger.error("Customer Risk Calculation process error");
