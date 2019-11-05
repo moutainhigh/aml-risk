@@ -417,15 +417,26 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 }
             }
 
-            riskCustomer.setAnnualTurnover(customer.getAnnualTurnover());
-            riskCustomer.setAddressesByCustomerCode((Collection<Address>) customer.getAddresses());
-            riskCustomer.setCustomerType(customer.getCustomerType().getCode());
-            riskCustomer.setIndustry(customer.getIndustry().getIsoCode());
-            riskCustomer.setOccupation(customer.getOccupation().getIsoCode());
+            if(customer.getAnnualTurnover()!=null){
+                riskCustomer.setAnnualTurnover(customer.getAnnualTurnover());
+            }
+            if(riskCustomer.getAddressesByCustomerCode()!=null){
+                riskCustomer.setAddressesByCustomerCode((Collection<Address>) customer.getAddresses());
+            }
+            if(riskCustomer.getCustomerType()!=null){
+                riskCustomer.setCustomerType(customer.getCustomerType().getCode());
+                riskCustomer.setCustomerTypeId(customer.getCustomerType().getId());
+            }
+
+            if(customer.getIndustry()!=null){
+                riskCustomer.setIndustry(customer.getIndustry().getIsoCode());
+                riskCustomer.setIndustryId(customer.getIndustry().getId());
+            }
+            if(customer.getOccupation()!=null) {
+                riskCustomer.setOccupation(customer.getOccupation().getIsoCode());
+                riskCustomer.setOccupationId(customer.getOccupation().getId());
+            }
             riskCustomer.setModule(ruleModule);
-            riskCustomer.setIndustryId(customer.getIndustry().getId());
-            riskCustomer.setCustomerTypeId(customer.getCustomerType().getId());
-            riskCustomer.setOccupationId(customer.getOccupation().getId());
         } catch (Exception e) {
             throw new FXDefaultException("3001", "INVALID_ATTEMPT", "Incomplete Customer Category data for risk calculation", new Date(), HttpStatus.BAD_REQUEST, true);
         }
@@ -730,7 +741,8 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
             ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), ruleModule, user, tenent);
 
-//            ChannelRisk channelRisk = new ChannelRisk();
+//            ChannelRisk channelRisk =
+//            new ChannelRisk();
 //            channelRisk.setCalculatedRisk(0.0);
 //            ProductRisk productRisk = new ProductRisk();
 //            productRisk.setCalculatedRisk(0.0);
