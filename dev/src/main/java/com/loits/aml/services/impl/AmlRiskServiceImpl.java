@@ -413,7 +413,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         String amlServiceTransactionUrl = String.format(env.getProperty("aml.api.aml-transactions"), tenent);
         HashMap<String, String> transactionParameters = new HashMap<>();
         transactionParameters.put("customerProduct.customer.id", customerId.toString());
-        transactionParameters.put("txnDate", sdf.format(cal.getTime()));
+        //transactionParameters.put("txnDate", sdf.format(cal.getTime()));
 
         //Send request to Customer Service
         ArrayList<Object> list = sendServiceRequest2(amlServiceTransactionUrl, transactionParameters, null, "AML");
