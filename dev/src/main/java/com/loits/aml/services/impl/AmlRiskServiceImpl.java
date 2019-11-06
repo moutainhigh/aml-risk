@@ -21,7 +21,9 @@ import com.loits.aml.services.HTTPService;
 import com.loits.aml.services.KieService;
 import com.loits.aml.services.ServiceMetadataService;
 import com.loits.fx.aml.*;
+import com.loits.fx.aml.CustomerType;
 import com.loits.fx.aml.Module;
+import com.loits.fx.aml.Occupation;
 import com.loits.fx.aml.Product;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -312,7 +314,24 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 if (productRisk.getCalculatedRisk() == null) {
                     productRisk.setCalculatedRisk(0.0);
                 }
-                OverallRisk overallRisk = new OverallRisk(customerRisk.getCustomerCode(), ruleModule, customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(), channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
+
+                if(customerRisk.getPepsEnabled()==null){
+                    customerRisk.setPepsEnabled(false);
+                }
+
+                if(customerRisk.getCustomerType()==null){
+                    CustomerType customerType = new CustomerType();
+                    customerType.setHighRisk(false);
+                    customerRisk.setCustomerType(customerType);
+                }
+                if(customerRisk.getOccupation()==null){
+                    Occupation occupation = new Occupation();
+                    occupation.setHighRisk(false);
+                    customerRisk.setOccupation(occupation);
+                }
+
+
+                OverallRisk overallRisk = new OverallRisk(customer.getId(), ruleModule, customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(), channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
                 overallRisk = kieService.getOverallRisk(overallRisk);
 
                 //Save to calculated AmlRisk record to overallrisk
