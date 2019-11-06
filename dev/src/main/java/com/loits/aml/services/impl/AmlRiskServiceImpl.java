@@ -716,6 +716,21 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 if (productRisk.getCalculatedRisk() == null) {
                     productRisk.setCalculatedRisk(0.0);
                 }
+                if(customerRisk.getPepsEnabled()==null){
+                    customerRisk.setPepsEnabled(false);
+                }
+
+                if(customerRisk.getCustomerType()==null){
+                    CustomerType customerType = new CustomerType();
+                    customerType.setHighRisk(false);
+                    customerRisk.setCustomerType(customerType);
+                }
+                if(customerRisk.getOccupation()==null){
+                    Occupation occupation = new Occupation();
+                    occupation.setHighRisk(false);
+                    customerRisk.setOccupation(occupation);
+                }
+
                 OverallRisk overallRisk = new OverallRisk(customerRisk.getCustomerCode(), ruleModule, customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(), channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
                 overallRisk = kieService.getOverallRisk(overallRisk);
 
