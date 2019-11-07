@@ -409,6 +409,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         try {
             String jsonString = EntityUtils.toString(res.getEntity());
             customerRisk = objectMapper.readValue(jsonString, CustomerRisk.class);
+            logger.debug("CustomerRisk calculated "+customerRisk);
         } catch (IOException e) {
             e.printStackTrace();
         }
