@@ -22,6 +22,7 @@ public class OnboardingCustomer {
     private String occupation;
     private String customerType;
     private String module;
-    private Double annualTurnover;
+    private Double annualTurnoverFrom;
+    private Double annualTurnoverTo;
     private String riskRating;
 }

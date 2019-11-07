@@ -27,6 +27,7 @@ public class RiskCustomer {
     private String occupation;
     private String customerType;
     private Module module;
-    private Double annualTurnover;
+    private Double annualTurnoverFrom;
+    private Double annualTurnoverTo;
     private String riskRating;
 }

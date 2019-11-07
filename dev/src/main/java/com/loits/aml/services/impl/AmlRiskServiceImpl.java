@@ -373,8 +373,11 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 }
             }
 
-            if(customer.getAnnualTurnover()!=null){
-                riskCustomer.setAnnualTurnover(customer.getAnnualTurnover());
+            if(customer.getAnnualTurnoverFrom()!=null){
+                riskCustomer.setAnnualTurnoverFrom(customer.getAnnualTurnoverFrom());
+            }
+            if(customer.getAnnualTurnoverTo()!=null){
+                riskCustomer.setAnnualTurnoverTo(customer.getAnnualTurnoverTo());
             }
             if(customer.getAddresses()!=null){
                 riskCustomer.setAddressesByCustomerCode((Collection<Address>) customer.getAddresses());

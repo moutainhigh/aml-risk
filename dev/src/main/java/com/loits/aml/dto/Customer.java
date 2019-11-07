@@ -12,9 +12,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Customer {
     private Long id;
-    private String surname;
-    private String otherNames;
-    private String title;
+    private String name;
     private String residency;
     private Byte status;
     private String createdBy;
@@ -24,7 +22,8 @@ public class Customer {
     private Industry industry;
     private Occupation occupation;
     private CustomerType customerType;
-    private Double annualTurnover;
+    private Double annualTurnoverFrom;
+    private Double annualTurnoverTo;
     private String riskRating;
 
     private List<CustomerMeta> customerMetaList;
