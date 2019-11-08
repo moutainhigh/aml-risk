@@ -436,7 +436,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         String amlServiceTransactionUrl = String.format(env.getProperty("aml.api.aml-transactions"), tenent);
         HashMap<String, String> transactionParameters = new HashMap<>();
         transactionParameters.put("customerProduct.customer.id", customerId.toString());
-        //transactionParameters.put("txnDate", sdf.format(cal.getTime()));
+        transactionParameters.put("txnDate", sdf.format(cal.getTime()));
 
         //Send request to Customer Service
         ArrayList<Object> list = sendServiceRequest2(amlServiceTransactionUrl, transactionParameters, null, "AML");
@@ -672,26 +672,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         }
     }
 
-    public void runRiskCronJob(String user, String tenent, int page, int size) throws FXDefaultException {
-
-        List<Customer> customerList = null;
-        Customer customer = null;
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        //Request parameters to Customer Service
-        String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
-        HashMap<String, String> parameters = new HashMap<>();
-        parameters.put("page", String.valueOf(page));
-        parameters.put("size", String.valueOf(size));
-
-        try {
-            logger.debug("Sending request to Customer API to get Customer");
-            customerList = httpService.getData("Customer", customerServiceUrl, parameters, new TypeReference<List<Customer>>(){});
-            customer = objectMapper.convertValue(customerList.get(0), Customer.class);
-            logger.debug("Customer successfully retrieved");
-        } catch (Exception e) {
-            logger.debug("Customer retrieval failed with "+ e.getMessage());
-        }
+    public void runRiskCronJob(String user, String tenent, Customer customer) throws FXDefaultException {
 
         String module = "lofc";//TODO customer.getCustomerModule().getModule();
         Module ruleModule = null;
@@ -709,17 +690,17 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
             CustomerRisk customerRisk = calculateCustomerRisk(customer, ruleModule, user, tenent);
 
-            ChannelRisk channelRisk = calculateChannelRisk(customerRisk.getCustomerCode(), ruleModule, user, tenent);
+            //ChannelRisk channelRisk = calculateChannelRisk(customer.getId(), ruleModule, user, tenent);
 
-            ProductRisk productRisk = calculateProductRisk(customerRisk.getCustomerCode(), ruleModule, user, tenent);
+            //ProductRisk productRisk = calculateProductRisk(customer.getId(), ruleModule, user, tenent);
 
             if (customerRisk.getCalculatedRisk() != null) {
-                if (channelRisk.getCalculatedRisk() == null) {
-                    channelRisk.setCalculatedRisk(0.0);
-                }
-                if (productRisk.getCalculatedRisk() == null) {
-                    productRisk.setCalculatedRisk(0.0);
-                }
+//                if (channelRisk.getCalculatedRisk() == null) {
+//                    channelRisk.setCalculatedRisk(0.0);
+//                }
+//                if (productRisk.getCalculatedRisk() == null) {
+//                    productRisk.setCalculatedRisk(0.0);
+//                }
                 if(customerRisk.getPepsEnabled()==null){
                     customerRisk.setPepsEnabled(false);
                 }
@@ -735,11 +716,12 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                     customerRisk.setOccupation(occupation);
                 }
 
-                OverallRisk overallRisk = new OverallRisk(customerRisk.getCustomerCode(), ruleModule, customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(), channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
+                OverallRisk overallRisk = new OverallRisk(customer.getId(), ruleModule, customerRisk.getCalculatedRisk(), 0.0, 0.0, customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
+
                 overallRisk = kieService.getOverallRisk(overallRisk);
 
                 //Save AMLRISK record
-                saveRiskRecord(overallRisk, customerRisk.getId(), productRisk.getId(), channelRisk.getId(), tenent, user);
+                saveRiskRecord(overallRisk, customerRisk.getId(), null, null, tenent, user);
 
             } else {
                 logger.debug("Failure in calculating risk for Customer with id "+customer.getId());

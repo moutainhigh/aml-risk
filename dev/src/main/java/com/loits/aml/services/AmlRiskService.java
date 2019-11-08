@@ -2,6 +2,7 @@ package com.loits.aml.services;
 
 import com.loits.aml.config.RestResponsePage;
 import com.loits.aml.core.FXDefaultException;
+import com.loits.aml.dto.Customer;
 import com.loits.aml.dto.OnboardingCustomer;
 import com.loits.fx.aml.OverallRisk;
 
@@ -17,7 +18,7 @@ public interface AmlRiskService {
     //temporary for testing
     OverallRisk calculateRiskByCustomer(String user, String tenent, Long id) throws FXDefaultException;
 
-    void runRiskCronJob(String user, String tenent, int page, int size) throws FXDefaultException;
+    void runRiskCronJob(String user, String tenent, Customer customer) throws FXDefaultException;
 
      public RestResponsePage sendServiceRequest(String
                                                      serviceUrl,

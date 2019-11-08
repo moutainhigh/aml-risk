@@ -1,11 +1,15 @@
 package com.loits.aml.services.impl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loits.aml.commons.SyncStatusCodes;
 import com.loits.aml.commons.SyncTypes;
 import com.loits.aml.config.RestResponsePage;
 import com.loits.aml.domain.SyncStatus;
+import com.loits.aml.dto.Customer;
 import com.loits.aml.mt.TenantHolder;
 import com.loits.aml.services.AmlRiskService;
+import com.loits.aml.services.HTTPService;
 import com.loits.aml.services.RiskService;
 import com.loits.aml.services.SyncStatusService;
 import org.apache.logging.log4j.LogManager;
@@ -33,6 +37,9 @@ public class RiskServiceImpl implements RiskService {
 
   @Autowired
   SyncStatusService syncStatusService;
+
+  @Autowired
+  HTTPService httpService;
 
   @Value("${api.customer-risk-calculation-allowed-parallel-threads}")
   int PARALLEL_THREADS;
@@ -73,32 +80,32 @@ public class RiskServiceImpl implements RiskService {
         logger.debug(String.format("Task parameters. No of Async Tasks : %s, Page size : %s, " +
                 "Total Records : %s", noOfAsyncTasks, pageSize, totRecords));
 
-        //TODO comment later
-        for(int i=0; i<totRecords; i++){
-          amlRiskService.runRiskCronJob(user,tenent,i, 1);
+//        //TODO comment later
+//        for(int i=0; i<totRecords; i++){
+//          amlRiskService.runRiskCronJob(user,tenent,i, 1);
+//        }
+
+//        TODO uncomment later
+        for (int i = 0; i < noOfAsyncTasks; i++) {
+
+          // if last page, might need to make an adjustment
+          if (i == noOfAsyncTasks - 1 &&
+                  totRecords >= PARALLEL_THREADS) {
+            int orphanRecordCount = totRecords % PARALLEL_THREADS;
+            pageSize += orphanRecordCount;
+          }
+
+          // send customer fetch -- tenant, page, size
+          futuresList.add(this.calculateCustomerRisk(user, tenent, i, pageSize));
         }
 
-        //TODO uncomment later
-//        for (int i = 0; i < noOfAsyncTasks; i++) {
-//
-//          // if last page, might need to make an adjustment
-//          if (i == noOfAsyncTasks - 1 &&
-//                  totRecords >= PARALLEL_THREADS) {
-//            int orphanRecordCount = totRecords % PARALLEL_THREADS;
-//            pageSize += orphanRecordCount;
-//          }
-//
-//          // send customer fetch -- tenant, page, size
-//          futuresList.add(this.calculateCustomerRisk(user, tenent, i, pageSize));
-//        }
-//
-//        CompletableFuture.allOf(
-//                futuresList.toArray(new CompletableFuture[futuresList.size()]))
-//                .whenComplete((result, ex) -> {
-//                  if (ex != null) {
-//                    logger.debug("All customer risk calculations processes error");
-//                  } else logger.debug("All customer risk calculations processes completed");
-//                });
+        CompletableFuture.allOf(
+                futuresList.toArray(new CompletableFuture[futuresList.size()]))
+                .whenComplete((result, ex) -> {
+                  if (ex != null) {
+                    logger.debug("All customer risk calculations processes error");
+                  } else logger.debug("All customer risk calculations processes completed");
+                });
 
       } catch (Exception e) {
         logger.error("Customer Risk Calculation process error");
@@ -121,7 +128,28 @@ public class RiskServiceImpl implements RiskService {
         logger.debug(String.format("Starting to calculate risk for tenent : %s , page: %s , size:" +
                 " %s", tenent, page, size));
 
-        amlRiskService.runRiskCronJob(user,tenent,page, size);
+        List<Customer> customerList = null;
+        //Customer customer = null;
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        //Request parameters to Customer Service
+        String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
+        HashMap<String, String> parameters = new HashMap<>();
+        parameters.put("page", String.valueOf(page));
+        parameters.put("size", String.valueOf(size));
+
+        try {
+          logger.debug("Sending request to Customer API to get Customer");
+          customerList = httpService.getData("Customer", customerServiceUrl, parameters, new TypeReference<List<Customer>>(){});
+//          customer = objectMapper.convertValue(customerList.get(0), Customer.class);
+          logger.debug("Customers successfully retrieved");
+        } catch (Exception e) {
+          logger.debug("Customer retrieval failed with "+ e.getMessage());
+        }
+
+        for(Customer customer: customerList){
+          amlRiskService.runRiskCronJob(user,tenent,customer);
+        }
 
         // Log sync status for this segment - completed status
         syncStatusService.updateSyncStatus(thisSync, SyncStatusCodes.SYNC_COMPLETED);
