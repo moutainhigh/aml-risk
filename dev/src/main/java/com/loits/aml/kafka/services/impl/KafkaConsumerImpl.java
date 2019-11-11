@@ -33,64 +33,85 @@ public class KafkaConsumerImpl implements KafkaConsumer {
     KafkaErrorLogRepository kafkaErrorLogRepository;
 
     public void create(Module module){
+        logger.debug("Starting to create module from sync topic. Tenent : " + module.getTenent());
         TenantHolder.setTenantId(module.getTenent());
         try{
             moduleRepository.save(module);
+            logger.debug("Module sync completed.");
         }catch (Exception e){
             logError(e, "module-create", module);
+            e.printStackTrace();
+            logger.debug("Module could not be synced.");
         }
         TenantHolder.clear();
     }
 
     public void update(Module module){
+        logger.debug("Starting to update module from sync topic. Tenent : " + module.getTenent());
         TenantHolder.setTenantId(module.getTenent());
         try{
             moduleRepository.save(module);
+            logger.debug("Module sync completed.");
         }catch (Exception e){
             logError(e, "module-update", module);
+            e.printStackTrace();
+            logger.debug("Module could not be synced.");
         }
         TenantHolder.clear();
     }
 
     public void delete(Module module){
+        logger.debug("Starting to delete module from sync topic. Tenent : " + module.getTenent());
         TenantHolder.setTenantId(module.getTenent());
         try{
             moduleRepository.delete(module);
+            logger.debug("Module sync completed.");
         }catch (Exception e){
             logError(e, "module-delete", module);
+            e.printStackTrace();
+            logger.debug("Module could not be synced.");
         }
         TenantHolder.clear();
     }
 
     public void create(GeoLocation geoLocation){
-        logger.debug("Starting to consume geo-location data from Kafka");
+        logger.debug("Starting to create geo-location data, tenent "+geoLocation.getTenent() );
         TenantHolder.setTenantId(geoLocation.getTenent());
         try{
             geolocationRepository.save(geoLocation);
             logger.debug("Kafka consumption successful for topic geolocation-create");
         }catch (Exception e){
             logError(e, "geolocation-create", geoLocation);
+            e.printStackTrace();
             logger.debug("Kafka consumption failed for topic geolocation-create");
         }
         TenantHolder.clear();
     }
 
     public void update(GeoLocation geoLocation){
+        logger.debug("Starting to update geo-location data, tenent "+geoLocation.getTenent() );
         TenantHolder.setTenantId(geoLocation.getTenent());
         try{
             geolocationRepository.save(geoLocation);
+            logger.debug("Kafka consumption successful for topic geolocation-update");
         }catch (Exception e){
             logError(e, "geolocation-update", geoLocation);
+            e.printStackTrace();
+            logger.debug("Kafka consumption failed for topic geolocation-update");
         }
         TenantHolder.clear();
     }
 
     public void delete(GeoLocation geoLocation){
+        logger.debug("Starting to delete geo-location data, tenent "+geoLocation.getTenent() );
         TenantHolder.setTenantId(geoLocation.getTenent());
         try{
             geolocationRepository.delete(geoLocation);
+            logger.debug("Kafka consumption successful for topic geolocation-delete");
         }catch (Exception e){
             logError(e, "geolocation-delete", geoLocation);
+            e.printStackTrace();
+            logger.debug("Kafka consumption failed for topic geolocation-create");
         }
         TenantHolder.clear();
     }
