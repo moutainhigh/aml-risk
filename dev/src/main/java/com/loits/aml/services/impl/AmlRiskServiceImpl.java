@@ -423,6 +423,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
     public ChannelRisk calculateChannelRisk(Long customerId, Module module, String user, String tenent) throws
             FXDefaultException {
+        logger.debug("Channel Risk calculation started...");
         ObjectMapper objectMapper = new ObjectMapper();
         List<Transaction> transactionList = null;
         ChannelRisk channelRisk = new ChannelRisk();
@@ -444,11 +445,14 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             transactionList = objectMapper.convertValue(list, new TypeReference<List<Transaction>>() {
             });
         } catch (Exception e) {
+            logger.debug("Error in deserializing transactions from AML Service "+ e.getMessage());
+            e.printStackTrace();
             channelRisk.setCalculatedRisk(0.0);
             return channelRisk;
         }
 
         if (transactionList.size() > 0) {
+            logger.debug("Transactions available. Starting calculation...");
             //send Transaction list to ChannelRisk
             List<ChannelUsage> channelUsageList = new ArrayList<>();
 
@@ -479,6 +483,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 String jsonString = EntityUtils.toString(httpResponse.getEntity());
                 channelRisk = objectMapper.readValue(jsonString, ChannelRisk.class);
             } catch (IOException e) {
+                logger.debug("Error in deserializing channelRisk object");
                 e.printStackTrace();
             }
 
@@ -486,11 +491,13 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             logger.debug("No transactions available to calculate Channel Risk. Aborting...");
             channelRisk.setCalculatedRisk(0.0);
         }
+        logger.debug("ChannelRisk obj "+channelRisk);
         return channelRisk;
     }
 
     public ProductRisk calculateProductRisk(Long customerId, Module ruleModule, String user, String tenent) throws
             FXDefaultException {
+        logger.debug("Product Risk calculation started...");
         List<CustomerProduct> customerProductList = null;
         ObjectMapper objectMapper = new ObjectMapper();
         ProductRisk productRisk = new ProductRisk();
@@ -508,6 +515,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         });
 
         if (customerProductList.size() > 0) {
+            logger.debug("Customer Products available. Starting calculation...");
             productRisk.setCustomerCode(customerId);
             productRisk.setModule(ruleModule);
             productRisk.setToday(new Date());
@@ -547,7 +555,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             logger.debug("No CustomerProducts available to calculate Product Risk. Aborting...");
             productRisk.setCalculatedRisk(0.0);
         }
-
+        logger.debug("ProductRisk obj "+productRisk);
         return productRisk;
     }
 
