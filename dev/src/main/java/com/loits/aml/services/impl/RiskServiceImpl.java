@@ -121,16 +121,14 @@ public class RiskServiceImpl implements RiskService {
         return CompletableFuture.runAsync(() -> {
 
             TenantHolder.setTenantId(tenent);
+            List<Customer> customerList = null;
+            ObjectMapper objectMapper = new ObjectMapper();
             // Log sync status for this segment - init status
             SyncStatus thisSync = syncStatusService.saveSyncStatus(SyncStatusCodes.SYNC_INITIATED,
                     SyncTypes.CUST_RISK_CALC, page, size);
             try {
                 logger.debug(String.format("Starting to calculate risk for tenent : %s , page: %s , size:" +
                         " %s", tenent, page, size));
-
-                List<Customer> customerList = null;
-                //Customer customer = null;
-                ObjectMapper objectMapper = new ObjectMapper();
 
                 //Request parameters to Customer Service
                 String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
@@ -142,7 +140,6 @@ public class RiskServiceImpl implements RiskService {
                     logger.debug("Sending request to Customer API to get Customer");
                     customerList = httpService.getData("Customer", customerServiceUrl, parameters, new TypeReference<List<Customer>>() {
                     });
-//          customer = objectMapper.convertValue(customerList.get(0), Customer.class);
                     logger.debug("Customers successfully retrieved");
                 } catch (Exception e) {
                     logger.debug("Customer retrieval failed with " + e.getMessage());
@@ -153,7 +150,7 @@ public class RiskServiceImpl implements RiskService {
                         try {
                             amlRiskService.runRiskCronJob(user, tenent, customer);
                             logger.debug("Risk calculated for customer with id " + customer.getId());
-                            customer.setRiskCalculationStatus(customer.getVersion());
+                            //customer.setRiskCalculationStatus(customer.getVersion());
                         } catch (Exception e) {
                             e.printStackTrace();
                             logger.debug("Risk not calculated for customer id " + customer.getId());
