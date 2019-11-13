@@ -12,12 +12,10 @@ import java.util.Objects;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Product {
-    private Integer productCode;
-    private String productType;
+    private Long productCode;
     private String code;
     private String productName;
     private String productDescription;
-    private Byte status;
     private Double defaultRate;
     private Module module;
 }

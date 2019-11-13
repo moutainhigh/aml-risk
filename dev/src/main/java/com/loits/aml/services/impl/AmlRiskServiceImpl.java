@@ -330,6 +330,14 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                     customerRisk.setOccupation(occupation);
                 }
 
+                if(channelRisk==null){
+                    channelRisk = new ChannelRisk();
+                }
+
+                if(productRisk==null){
+                    productRisk = new ProductRisk();
+                }
+
 
                 OverallRisk overallRisk = new OverallRisk(customer.getId(), ruleModule, customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(), channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
                 overallRisk = kieService.getOverallRisk(overallRisk);
@@ -437,7 +445,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         String amlServiceTransactionUrl = String.format(env.getProperty("aml.api.aml-transactions"), tenent);
         HashMap<String, String> transactionParameters = new HashMap<>();
         transactionParameters.put("customerProduct.customer.id", customerId.toString());
-        transactionParameters.put("txnDate", sdf.format(cal.getTime()));
+        //transactionParameters.put("txnDate", sdf.format(cal.getTime()));
 
         //Send request to Customer Service
         ArrayList<Object> list = sendServiceRequest2(amlServiceTransactionUrl, transactionParameters, null, "AML");
@@ -722,6 +730,14 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                     Occupation occupation = new Occupation();
                     occupation.setHighRisk(false);
                     customerRisk.setOccupation(occupation);
+                }
+
+                if(channelRisk==null){
+                    channelRisk = new ChannelRisk();
+                }
+
+                if(productRisk==null){
+                    productRisk = new ProductRisk();
                 }
 
                 OverallRisk overallRisk = new OverallRisk(customer.getId(), ruleModule, customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(), channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(), customerRisk.getCustomerType().getHighRisk(), customerRisk.getOccupation().getHighRisk());
