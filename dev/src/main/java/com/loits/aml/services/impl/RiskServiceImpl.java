@@ -80,32 +80,48 @@ public class RiskServiceImpl implements RiskService {
         logger.debug(String.format("Task parameters. No of Async Tasks : %s, Page size : %s, " +
                 "Total Records : %s", noOfAsyncTasks, pageSize, totRecords));
 
-//        //TODO comment later
-//        for(int i=0; i<totRecords; i++){
-//          amlRiskService.runRiskCronJob(user,tenent,i, 1);
-//        }
+        //TODO comment later
+        List<Customer> customerList = null;
+        //Customer customer = null;
+        ObjectMapper objectMapper = new ObjectMapper();
 
-//        TODO uncomment later
-        for (int i = 0; i < noOfAsyncTasks; i++) {
-
-          // if last page, might need to make an adjustment
-          if (i == noOfAsyncTasks - 1 &&
-                  totRecords >= PARALLEL_THREADS) {
-            int orphanRecordCount = totRecords % PARALLEL_THREADS;
-            pageSize += orphanRecordCount;
-          }
-
-          // send customer fetch -- tenant, page, size
-          futuresList.add(this.calculateCustomerRisk(user, tenent, i, pageSize));
+        //Request parameters to Customer Service
+        HashMap<String, String> parameters2 = new HashMap<>();
+        parameters.put("size", String.valueOf(Integer.MAX_VALUE));
+        try {
+          logger.debug("Sending request to Customer API to get Customer");
+          customerList = httpService.getData("Customer", customerServiceUrl, parameters2, new TypeReference<List<Customer>>(){});
+//          customer = objectMapper.convertValue(customerList.get(0), Customer.class);
+          logger.debug("Customers successfully retrieved");
+        } catch (Exception e) {
+          logger.debug("Customer retrieval failed with "+ e.getMessage());
         }
 
-        CompletableFuture.allOf(
-                futuresList.toArray(new CompletableFuture[futuresList.size()]))
-                .whenComplete((result, ex) -> {
-                  if (ex != null) {
-                    logger.debug("All customer risk calculations processes error");
-                  } else logger.debug("All customer risk calculations processes completed");
-                });
+        for(Customer customer: customerList){
+          amlRiskService.runRiskCronJob(user,tenent,customer);
+        }
+
+//        TODO uncomment later
+//        for (int i = 0; i < noOfAsyncTasks; i++) {
+//
+//          // if last page, might need to make an adjustment
+//          if (i == noOfAsyncTasks - 1 &&
+//                  totRecords >= PARALLEL_THREADS) {
+//            int orphanRecordCount = totRecords % PARALLEL_THREADS;
+//            pageSize += orphanRecordCount;
+//          }
+//
+//          // send customer fetch -- tenant, page, size
+//          futuresList.add(this.calculateCustomerRisk(user, tenent, i, pageSize));
+//        }
+//
+//        CompletableFuture.allOf(
+//                futuresList.toArray(new CompletableFuture[futuresList.size()]))
+//                .whenComplete((result, ex) -> {
+//                  if (ex != null) {
+//                    logger.debug("All customer risk calculations processes error");
+//                  } else logger.debug("All customer risk calculations processes completed");
+//                });
 
       } catch (Exception e) {
         logger.error("Customer Risk Calculation process error");

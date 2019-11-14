@@ -557,6 +557,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 String jsonString = EntityUtils.toString(httpResponse.getEntity());
                 productRisk = objectMapper.readValue(jsonString, ProductRisk.class);
             } catch (IOException e) {
+                logger.debug("Error deserializing productRisk object");
                 e.printStackTrace();
             }
         } else {
@@ -575,6 +576,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         try {
             jsonString = objectMapper.writeValueAsString(object);
         } catch (JsonProcessingException e) {
+            logger.debug("Error converiting Object to string");
             e.printStackTrace();
         }
 
