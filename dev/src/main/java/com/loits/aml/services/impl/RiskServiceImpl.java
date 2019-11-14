@@ -87,7 +87,7 @@ public class RiskServiceImpl implements RiskService {
 
         //Request parameters to Customer Service
         HashMap<String, String> parameters2 = new HashMap<>();
-        parameters.put("size", String.valueOf(Integer.MAX_VALUE));
+        parameters2.put("size", String.valueOf(Integer.MAX_VALUE));
         try {
           logger.debug("Sending request to Customer API to get Customer");
           customerList = httpService.getData("Customer", customerServiceUrl, parameters2, new TypeReference<List<Customer>>(){});
