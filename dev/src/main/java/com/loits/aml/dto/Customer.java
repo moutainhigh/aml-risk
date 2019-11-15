@@ -18,6 +18,7 @@ public class Customer {
     private String createdBy;
     private Timestamp createdOn;
     private Long version;
+    private Long riskCalculationStatus;
     private Collection<Address> addresses;
     private Industry industry;
     private Occupation occupation;

@@ -66,4 +66,8 @@ public class AmlRisk extends BaseEntity {
     @Transient
     private String tenent;
 
+    @Basic
+    @Column (name="risk_calculation_status")
+    private Long riskCalculationStatus;
+
 }

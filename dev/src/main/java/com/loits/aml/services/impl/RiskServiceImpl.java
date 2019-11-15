@@ -27,58 +27,58 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class RiskServiceImpl implements RiskService {
 
-  Logger logger = LogManager.getLogger(RiskServiceImpl.class);
+    Logger logger = LogManager.getLogger(RiskServiceImpl.class);
 
-  @Autowired
-  Environment env;
+    @Autowired
+    Environment env;
 
-  @Autowired
-  AmlRiskService amlRiskService;
+    @Autowired
+    AmlRiskService amlRiskService;
 
-  @Autowired
-  SyncStatusService syncStatusService;
+    @Autowired
+    SyncStatusService syncStatusService;
 
-  @Autowired
-  HTTPService httpService;
+    @Autowired
+    HTTPService httpService;
 
-  @Value("${api.customer-risk-calculation-allowed-parallel-threads}")
-  int PARALLEL_THREADS;
+    @Value("${api.customer-risk-calculation-allowed-parallel-threads}")
+    int PARALLEL_THREADS;
 
-  @Override
-  public CompletableFuture<?> calculateRiskForCustomerBase(String user, String tenent) {
+    @Override
+    public CompletableFuture<?> calculateRiskForCustomerBase(String user, String tenent) {
 
-    return CompletableFuture.runAsync(() -> {
-      try {
-        TenantHolder.setTenantId(tenent);
-        List<CompletableFuture<?>> futuresList = new ArrayList<>();
-        logger.debug("Customer base risk calculation process started");
+        return CompletableFuture.runAsync(() -> {
+            try {
+                TenantHolder.setTenantId(tenent);
+                List<CompletableFuture<?>> futuresList = new ArrayList<>();
+                logger.debug("Customer base risk calculation process started");
 
-        // fetch a single cusomer page to determine no of customer records.
-        //Request parameters to Customer Service
-        String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
-        HashMap<String, String> parameters = new HashMap<>();
-        parameters.put("size", "1");
-        parameters.put("projection", "");
+                // fetch a single cusomer page to determine no of customer records.
+                //Request parameters to Customer Service
+                String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
+                HashMap<String, String> parameters = new HashMap<>();
+                parameters.put("size", "1");
+                parameters.put("projection", "");
 
-        //Send request to Customer Service
-        RestResponsePage customerResultPage =
-                amlRiskService.sendServiceRequest(customerServiceUrl, parameters,
-                        null, "Customer");
+                //Send request to Customer Service
+                RestResponsePage customerResultPage =
+                        amlRiskService.sendServiceRequest(customerServiceUrl, parameters,
+                                null, "Customer");
 
-        int totRecords = customerResultPage.getTotalPages(); //Total pages = Total Customers
-        int pageSize = 0;
+                int totRecords = customerResultPage.getTotalPages(); //Total pages = Total Customers
+                int pageSize = 0;
 
-        // calculate customer risk in segments.
-        // Max. allowed segments --PARALLEL_THREADS
-        int noOfAsyncTasks = 1;
+                // calculate customer risk in segments.
+                // Max. allowed segments --PARALLEL_THREADS
+                int noOfAsyncTasks = 1;
 
-        if (totRecords >= PARALLEL_THREADS) {
-          noOfAsyncTasks = totRecords / PARALLEL_THREADS;
-          pageSize = noOfAsyncTasks;
-        } else pageSize = totRecords;
+                if (totRecords >= PARALLEL_THREADS) {
+                    noOfAsyncTasks = totRecords / PARALLEL_THREADS;
+                    pageSize = noOfAsyncTasks;
+                } else pageSize = totRecords;
 
-        logger.debug(String.format("Task parameters. No of Async Tasks : %s, Page size : %s, " +
-                "Total Records : %s", noOfAsyncTasks, pageSize, totRecords));
+                logger.debug(String.format("Task parameters. No of Async Tasks : %s, Page size : %s, " +
+                        "Total Records : %s", noOfAsyncTasks, pageSize, totRecords));
 
         //TODO comment later
         List<Customer> customerList = null;

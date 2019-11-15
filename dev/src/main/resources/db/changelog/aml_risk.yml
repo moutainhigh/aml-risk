@@ -54,4 +54,15 @@ databaseChangeLog:
                 type: TEXT
             tableName: aml_risk
 
+- changeSet:
+    id: 2
+    author: minolid@i360.lk
+    changes:
+      - addColumn:
+          columns:
+            - column:
+                name: risk_calculation_status
+                type: BIGINT
+          tableName: aml_risk
+
 
