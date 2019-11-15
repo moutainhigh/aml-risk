@@ -531,6 +531,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             List<Product> productList = new ArrayList<>();
             for (CustomerProduct cp : customerProductList) {
                 Product product = new Product();
+                product.setId(cp.getId());
                 product.setCode(cp.getProduct().getCode());
                 product.setCommencedDate(cp.getCommenceDate());
                 product.setTerminatedDate(cp.getTerminateDate());
