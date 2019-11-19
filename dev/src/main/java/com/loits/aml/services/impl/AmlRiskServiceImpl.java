@@ -22,6 +22,7 @@ import com.loits.aml.services.KieService;
 import com.loits.aml.services.ServiceMetadataService;
 import com.loits.fx.aml.*;
 import com.loits.fx.aml.CustomerType;
+import com.loits.fx.aml.Industry;
 import com.loits.fx.aml.Module;
 import com.loits.fx.aml.Occupation;
 import com.loits.fx.aml.Product;
@@ -712,29 +713,30 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 customerRisk = calculateCustomerRisk(customer, ruleModule, user, tenent);
             }else{
                 AmlRisk amlRisk = amlRiskRepository.findTopByCustomerOrderByCreatedOnDesc(customer.getId()).get();
+                customerRisk = new CustomerRisk();
+                customerRisk.setOccupation(new Occupation());
+                customerRisk.setCustomerType(new CustomerType());
                 customerRisk.setCalculatedRisk(amlRisk.getCustomerRisk());
-                //customerRisk.getCustomerType().setHighRisk(amlRisk.get);
-//                if(amlRisk.getRiskText()!=null) {
-//                    if (amlRisk.getRiskText().contains("A politically exposed person")) {
-//                        customerRisk.setPepsEnabled(true);
-//                    }
-//                    customerRisk.setCustomerType(new CustomerType());
-//                    customerRisk.setOccupation(new Occupation());
-//                    if (amlRisk.getRiskText().contains("customer-type")) {
-//                        customerRisk.getCustomerType().setHighRisk(true);
-//                    }
-//
-//                    if (amlRisk.getRiskText().contains("occupation")) {
-//                        customerRisk.getOccupation().setHighRisk(true);
-//                    }
-//                }else{
-//                    customerRisk.setPepsEnabled(false);
-//                    customerRisk.getCustomerType().setHighRisk(false);
-//                    customerRisk.getOccupation().setHighRisk(false);
-//                }
-                customerRisk.setPepsEnabled(false);
+
+                if(amlRisk.getRiskText()!=null) {
+                    if (amlRisk.getRiskText().contains("A politically exposed person")) {
+                        customerRisk.setPepsEnabled(true);
+                    }
+                    customerRisk.setCustomerType(new CustomerType());
+                    customerRisk.setOccupation(new Occupation());
+                    if (amlRisk.getRiskText().contains("customer-type")) {
+                        customerRisk.getCustomerType().setHighRisk(true);
+                    }
+
+                    if (amlRisk.getRiskText().contains("occupation")) {
+                        customerRisk.getOccupation().setHighRisk(true);
+                    }
+                }else{
+                    customerRisk.setPepsEnabled(false);
                     customerRisk.getCustomerType().setHighRisk(false);
                     customerRisk.getOccupation().setHighRisk(false);
+                }
+
                 //TODO change approach to save the booleans in amlrisk and retrieve
             }
 
