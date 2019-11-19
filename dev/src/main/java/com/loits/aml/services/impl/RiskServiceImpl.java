@@ -98,7 +98,20 @@ public class RiskServiceImpl implements RiskService {
         }
 
         for(Customer customer: customerList){
-          amlRiskService.runRiskCronJob(user,tenent,customer);
+            Boolean calculateCustRisk;
+            if (customer.getRiskCalculationStatus() == 0 || customer.getRiskCalculationStatus() != customer.getVersion()) {
+               calculateCustRisk = true;
+            }else{
+                calculateCustRisk = false;
+            }
+            try {
+                amlRiskService.runRiskCronJob(calculateCustRisk,user, tenent, customer);
+                logger.debug("Risk calculated for customer with id " + customer.getId());
+                //customer.setRiskCalculationStatus(customer.getVersion());
+            } catch (Exception e) {
+                e.printStackTrace();
+                logger.debug("Risk not calculated for customer id " + customer.getId());
+            }
         }
 
 //        TODO uncomment later
@@ -163,9 +176,22 @@ public class RiskServiceImpl implements RiskService {
           logger.debug("Customer retrieval failed with "+ e.getMessage());
         }
 
-        for(Customer customer: customerList){
-          amlRiskService.runRiskCronJob(user,tenent,customer);
-        }
+          for(Customer customer: customerList){
+              Boolean calculateCustRisk;
+              if (customer.getRiskCalculationStatus() == 0 || customer.getRiskCalculationStatus() != customer.getVersion()) {
+                  calculateCustRisk = true;
+              }else{
+                  calculateCustRisk = false;
+              }
+              try {
+                  amlRiskService.runRiskCronJob(calculateCustRisk,user, tenent, customer);
+                  logger.debug("Risk calculated for customer with id " + customer.getId());
+                  //customer.setRiskCalculationStatus(customer.getVersion());
+              } catch (Exception e) {
+                  e.printStackTrace();
+                  logger.debug("Risk not calculated for customer id " + customer.getId());
+              }
+          }
 
         // Log sync status for this segment - completed status
         syncStatusService.updateSyncStatus(thisSync, SyncStatusCodes.SYNC_COMPLETED);
