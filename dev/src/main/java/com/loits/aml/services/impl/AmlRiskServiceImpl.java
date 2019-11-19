@@ -717,7 +717,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 customerRisk.setOccupation(new Occupation());
                 customerRisk.setCustomerType(new CustomerType());
                 customerRisk.setCalculatedRisk(amlRisk.getCustomerRisk());
-
+                customerRisk.setId(amlRisk.getCustomerRiskId());
                 if(amlRisk.getRiskText()!=null) {
                     if (amlRisk.getRiskText().contains("A politically exposed person")) {
                         customerRisk.setPepsEnabled(true);
