@@ -714,22 +714,22 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 AmlRisk amlRisk = amlRiskRepository.findTopByCustomerOrderByCreatedOnDesc(customer.getId()).get();
                 customerRisk.setCalculatedRisk(amlRisk.getCustomerRisk());
                 //customerRisk.getCustomerType().setHighRisk(amlRisk.get);
-                if(amlRisk.getRiskText().contains("A politically exposed person")){
-                    customerRisk.setPepsEnabled(true);
+                if(amlRisk.getRiskText()!=null) {
+                    if (amlRisk.getRiskText().contains("A politically exposed person")) {
+                        customerRisk.setPepsEnabled(true);
+                    }
+                    customerRisk.setCustomerType(new CustomerType());
+                    customerRisk.setOccupation(new Occupation());
+                    if (amlRisk.getRiskText().contains("customer-type")) {
+                        customerRisk.getCustomerType().setHighRisk(true);
+                    }
+
+                    if (amlRisk.getRiskText().contains("occupation")) {
+                        customerRisk.getOccupation().setHighRisk(true);
+                    }
                 }else{
                     customerRisk.setPepsEnabled(false);
-                }
-                customerRisk.setCustomerType(new CustomerType());
-                customerRisk.setOccupation(new Occupation());
-                if(amlRisk.getRiskText().contains("customer-type")){
-                    customerRisk.getCustomerType().setHighRisk(true);
-                }else{
                     customerRisk.getCustomerType().setHighRisk(false);
-                }
-
-                if(amlRisk.getRiskText().contains("occupation")){
-                    customerRisk.getOccupation().setHighRisk(true);
-                }else{
                     customerRisk.getOccupation().setHighRisk(false);
                 }
                 //TODO change approach to save the booleans in amlrisk and retrieve
