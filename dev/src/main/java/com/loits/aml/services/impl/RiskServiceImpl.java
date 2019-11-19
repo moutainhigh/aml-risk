@@ -98,6 +98,7 @@ public class RiskServiceImpl implements RiskService {
         }
 
         for(Customer customer: customerList){
+            if(customer.getRiskCalculationStatus()==null) customer.setRiskCalculationStatus(0L);
             Boolean calculateCustRisk;
             if (customer.getRiskCalculationStatus() == 0 || customer.getRiskCalculationStatus() != customer.getVersion()) {
                calculateCustRisk = true;
