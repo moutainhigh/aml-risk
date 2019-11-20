@@ -32,44 +32,44 @@ public class KafkaConsumerImpl implements KafkaConsumer {
     @Autowired
     KafkaErrorLogRepository kafkaErrorLogRepository;
 
-    public void create(Module module){
-        logger.debug("Starting to create module from sync topic. Tenent : " + module.getTenent());
+    public void create(Module module) {
+        logger.debug("Module Create Sync started for topic module-create with tenent " + module.getTenent());
         TenantHolder.setTenantId(module.getTenent());
-        try{
+        try {
             moduleRepository.save(module);
-            logger.debug("Module sync completed.");
-        }catch (Exception e){
+            logger.debug("Module sync completed for module with code "+module.getCode());
+        } catch (Exception e) {
             logError(e, "module-create", module);
             e.printStackTrace();
-            logger.debug("Module could not be synced.");
+            logger.debug("Module could not be synced for module with code "+module.getCode());
         }
         TenantHolder.clear();
     }
 
-    public void update(Module module){
-        logger.debug("Starting to update module from sync topic. Tenent : " + module.getTenent());
+    public void update(Module module) {
+        logger.debug("Module Update Sync started topic module-update with tenent " + module.getTenent());
         TenantHolder.setTenantId(module.getTenent());
-        try{
+        try {
             moduleRepository.save(module);
-            logger.debug("Module sync completed.");
-        }catch (Exception e){
+            logger.debug("Module sync completed for module with code "+module.getCode());
+        } catch (Exception e) {
             logError(e, "module-update", module);
             e.printStackTrace();
-            logger.debug("Module could not be synced.");
+            logger.debug("Module could not be synced for module with code "+module.getCode());
         }
         TenantHolder.clear();
     }
 
-    public void delete(Module module){
-        logger.debug("Starting to delete module from sync topic. Tenent : " + module.getTenent());
+    public void delete(Module module) {
+        logger.debug("Module Delete Sync started topic module-delete with tenent " + module.getTenent());
         TenantHolder.setTenantId(module.getTenent());
-        try{
-            moduleRepository.delete(module);
-            logger.debug("Module sync completed.");
-        }catch (Exception e){
+        try {
+            moduleRepository.deleteById(module.getCode());
+            logger.debug("Module sync completed for module with code "+module.getCode());
+        } catch (Exception e) {
             logError(e, "module-delete", module);
             e.printStackTrace();
-            logger.debug("Module could not be synced.");
+            logger.debug("Module could not be synced for module with code "+module.getCode());
         }
         TenantHolder.clear();
     }
@@ -79,11 +79,12 @@ public class KafkaConsumerImpl implements KafkaConsumer {
         TenantHolder.setTenantId(geoLocation.getTenent());
         try{
             geolocationRepository.save(geoLocation);
-            logger.debug("Kafka consumption successful for topic geolocation-create");
+            logger.debug("Kafka consumption successful for geolocation with id "+geoLocation.getId());
         }catch (Exception e){
             logError(e, "geolocation-create", geoLocation);
+            logger.debug("Kafka consumption failed for for geolocation with id "+geoLocation.getId());
             e.printStackTrace();
-            logger.debug("Kafka consumption failed for topic geolocation-create");
+
         }
         TenantHolder.clear();
     }
@@ -93,11 +94,11 @@ public class KafkaConsumerImpl implements KafkaConsumer {
         TenantHolder.setTenantId(geoLocation.getTenent());
         try{
             geolocationRepository.save(geoLocation);
-            logger.debug("Kafka consumption successful for topic geolocation-update");
+            logger.debug("Kafka consumption successful for geolocation with id "+geoLocation.getId());
         }catch (Exception e){
             logError(e, "geolocation-update", geoLocation);
+            logger.debug("Kafka consumption failed for geolocation with id "+geoLocation.getId());
             e.printStackTrace();
-            logger.debug("Kafka consumption failed for topic geolocation-update");
         }
         TenantHolder.clear();
     }

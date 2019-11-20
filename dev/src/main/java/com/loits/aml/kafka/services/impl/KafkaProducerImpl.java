@@ -2,6 +2,7 @@ package com.loits.aml.kafka.services.impl;
 
 import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.domain.AmlRisk;
+import com.loits.aml.domain.KafkaErrorLog;
 import com.loits.aml.kafka.services.KafkaProducer;
 import com.loits.aml.mt.TenantHolder;
 import com.loits.aml.repo.KafkaErrorLogRepository;
@@ -11,6 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -32,15 +37,31 @@ public class KafkaProducerImpl implements KafkaProducer {
   @Override
   public CompletableFuture<?> publishToTopic(String topic, AmlRisk amlRisk) {
     return CompletableFuture.runAsync(() -> {
-      logger.debug("Publishing data to topic aml-risk-create started");
+      logger.debug("Publishing data to topic aml-risk-create started. Tenent: "+amlRisk.getTenent());
       TenantHolder.setTenantId(amlRisk.getTenent());
       try {
         kafkaTemplate.send(topic, amlRisk);
-        logger.debug("Publishing to topic aml-risk-create successful");
+        logger.debug("Publishing to kafka  successful for aml-risk with id "+amlRisk.getId());
       }catch(Exception e){
-        logger.debug("Publishing to topic aml-risk-create failed");
+        logError(e, topic, amlRisk);
+        logger.debug("Publishing to kafka failed for aml-risk with id "+amlRisk.getId());
+        e.printStackTrace();
       }
       TenantHolder.clear();
     });
+  }
+
+  public void logError(Exception e, String topic, Object object){
+    KafkaErrorLog kafkaErrorLog = new KafkaErrorLog();
+    kafkaErrorLog.setTimestamp(new Timestamp(new Date().getTime()));
+    kafkaErrorLog.setErrorMessage(e.getMessage());
+    kafkaErrorLog.setTopic(topic);
+    kafkaErrorLog.setType("Producer");
+    kafkaErrorLog.setSubType("Db");
+    StringWriter stringWriter = new StringWriter();
+    e.printStackTrace(new PrintWriter(stringWriter));
+    kafkaErrorLog.setTrace(stringWriter.toString());
+    kafkaErrorLog.setData(object.toString());
+    kafkaErrorLogRepository.save(kafkaErrorLog);
   }
 }
