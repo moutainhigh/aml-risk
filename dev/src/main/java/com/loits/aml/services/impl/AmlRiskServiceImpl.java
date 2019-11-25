@@ -1,6 +1,5 @@
 package com.loits.aml.services.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loits.aml.config.NullAwareBeanUtilsBean;
@@ -25,14 +24,10 @@ import com.loits.fx.aml.CustomerType;
 import com.loits.fx.aml.Module;
 import com.loits.fx.aml.Occupation;
 import com.loits.fx.aml.Product;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
@@ -40,6 +35,9 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -214,14 +212,16 @@ public class AmlRiskServiceImpl implements AmlRiskService {
     }
 
     @Override
-    public Object getCustomerRisk(String customerCode, String module, String otherIdentity, String user, String tenent) throws FXDefaultException {
+    public Page<?> getAvailableCustomerRisk(String customerCode, Pageable pageable, String module, String otherIdentity, Date from, Date to, String user, String tenent) throws FXDefaultException {
         ObjectMapper objectMapper = new ObjectMapper();
         Customer customer = null;
+        List<ModuleCustomer> moduleCustomerList = null;
+        ModuleCustomer moduleCustomer = null;
 
         //Find module from module table
         Module ruleModule = null;
         if (!moduleRepository.existsById(module)) {
-            throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"), new Date(), HttpStatus.BAD_REQUEST, false);
+            throw new FXDefaultException("3001", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"), new Date(), HttpStatus.BAD_REQUEST, false);
         } else {
             //Build module
             com.loits.aml.domain.Module dbModule = moduleRepository.findByCode(module).get();
@@ -233,13 +233,20 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 ruleModule.setParent(ruleModuleParent);
             }
 
-            List<ModuleCustomer> moduleCustomerList = null;
-            ModuleCustomer moduleCustomer = null;
+            if(from==null && to==null){
+                Date date = new GregorianCalendar(1970, Calendar.JANUARY, 1).getTime();
+                from = new Date();
+                to = new Date();
+                from.setTime(date.getTime());
+                to.setTime(new Date().getTime());
+            }
 
             //Request parameters to Customer Service
             String customerServiceUrl = String.format(env.getProperty("aml.api.customer-module-customer"), tenent);
             HashMap<String, String> parameters = new HashMap<>();
-            parameters.put("moduleCustomerCode", customerCode);
+            if(customerCode!=null && !customerCode.isEmpty()){
+                parameters.put("moduleCustomerCode", customerCode);
+            }
             parameters.put("module.code", module);
 
             try {
@@ -252,8 +259,17 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         }
 
         //Get last calculated risk of customer from AMLRisk table
-        if (amlRiskRepository.existsByCustomer(customer.getId())) {
-            AmlRisk amlRisk = amlRiskRepository.findTopByCustomerOrderByCreatedOnDesc(customer.getId()).get();
+        List<AmlRisk> amlRiskList = new ArrayList<>();
+        List<OverallRisk> overallRiskList = new ArrayList<>();
+        if (customerCode!=null && !customerCode.isEmpty()) {
+            amlRiskList= amlRiskRepository.findTopForCustomerOrderByCreatedOnDescBetween(customer.getId(),new Timestamp(from.getTime()), new Timestamp(to.getTime()) );
+        }else if (customerCode==null || customerCode.isEmpty()){
+            amlRiskList = amlRiskRepository.findTopForEachCustomerBetween(new Timestamp(from.getTime()), new Timestamp(to.getTime()));
+        } else {
+            throw new FXDefaultException("3003", "NO_DATA_AVAILABLE", Translator.toLocale("NO_RISK_DATA"), new Date(), HttpStatus.BAD_REQUEST, false);
+        }
+
+        for(AmlRisk amlRisk : amlRiskList){
             OverallRisk overallRisk = new OverallRisk();
             overallRisk.setCustomerCode(amlRisk.getCustomer());
             overallRisk.setModule(ruleModule);
@@ -262,10 +278,12 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             overallRisk.setChannelRisk(amlRisk.getChannelRisk());
             overallRisk.setProductRisk(amlRisk.getProductRisk());
             overallRisk.setCustomerRisk(amlRisk.getCustomerRisk());
-            return overallRisk;
-        } else {
-            throw new FXDefaultException("3003", "NO_DATA_AVAILABLE", Translator.toLocale("NO_RISK_DATA"), new Date(), HttpStatus.BAD_REQUEST, false);
+            overallRiskList.add(overallRisk);
         }
+
+        return new PageImpl<OverallRisk>(overallRiskList,
+                pageable,
+                overallRiskList.size());
     }
 
 

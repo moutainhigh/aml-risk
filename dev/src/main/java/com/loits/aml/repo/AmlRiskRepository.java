@@ -1,6 +1,7 @@
 package com.loits.aml.repo;
 
 import com.loits.aml.domain.AmlRisk;
+import com.loits.aml.repo.custom.AmlRiskRepositoryCustom;
 import com.querydsl.core.types.Predicate;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -14,7 +15,9 @@ import java.util.Optional;
  */
 
 @RepositoryRestResource(exported = false)
-public interface AmlRiskRepository extends PagingAndSortingRepository<AmlRisk, Long>, QuerydslPredicateExecutor<AmlRisk> {
+public interface AmlRiskRepository extends PagingAndSortingRepository<AmlRisk, Long>, QuerydslPredicateExecutor<AmlRisk>,
+        AmlRiskRepositoryCustom {
+
     boolean existsByCustomer(Long id);
 
     Optional<AmlRisk> findTopByCustomerOrderByCreatedOnDesc(Long id);

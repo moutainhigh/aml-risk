@@ -7,12 +7,16 @@ import com.loits.aml.services.RiskService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.util.Date;
 
 /**
  * Managing Riskrelated operations
@@ -42,14 +46,17 @@ public class AmlRiskController {
      * @throws FXDefaultException
      */
     @GetMapping(path= "/{tenent}", produces = "application/json")
-    public ResponseEntity<?> calculateRisk(@PathVariable(value = "tenent") String tenent,
-                                           @RequestParam(value= "customer_code", required = true) String customerCode,
-                                           @RequestParam(value= "module" , required = true) String module,
-                                           @RequestParam(value= "other_identity") String otherIdentity,
-                                           @RequestHeader(value = "user", defaultValue = "sysUser") String user
+    public @ResponseBody
+    Page<?> getAvailableRisk(@PathVariable(value = "tenent") String tenent,
+                             @PageableDefault(size = 10) Pageable pageable,
+                             @RequestParam(value= "customer_code", required = false) String customerCode,
+                             @RequestParam(value= "module" , required = true) String module,
+                             @RequestParam(value= "other_identity", required = false) String otherIdentity,
+                             @RequestParam(value= "from", required = false) Date from,
+                             @RequestParam(value= "to", required = false) Date to,
+                             @RequestHeader(value = "user", defaultValue = "sysUser") String user
     ) throws FXDefaultException {
-        Resource resource = new Resource(amlRiskService.getCustomerRisk(customerCode, module, otherIdentity, user, tenent));
-        return ResponseEntity.ok(resource);
+        return amlRiskService.getAvailableCustomerRisk(customerCode, pageable,module, otherIdentity, from, to, user, tenent);
     }
 
 
@@ -63,7 +70,7 @@ public class AmlRiskController {
     }
 
     @GetMapping(path= "/{tenent}/calculate-one/{id}", produces = "application/json")
-    public ResponseEntity<?> calculateAllRisk(@PathVariable(value = "tenent") String tenent,
+    public ResponseEntity<?> calculateRiskSingle(@PathVariable(value = "tenent") String tenent,
                                               @PathVariable(value = "id") Long id,
                                            @RequestHeader(value = "user", defaultValue = "sysUser") String user
     ) throws FXDefaultException {
@@ -72,7 +79,7 @@ public class AmlRiskController {
     }
 
   @PostMapping(path = "/{tenent}/calculate", produces = "application/json")
-  public ResponseEntity<?> calculateRiskOnOnboarding(@PathVariable(value = "tenent") String tenent,
+  public ResponseEntity<?> calculateRiskBulk(@PathVariable(value = "tenent") String tenent,
                                                      @RequestHeader(value = "user", defaultValue
                                                              = "sysUser") String user
   ) throws FXDefaultException {
