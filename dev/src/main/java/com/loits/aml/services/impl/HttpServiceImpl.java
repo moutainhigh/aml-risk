@@ -25,10 +25,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Lahiru Bandara - Infinitum360
@@ -46,9 +43,9 @@ public class HttpServiceImpl implements HTTPService {
     private final String template3 = "REST API request successful. Service : %s";
 
     @Override
-    public <T, classType, binderType> List<classType> getData(String key, String url,
-                                                              Map<String, String> queryParam,
-                                                              TypeReference typeReference)
+    public <T, classType, binderType> List<classType> getDataFromPage(String key, String url,
+                                                                      Map<String, String> queryParam,
+                                                                      TypeReference typeReference)
             throws FXDefaultException, ClassNotFoundException {
 
         HttpResponse httpResponse;
@@ -68,6 +65,36 @@ public class HttpServiceImpl implements HTTPService {
             jsonString = EntityUtils.toString(httpResponse.getEntity());
             RestResponsePage page = objectMapper.readValue(jsonString, RestResponsePage.class);
             data = objectMapper.convertValue(page.getContent(), typeReference);
+        } catch (IOException e) {
+            logger.error("Error in response to RestResponsePage conversion");
+            e.printStackTrace();
+        }
+        return data;
+    }
+
+    @Override
+    public <T, classType, binderType> List<classType> getDataFromList(String key, String url,
+                                                                      Map<String, String> queryParam,
+                                                                      TypeReference typeReference)
+            throws FXDefaultException, ClassNotFoundException {
+
+        HttpResponse httpResponse;
+        String jsonString;
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<classType> data = null;
+        url = this.buildGetURL(url, queryParam, key);
+
+        // make sure valid URL
+        if (url == null) throw new FXDefaultException("-1", "URL_BUILD_FAILED",
+                "URL Build failed. (#" + key + ")", new Date(), HttpStatus.BAD_REQUEST);
+
+        //Get Customer Products
+        httpResponse = sendGetRequest(url, key, null);
+        try {
+
+            jsonString = EntityUtils.toString(httpResponse.getEntity());
+            ArrayList list = objectMapper.readValue(jsonString, ArrayList.class);
+            data = objectMapper.convertValue(list, typeReference);
         } catch (IOException e) {
             logger.error("Error in response to RestResponsePage conversion");
             e.printStackTrace();

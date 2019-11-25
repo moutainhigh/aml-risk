@@ -90,7 +90,7 @@ public class RiskServiceImpl implements RiskService {
         parameters2.put("size", String.valueOf(Integer.MAX_VALUE));
         try {
           logger.debug("Sending request to Customer API to get Customer");
-          customerList = httpService.getData("Customer", customerServiceUrl, parameters2, new TypeReference<List<Customer>>(){});
+          customerList = httpService.getDataFromPage("Customer", customerServiceUrl, parameters2, new TypeReference<List<Customer>>(){});
 //          customer = objectMapper.convertValue(customerList.get(0), Customer.class);
           logger.debug("Customers successfully retrieved");
         } catch (Exception e) {
@@ -170,7 +170,7 @@ public class RiskServiceImpl implements RiskService {
 
         try {
           logger.debug("Sending request to Customer API to get Customer");
-          customerList = httpService.getData("Customer", customerServiceUrl, parameters, new TypeReference<List<Customer>>(){});
+          customerList = httpService.getDataFromPage("Customer", customerServiceUrl, parameters, new TypeReference<List<Customer>>(){});
 //          customer = objectMapper.convertValue(customerList.get(0), Customer.class);
           logger.debug("Customers successfully retrieved");
         } catch (Exception e) {

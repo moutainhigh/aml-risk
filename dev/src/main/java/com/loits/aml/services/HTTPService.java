@@ -17,7 +17,11 @@ import java.util.Map;
 
 public interface HTTPService {
 
-  public <T, classType, binderType> List<classType> getData(String key, String url, Map<String,
+  public <T, classType, binderType> List<classType> getDataFromPage(String key, String url, Map<String,
+          String> queryParam, TypeReference typeReference) throws FXDefaultException,
+          IOException, ClassNotFoundException;
+
+  public <T, classType, binderType> List<classType> getDataFromList(String key, String url, Map<String,
           String> queryParam, TypeReference typeReference) throws FXDefaultException,
           IOException, ClassNotFoundException;
 

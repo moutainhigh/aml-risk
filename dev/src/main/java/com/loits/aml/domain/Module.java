@@ -33,7 +33,7 @@ public class Module {
     @Column(name = "created_on", nullable = true)
     private Timestamp createdOn;
 
-    @Version
+    @Column(name = "version", nullable = true)
     private Long version;
 
     @ManyToOne

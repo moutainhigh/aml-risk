@@ -22,7 +22,6 @@ import com.loits.aml.services.KieService;
 import com.loits.aml.services.ServiceMetadataService;
 import com.loits.fx.aml.*;
 import com.loits.fx.aml.CustomerType;
-import com.loits.fx.aml.Industry;
 import com.loits.fx.aml.Module;
 import com.loits.fx.aml.Occupation;
 import com.loits.fx.aml.Product;
@@ -244,7 +243,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             parameters.put("module.code", module);
 
             try {
-                moduleCustomerList = httpService.getData("Customer", customerServiceUrl, parameters, new TypeReference<List<ModuleCustomer>>(){});
+                moduleCustomerList = httpService.getDataFromPage("Customer", customerServiceUrl, parameters, new TypeReference<List<ModuleCustomer>>(){});
                 moduleCustomer = objectMapper.convertValue(moduleCustomerList.get(0), ModuleCustomer.class);
                 customer = moduleCustomer.getCustomer();
             } catch (Exception e) {
@@ -282,7 +281,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         parameters.put("id", String.valueOf(id));
 
         try {
-            customerList = httpService.getData("Customer", customerServiceUrl, parameters, new TypeReference<List<Customer>>(){});
+            customerList = httpService.getDataFromPage("Customer", customerServiceUrl, parameters, new TypeReference<List<Customer>>(){});
             customer = objectMapper.convertValue(customerList.get(0), Customer.class);
         } catch (Exception e) {
             throw new FXDefaultException("-1", "NO_DATA_FOUND", "No customers found", new Date(), HttpStatus.BAD_REQUEST, false);
@@ -413,13 +412,24 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         //TODO change this to HTTP Service
         HashMap<String, String> headers = new HashMap<>();
         headers.put("user", user);
-        HttpResponse res = sendPostRequest(riskCustomer, String.format(env.getProperty("aml.api.category-risk"), tenent), "Aml-Category-Risk", headers);
+//        HttpResponse res = sendPostRequest(riskCustomer, String.format(env.getProperty("aml.api.category-risk"), tenent), "Aml-Category-Risk", headers);
+//        CustomerRisk customerRisk = null;
+//        try {
+//            String jsonString = EntityUtils.toString(res.getEntity());
+//            customerRisk = objectMapper.readValue(jsonString, CustomerRisk.class);
+//            logger.debug("CustomerRisk calculated "+customerRisk);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
+        //Calculate customer category risk by sending request to Category Risk Service
         CustomerRisk customerRisk = null;
         try {
-            String jsonString = EntityUtils.toString(res.getEntity());
-            customerRisk = objectMapper.readValue(jsonString, CustomerRisk.class);
-            logger.debug("CustomerRisk calculated "+customerRisk);
+            customerRisk = (CustomerRisk) httpService.sendData("Category-risk",String.format(env.getProperty("aml.api.category-risk"), tenent),
+                    null,headers,  CustomerRisk.class, riskCustomer );
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
 
@@ -448,16 +458,26 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         transactionParameters.put("customerProduct.customer.id", customerId.toString());
         transactionParameters.put("txnDate", sdf.format(cal.getTime()));
 
-        //Send request to Customer Service
-        ArrayList<Object> list = sendServiceRequest2(amlServiceTransactionUrl, transactionParameters, null, "AML");
+//        //Send request to Customer Service
+//        ArrayList<Object> list = sendServiceRequest2(amlServiceTransactionUrl, transactionParameters, null, "AML");
+//        try {
+//            transactionList = objectMapper.convertValue(list, new TypeReference<List<Transaction>>() {
+//            });
+//        } catch (Exception e) {
+//            logger.debug("Error in deserializing transactions from AML Service "+ e.getMessage());
+//            e.printStackTrace();
+//            channelRisk.setCalculatedRisk(0.0);
+//            return channelRisk;
+//        }
+
         try {
-            transactionList = objectMapper.convertValue(list, new TypeReference<List<Transaction>>() {
+            transactionList = httpService.getDataFromList("AML", amlServiceTransactionUrl, transactionParameters, new TypeReference<List<Transaction>>() {
             });
-        } catch (Exception e) {
-            logger.debug("Error in deserializing transactions from AML Service "+ e.getMessage());
+        }catch (Exception e){
             e.printStackTrace();
             channelRisk.setCalculatedRisk(0.0);
             return channelRisk;
+            //throw new FXDefaultException("-1", "ERROR", "Exception occured in retrieving Customer Products", new Date(), HttpStatus.BAD_REQUEST, false);
         }
 
         if (transactionList.size() > 0) {
@@ -486,13 +506,23 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             //TODO add to HTTPService
             HashMap<String, String> headers = new HashMap<>();
             headers.put("user", user);
-            HttpResponse httpResponse = sendPostRequest(channelRisk, String.format(env.getProperty("aml.api.channel-risk"), tenent), "ChannelRisk", headers);
+//            HttpResponse httpResponse = sendPostRequest(channelRisk, String.format(env.getProperty("aml.api.channel-risk"), tenent), "ChannelRisk", headers);
+//
+//            try {
+//                String jsonString = EntityUtils.toString(httpResponse.getEntity());
+//                channelRisk = objectMapper.readValue(jsonString, ChannelRisk.class);
+//            } catch (IOException e) {
+//                logger.debug("Error in deserializing channelRisk object");
+//                e.printStackTrace();
+//            }
 
+            //Calculate customer category risk by sending request to Category Risk Service
             try {
-                String jsonString = EntityUtils.toString(httpResponse.getEntity());
-                channelRisk = objectMapper.readValue(jsonString, ChannelRisk.class);
+                channelRisk = (ChannelRisk) httpService.sendData("Channel-risk",String.format(env.getProperty("aml.api.channel-risk"), tenent),
+                       null,headers,  ChannelRisk.class, channelRisk);
             } catch (IOException e) {
-                logger.debug("Error in deserializing channelRisk object");
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
 
@@ -517,11 +547,20 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         HashMap<String, String> productsParameters = new HashMap<>();
         productsParameters.put("customer.id", customerId.toString());
 
-        //Send request to Customer Service
-        ArrayList list = sendServiceRequest2(amlServiceProductsUrl, productsParameters, null, "AML");
+                //TODO remove if getDataFromList is working
+        //        //Send request to Customer Service
+        //        ArrayList list = sendServiceRequest2(amlServiceProductsUrl, productsParameters, null, "AML");
+        //
+        //        customerProductList = objectMapper.convertValue(list, new TypeReference<List<CustomerProduct>>() {
+        //        });
 
-        customerProductList = objectMapper.convertValue(list, new TypeReference<List<CustomerProduct>>() {
-        });
+        try {
+            customerProductList = httpService.getDataFromList("AML", amlServiceProductsUrl, productsParameters, new TypeReference<List<CustomerProduct>>() {
+            });
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new FXDefaultException("-1", "ERROR", "Exception occured in retrieving Customer Products", new Date(), HttpStatus.BAD_REQUEST, false);
+        }
 
         if (customerProductList.size() > 0) {
             logger.debug("Customer Products available. Starting calculation...");
@@ -553,15 +592,31 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             }
             productRisk.setProducts(productList);
 
-            //TODO add to HTTPSERVice
-            HttpResponse httpResponse = sendPostRequest(productRisk, String.format(env.getProperty("aml.api.product-risk"), tenent), "ProductRisk", null);
+//            //TODO add to HTTPSERVice
+//            HttpResponse httpResponse = sendPostRequest(productRisk, String.format(env.getProperty("aml.api.product-risk"), tenent), "ProductRisk", null);
+//            try {
+//                String jsonString = EntityUtils.toString(httpResponse.getEntity());
+//                productRisk = objectMapper.readValue(jsonString, ProductRisk.class);
+//            } catch (IOException e) {
+//                logger.debug("Error deserializing productRisk object");
+//                e.printStackTrace();
+//            }
+
+            //Headers for CategoryRisk POST Req
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("user", user);
+
+            //Calculate customer category risk by sending request to Category Risk Service
             try {
-                String jsonString = EntityUtils.toString(httpResponse.getEntity());
-                productRisk = objectMapper.readValue(jsonString, ProductRisk.class);
+                productRisk = (ProductRisk) httpService.sendData("Product-risk",String.format(env.getProperty("aml.api.product-risk"), tenent),
+                        null,headers,  ProductRisk.class, productRisk);
             } catch (IOException e) {
-                logger.debug("Error deserializing productRisk object");
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
+
+
         } else {
             logger.debug("No CustomerProducts available to calculate Product Risk. Aborting...");
             productRisk.setCalculatedRisk(0.0);
@@ -571,37 +626,37 @@ public class AmlRiskServiceImpl implements AmlRiskService {
     }
 
 
-    public HttpResponse sendPostRequest(Object object, String url, String
-            service, HashMap<String, String> headers) throws FXDefaultException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = null;
-        try {
-            jsonString = objectMapper.writeValueAsString(object);
-        } catch (JsonProcessingException e) {
-            logger.debug("Error converiting Object to string");
-            e.printStackTrace();
-        }
-
-        HttpClient client = HttpClientBuilder.create().build();
-        HttpResponse response = null;
-
-        HttpPost httpReq = new HttpPost(url);
-        HttpEntity stringEntity = new StringEntity(jsonString, ContentType.APPLICATION_JSON);
-        httpReq.setEntity(stringEntity);
-        httpReq.setHeader("Content-type", "application/json");
-        if (headers != null) {
-            for (Map.Entry<String, String> entry : headers.entrySet()) {
-                httpReq.setHeader(entry.getKey(), entry.getValue());
-            }
-        }
-
-        try {
-            response = client.execute(httpReq);
-            return response;
-        } catch (IOException e) {
-            throw new FXDefaultException("", "Rest Request to " + service + " Failed", e.getMessage(), new Date(), HttpStatus.BAD_REQUEST);
-        }
-    }
+//    public HttpResponse sendPostRequest(Object object, String url, String
+//            service, HashMap<String, String> headers) throws FXDefaultException {
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        String jsonString = null;
+//        try {
+//            jsonString = objectMapper.writeValueAsString(object);
+//        } catch (JsonProcessingException e) {
+//            logger.debug("Error converiting Object to string");
+//            e.printStackTrace();
+//        }
+//
+//        HttpClient client = HttpClientBuilder.create().build();
+//        HttpResponse response = null;
+//
+//        HttpPost httpReq = new HttpPost(url);
+//        HttpEntity stringEntity = new StringEntity(jsonString, ContentType.APPLICATION_JSON);
+//        httpReq.setEntity(stringEntity);
+//        httpReq.setHeader("Content-type", "application/json");
+//        if (headers != null) {
+//            for (Map.Entry<String, String> entry : headers.entrySet()) {
+//                httpReq.setHeader(entry.getKey(), entry.getValue());
+//            }
+//        }
+//
+//        try {
+//            response = client.execute(httpReq);
+//            return response;
+//        } catch (IOException e) {
+//            throw new FXDefaultException("", "Rest Request to " + service + " Failed", e.getMessage(), new Date(), HttpStatus.BAD_REQUEST);
+//        }
+//    }
 
     public HttpResponse sendGetRequest(String url, String service, HashMap<String, String> headers) throws
             FXDefaultException {
@@ -626,8 +681,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
 
     @Override
-    public RestResponsePage sendServiceRequest(String
-                                                       serviceUrl, HashMap<String, String> parameters, HashMap<String, String> headers, String service) throws
+    public RestResponsePage sendServiceRequest(String serviceUrl, HashMap<String, String> parameters, HashMap<String, String> headers, String service) throws
             FXDefaultException {
         URIBuilder builder;
         String url = null;
@@ -659,38 +713,38 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         }
     }
 
-    public ArrayList sendServiceRequest2(String
-                                                 serviceUrl, HashMap<String, String> parameters, HashMap<String, String> headers, String service) throws
-            FXDefaultException {
-        URIBuilder builder;
-        String url = null;
-        String jsonString = null;
-        ArrayList list = null;
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        try {
-            builder = new URIBuilder(serviceUrl);
-            for (Map.Entry<String, String> entry : parameters.entrySet()) {
-                builder.addParameter(entry.getKey(), entry.getValue());
-            }
-            url = builder.build().toString();
-        } catch (URISyntaxException e) {
-            throw new FXDefaultException();
-        }
-
-        HttpResponse httpResponse = sendGetRequest(url, service, headers);
-        if (httpResponse.getStatusLine().getStatusCode() == 200) {
-            try {
-                jsonString = EntityUtils.toString(httpResponse.getEntity());
-                list = objectMapper.readValue(jsonString, ArrayList.class);
-            } catch (IOException e) {
-                throw new FXDefaultException();
-            }
-            return list;
-        } else {
-            throw new FXDefaultException("-1", "FAILED_REQUEST", "Service Request Failed to "+service, new Date(), HttpStatus.BAD_REQUEST);
-        }
-    }
+//    public ArrayList sendServiceRequest2(String
+//                                                 serviceUrl, HashMap<String, String> parameters, HashMap<String, String> headers, String service) throws
+//            FXDefaultException {
+//        URIBuilder builder;
+//        String url = null;
+//        String jsonString = null;
+//        ArrayList list = null;
+//        ObjectMapper objectMapper = new ObjectMapper();
+//
+//        try {
+//            builder = new URIBuilder(serviceUrl);
+//            for (Map.Entry<String, String> entry : parameters.entrySet()) {
+//                builder.addParameter(entry.getKey(), entry.getValue());
+//            }
+//            url = builder.build().toString();
+//        } catch (URISyntaxException e) {
+//            throw new FXDefaultException();
+//        }
+//
+//        HttpResponse httpResponse = sendGetRequest(url, service, headers);
+//        if (httpResponse.getStatusLine().getStatusCode() == 200) {
+//            try {
+//                jsonString = EntityUtils.toString(httpResponse.getEntity());
+//                list = objectMapper.readValue(jsonString, ArrayList.class);
+//            } catch (IOException e) {
+//                throw new FXDefaultException();
+//            }
+//            return list;
+//        } else {
+//            throw new FXDefaultException("-1", "FAILED_REQUEST", "Service Request Failed to "+service, new Date(), HttpStatus.BAD_REQUEST);
+//        }
+//    }
 
     public void runRiskCronJob(Boolean calculateCustRisk, String user, String tenent, Customer customer) throws FXDefaultException {
 
