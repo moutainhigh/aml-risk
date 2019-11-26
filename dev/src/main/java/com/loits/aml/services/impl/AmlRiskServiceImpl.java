@@ -281,6 +281,13 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             overallRiskList.add(overallRisk);
         }
 
+        int start = (int)pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), overallRiskList.size());
+
+        if (start <= end) {
+            overallRiskList = overallRiskList.subList(start, end);
+        }
+
         return new PageImpl<OverallRisk>(overallRiskList,
                 pageable,
                 overallRiskList.size());
