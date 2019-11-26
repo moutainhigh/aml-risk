@@ -361,7 +361,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 overallRisk = kieService.getOverallRisk(overallRisk);
 
                 //Save to calculated AmlRisk record to overallrisk
-                saveRiskRecord(overallRisk, customerRisk.getId(), productRisk.getId(), channelRisk.getId(), tenent, user, customer.getVersion());
+                saveRiskRecord(overallRisk, customerRisk.getId(), productRisk.getId(), channelRisk.getId(), tenent, user, customer.getVersion(), module);
 
                 return overallRisk;
             } else {
@@ -851,7 +851,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 overallRisk = kieService.getOverallRisk(overallRisk);
 
                 //Save AMLRISK record
-                saveRiskRecord(overallRisk, customerRisk.getId(), productRisk.getId(), channelRisk.getId(), tenent, user, customer.getVersion());
+                saveRiskRecord(overallRisk, customerRisk.getId(), productRisk.getId(), channelRisk.getId(), tenent, user, customer.getVersion(), module);
 
             } else {
                 logger.debug("Failure in calculating risk for Customer with id "+customer.getId());
@@ -860,7 +860,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
     }
 
     @Async
-    CompletableFuture<?> saveRiskRecord(OverallRisk overallRisk, Long customerRiskId, Long productRiskId, Long channelRiskId, String tenent, String user, Long version) throws FXDefaultException{
+    CompletableFuture<?> saveRiskRecord(OverallRisk overallRisk, Long customerRiskId, Long productRiskId, Long channelRiskId, String tenent, String user, Long version, String module) throws FXDefaultException{
         return CompletableFuture.runAsync(() -> {
             logger.debug("AmlRisk record save stared");
             TenantHolder.setTenantId(tenent);
@@ -878,6 +878,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             amlRisk.setTenent(tenent);
             amlRisk.setCustomer(overallRisk.getCustomerCode());
             amlRisk.setRiskCalculationStatus(version);
+            amlRisk.setModule(module);
             StringBuilder stringBuilder = new StringBuilder();
 
             if (overallRisk.getPepsEnabled()) {

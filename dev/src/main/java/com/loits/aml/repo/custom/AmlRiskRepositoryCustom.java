@@ -19,7 +19,8 @@ public interface AmlRiskRepositoryCustom {
     public final static String GET_CUSTOMER_RISKS= "SELECT x.* FROM aml_risk x " +
             "INNER JOIN (SELECT customer, MAX(created_on) as co FROM aml_risk as x " +
             "where created_on >= :from" +
-            " AND created_on<= :to" +
+            " AND created_on<= :to"+"" +
+            //"AND module= :module" +
             " GROUP BY customer) y ON x.customer = y.customer AND x.created_on = y.co";
 
     @Query(value =GET_CUSTOMER_RISKS, nativeQuery = true)
