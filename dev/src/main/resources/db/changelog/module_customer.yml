@@ -1,0 +1,61 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: minolid@i360.lk (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  startWith: 1
+                  constraints:
+                    primaryKey: true
+                  name: id
+                  type: BIGINT
+              - column:
+                  name: customer
+                  type: BIGINT
+              - column:
+                  name: module_customer_code
+                  type: VARCHAR(45)
+              - column:
+                  name: module
+                  type: VARCHAR(45)
+            tableName: module_customer
+
+  - changeSet:
+      id: 2
+      author: minolid@i360.lk
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  name: customer
+            indexName: fk_module_customer_customer_idx
+            tableName: module_customer
+  - changeSet:
+      id: 3
+      author: minolid@i360.lk
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: customer
+            baseTableName: module_customer
+            constraintName: fk_module_customer_customer
+            deferrable: false
+            initiallyDeferred: false
+            onDelete: NO ACTION
+            onUpdate: NO ACTION
+            referencedColumnNames: id
+            referencedTableName: customer
+            validate: true
+
+  - changeSet:
+      id: 4
+      author: minolid@i360.lk (generated)
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: risk_calculated_on
+                  type: DATETIME
+            tableName: module_customer

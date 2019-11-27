@@ -1,11 +1,13 @@
 package com.loits.aml.kafka.services.impl;
 
+import com.loits.aml.domain.Customer;
 import com.loits.aml.domain.GeoLocation;
 import com.loits.aml.domain.KafkaErrorLog;
 import com.loits.aml.domain.Module;
 
 import com.loits.aml.kafka.services.KafkaConsumer;
 import com.loits.aml.mt.TenantHolder;
+import com.loits.aml.repo.CustomerRepository;
 import com.loits.aml.repo.GeoLocationRepository;
 import com.loits.aml.repo.KafkaErrorLogRepository;
 import com.loits.aml.repo.ModuleRepository;
@@ -31,6 +33,9 @@ public class KafkaConsumerImpl implements KafkaConsumer {
 
     @Autowired
     KafkaErrorLogRepository kafkaErrorLogRepository;
+
+    @Autowired
+    CustomerRepository customerRepository;
 
     public void create(Module module) {
         logger.debug("Module Create Sync started for topic module-create with tenent " + module.getTenent());
@@ -115,6 +120,69 @@ public class KafkaConsumerImpl implements KafkaConsumer {
             logger.debug("Kafka consumption failed for topic geolocation-create");
         }
         TenantHolder.clear();
+    }
+
+    public void create(Customer customer) {
+        TenantHolder.setTenantId(customer.getTenent());
+        logger.debug("Starting to create new customer from sync topic. Tenent : " + customer.getTenent());
+
+        processCustomer(false, customer);
+        try {
+            customerRepository.save(customer);
+            logger.debug("Customer sync completed for customer id " + customer.getId());
+        } catch (Exception e) {
+            logger.debug("Customer could not be synced for customer id " + customer.getId());
+            e.printStackTrace();
+            logError(e, "customer-create", customer);
+        }
+        TenantHolder.clear();
+    }
+
+    public void update(Customer customer) {
+        TenantHolder.setTenantId(customer.getTenent());
+        logger.debug("Starting to update customer from sync topic. Tenent : " + customer.getTenent());
+        processCustomer(true, customer);
+
+        try {
+            customerRepository.save(customer);
+            logger.debug("Customer sync completed for customer id " + customer.getId());
+        } catch (Exception e) {
+            logger.debug("Customer could not be synced for customer id " + customer.getId());
+            e.printStackTrace();
+            logError(e, "customer-update", customer);
+        }
+        TenantHolder.clear();
+    }
+
+    public void delete(Customer customer) {
+        TenantHolder.setTenantId(customer.getTenent());
+        logger.debug("Starting to delete customer from sync topic. Tenent : " + customer.getTenent());
+        try {
+            customerRepository.delete(customer);
+            logger.debug("Customer sync completed for customer id " + customer.getId());
+        } catch (Exception e) {
+            logger.debug("Customer could not be synced for customer id " + customer.getId());
+            e.printStackTrace();
+            logError(e, "customer-delete", customer);
+        }
+        TenantHolder.clear();
+    }
+
+    void processCustomer(boolean update, Customer customer) {
+
+        if(update){
+            Customer existingCustomer = customerRepository.findById(customer.getId()).get();
+            customer.setRiskCalculatedOn(existingCustomer.getRiskCalculatedOn());
+        }
+        if (customer.getCustomerIdentificationList() != null)
+            customer.getCustomerIdentificationList().forEach(customerIdentification -> customerIdentification.setCustomer(customer));
+        if (customer.getModuleCustomers() != null) {
+            customer.getModuleCustomers().forEach(moduleCustomer -> moduleCustomer.setCustomer(customer));
+            if(update && customerRepository.existsById(customer.getId())) {
+                Customer existingCustomer = customerRepository.findById(customer.getId()).get(); //TODO remove
+                customer.getModuleCustomers().forEach(moduleCustomer -> moduleCustomer.setRiskCalculatedOn(existingCustomer.getRiskCalculatedOn()));
+            }
+        }
     }
 
     public void logError(Exception e, String topic, Object object){

@@ -13,3 +13,9 @@ databaseChangeLog:
       file: "db/changelog/kafka_error_log.yml"
   - include:
       file: "db/changelog/sync_status.yml"
+  - include:
+      file: "db/changelog/customer.yml"
+  - include:
+      file: "db/changelog/module_customer.yml"
+  - include:
+      file: "db/changelog/customer_identification.yml"

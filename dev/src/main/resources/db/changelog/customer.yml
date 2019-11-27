@@ -1,0 +1,41 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: minolid@i360.lk (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  startWith: 1
+                  constraints:
+                    primaryKey: true
+                  name: id
+                  type: BIGINT
+              - column:
+                  name: name
+                  type: VARCHAR(500)
+              - column:
+                  name: risk
+                  type: VARCHAR(100)
+              - column:
+                  name: risk_score
+                  type: DOUBLE
+              - column:
+                  name: status
+                  type: TINYINT(3)
+            tableName: customer
+
+  - changeSet:
+      id: 2
+      author: minolid@i360.lk (generated)
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: risk_calculated_on
+                  type: DATETIME
+            tableName: customer
+
+
+

@@ -1,0 +1,53 @@
+databaseChangeLog:
+- changeSet:
+    id: 1
+    author: lahirub@i360.lk (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            startWith: 1
+            constraints:
+              primaryKey: true
+            name: id
+            type: BIGINT
+        - column:
+            name: type
+            type: VARCHAR(500)
+        - column:
+            name: value
+            type: VARCHAR(1000)
+        - column:
+            constraints:
+              nullable: false
+            name: customer
+            type: BIGINT
+        tableName: customer_identification
+
+- changeSet:
+    id: 2
+    author: lahirub@i360.lk
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: customer
+        indexName: fk_customer_customer_identification_idx
+        tableName: customer_identification
+
+- changeSet:
+    id: 3
+    author: lahirub@i360.lk
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: customer
+        baseTableName: customer_identification
+        constraintName: fk_customer_identification_customer
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: customer
+        validate: true
