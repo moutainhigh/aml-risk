@@ -52,8 +52,8 @@ public class AmlRiskController {
                              @RequestParam(value= "customer_code", required = false) String customerCode,
                              @RequestParam(value= "module" , required = true) String module,
                              @RequestParam(value= "other_identity", required = false) String otherIdentity,
-                             @RequestParam(value= "from", required = false) Date from,
-                             @RequestParam(value= "to", required = false) Date to,
+                             @RequestParam(value= "fromDate", required = false) Date from,
+                             @RequestParam(value= "toDate", required = false) Date to,
                              @RequestHeader(value = "user", defaultValue = "sysUser") String user
     ) throws FXDefaultException {
         return amlRiskService.getAvailableCustomerRisk(customerCode, pageable,module, otherIdentity, from, to, user, tenent);

@@ -605,13 +605,6 @@ public class AmlRiskServiceImpl implements AmlRiskService {
         HashMap<String, String> productsParameters = new HashMap<>();
         productsParameters.put("customer.id", customerId.toString());
 
-        //TODO remove if getDataFromList is working
-        //        //Send request to Customer Service
-        //        ArrayList list = sendServiceRequest2(amlServiceProductsUrl, productsParameters, null, "AML");
-        //
-        //        customerProductList = objectMapper.convertValue(list, new TypeReference<List<CustomerProduct>>() {
-        //        });
-
         try {
             customerProductList = httpService.getDataFromList("AML", amlServiceProductsUrl, productsParameters, new TypeReference<List<CustomerProduct>>() {
             });
