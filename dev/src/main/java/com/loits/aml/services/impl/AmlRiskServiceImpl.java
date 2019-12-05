@@ -650,7 +650,9 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                         productRate.setDate(amlProductRate.getDate());
                         productRate.setFromAmt(amlProductRate.getFromAmt().doubleValue());
                         productRate.setToAmt(amlProductRate.getToAmt().doubleValue());
+                        productRatesList.add(productRate);
                     }
+                    product.setRates(productRatesList);
                 }
 
 
