@@ -22,6 +22,7 @@ import com.loits.fx.aml.CustomerType;
 import com.loits.fx.aml.Module;
 import com.loits.fx.aml.Occupation;
 import com.loits.fx.aml.Product;
+import com.loits.fx.aml.ProductRates;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -623,12 +624,37 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             for (CustomerProduct cp : customerProductList) {
                 Product product = new Product();
                 product.setId(cp.getId());
-                product.setCode(cp.getProduct().getCode());
                 product.setCommencedDate(cp.getCommenceDate());
                 product.setTerminatedDate(cp.getTerminateDate());
                 product.setInterestRate(cp.getRate());
                 product.setValue(cp.getValue());
-                product.setDefaultRate(cp.getProduct().getDefaultRate());
+
+                if(cp.getProduct()!=null){
+                    product.setCode(cp.getProduct().getCode());
+                    product.setDefaultRate(cp.getProduct().getDefaultRate());
+                    product.setMeta1(cp.getProduct().getMeta1());
+                    product.setMeta2(cp.getProduct().getMeta2());
+
+                    List<ProductRates> productRatesList = new ArrayList<>();
+                    for(com.loits.aml.dto.ProductRates amlProductRate: cp.getProduct().getRates()){
+                        ProductRates productRate = new ProductRates();
+                        productRate.setRate(amlProductRate.getRate().doubleValue());
+                        productRate.setAccumulatedRate(amlProductRate.getAccumulatedRate().doubleValue());
+                        productRate.setCompanyRatio(amlProductRate.getCompanyRatio().doubleValue());
+                        productRate.setInvestorRatio(amlProductRate.getInvestorRatio().doubleValue());
+                        productRate.setProfitRate(amlProductRate.getProfitRate().doubleValue());
+                        productRate.setProfitFeeRate(amlProductRate.getProfitFeeRate().doubleValue());
+                        productRate.setPeriod(amlProductRate.getPeriod().doubleValue());
+                        productRate.setPayMode(amlProductRate.getPayMode());
+                        productRate.setStatus(amlProductRate.getStatus());
+                        productRate.setDate(amlProductRate.getDate());
+                        productRate.setFromAmt(amlProductRate.getFromAmt().doubleValue());
+                        productRate.setToAmt(amlProductRate.getToAmt().doubleValue());
+                    }
+                }
+
+
+
                 List<com.loits.fx.aml.Transaction> ruleTransactionsList = new ArrayList<>();
                 for (Transaction tr : cp.getTransactions()) {
                     com.loits.fx.aml.Transaction transaction = new com.loits.fx.aml.Transaction();

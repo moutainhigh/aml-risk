@@ -7,6 +7,7 @@ import lombok.Data;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Objects;
 
 @Data
@@ -18,4 +19,7 @@ public class Product {
     private String productDescription;
     private Double defaultRate;
     private Module module;
+    private List<ProductRates> rates;
+    private String meta1;
+    private String meta2;
 }
