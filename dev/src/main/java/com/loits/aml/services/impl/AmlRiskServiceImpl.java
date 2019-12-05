@@ -636,21 +636,23 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                     product.setMeta2(cp.getProduct().getMeta2());
 
                     List<ProductRates> productRatesList = new ArrayList<>();
-                    for(com.loits.aml.dto.ProductRates amlProductRate: cp.getProduct().getRates()){
-                        ProductRates productRate = new ProductRates();
-                        productRate.setRate(amlProductRate.getRate().doubleValue());
-                        productRate.setAccumulatedRate(amlProductRate.getAccumulatedRate().doubleValue());
-                        productRate.setCompanyRatio(amlProductRate.getCompanyRatio().doubleValue());
-                        productRate.setInvestorRatio(amlProductRate.getInvestorRatio().doubleValue());
-                        productRate.setProfitRate(amlProductRate.getProfitRate().doubleValue());
-                        productRate.setProfitFeeRate(amlProductRate.getProfitFeeRate().doubleValue());
-                        productRate.setPeriod(amlProductRate.getPeriod().doubleValue());
-                        productRate.setPayMode(amlProductRate.getPayMode());
-                        productRate.setStatus(amlProductRate.getStatus());
-                        productRate.setDate(amlProductRate.getDate());
-                        productRate.setFromAmt(amlProductRate.getFromAmt().doubleValue());
-                        productRate.setToAmt(amlProductRate.getToAmt().doubleValue());
-                        productRatesList.add(productRate);
+                    if(product.getRates()!=null) {
+                        for (com.loits.aml.dto.ProductRates amlProductRate : cp.getProduct().getRates()) {
+                            ProductRates productRate = new ProductRates();
+                            productRate.setRate(amlProductRate.getRate().doubleValue());
+                            productRate.setAccumulatedRate(amlProductRate.getAccumulatedRate().doubleValue());
+                            productRate.setCompanyRatio(amlProductRate.getCompanyRatio().doubleValue());
+                            productRate.setInvestorRatio(amlProductRate.getInvestorRatio().doubleValue());
+                            productRate.setProfitRate(amlProductRate.getProfitRate().doubleValue());
+                            productRate.setProfitFeeRate(amlProductRate.getProfitFeeRate().doubleValue());
+                            productRate.setPeriod(amlProductRate.getPeriod().doubleValue());
+                            productRate.setPayMode(amlProductRate.getPayMode());
+                            productRate.setStatus(amlProductRate.getStatus());
+                            productRate.setDate(amlProductRate.getDate());
+                            productRate.setFromAmt(amlProductRate.getFromAmt().doubleValue());
+                            productRate.setToAmt(amlProductRate.getToAmt().doubleValue());
+                            productRatesList.add(productRate);
+                        }
                     }
                     product.setRates(productRatesList);
                 }
