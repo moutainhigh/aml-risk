@@ -22,6 +22,8 @@ public class CustomerProduct{
     private Product product;
     private Long version;
     private Byte status;
+    private String meta1;
+    private String meta2;
 
     private Collection<Transaction> transactions;
 

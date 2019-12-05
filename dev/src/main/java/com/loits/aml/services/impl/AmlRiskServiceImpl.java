@@ -628,12 +628,14 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 product.setTerminatedDate(cp.getTerminateDate());
                 product.setInterestRate(cp.getRate());
                 product.setValue(cp.getValue());
+                product.setCpmeta1(cp.getMeta1());
+                product.setCpmeta2(cp.getMeta2());
 
                 if(cp.getProduct()!=null){
                     product.setCode(cp.getProduct().getCode());
                     product.setDefaultRate(cp.getProduct().getDefaultRate());
-                    product.setMeta1(cp.getProduct().getMeta1());
-                    product.setMeta2(cp.getProduct().getMeta2());
+                    product.setPmeta1(cp.getProduct().getMeta1());
+                    product.setPmeta2(cp.getProduct().getMeta2());
                     product.setPeriod(cp.getPeriod().doubleValue());
 
                     List<ProductRates> productRatesList = new ArrayList<>();
@@ -657,8 +659,6 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                     }
                     product.setRates(productRatesList);
                 }
-
-
 
                 List<com.loits.fx.aml.Transaction> ruleTransactionsList = new ArrayList<>();
                 for (Transaction tr : cp.getTransactions()) {

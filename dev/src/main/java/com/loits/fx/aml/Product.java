@@ -27,14 +27,16 @@ public class Product {
     private List<Transaction> transactions;
     private Boolean riskFactorAvailability;
     private List<ProductRates> rates;
-    private String meta1;
-    private String meta2;
+    private String pmeta1;
+    private String pmeta2;
+    private String cpmeta1;
+    private String cpmeta2;
     private Double period;
 
     public Product() {
     }
 
-    public Product(Long id, String code, String productDescription, String module, Date commencedDate, Date terminatedDate, Double interestRate, Double defaultRate, Double value, Double productRisk, Double valueRisk, Double interestRateRisk, Double termRisk, Double calculatedRisk, List<Transaction> transactions, Boolean riskFactorAvailability, List<ProductRates> rates, String meta1, String meta2, Double period) {
+    public Product(Long id, String code, String productDescription, String module, Date commencedDate, Date terminatedDate, Double interestRate, Double defaultRate, Double value, Double productRisk, Double valueRisk, Double interestRateRisk, Double termRisk, Double calculatedRisk, List<Transaction> transactions, Boolean riskFactorAvailability, List<ProductRates> rates, String pmeta1, String pmeta2, String cpmeta1, String cpmeta2, Double period) {
         this.id = id;
         this.code = code;
         this.productDescription = productDescription;
@@ -52,8 +54,10 @@ public class Product {
         this.transactions = transactions;
         this.riskFactorAvailability = riskFactorAvailability;
         this.rates = rates;
-        this.meta1 = meta1;
-        this.meta2 = meta2;
+        this.pmeta1 = pmeta1;
+        this.pmeta2 = pmeta2;
+        this.cpmeta1 = cpmeta1;
+        this.cpmeta2 = cpmeta2;
         this.period = period;
     }
 }
