@@ -634,7 +634,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                     product.setDefaultRate(cp.getProduct().getDefaultRate());
                     product.setMeta1(cp.getProduct().getMeta1());
                     product.setMeta2(cp.getProduct().getMeta2());
-                    product.setPeriod(cp.getPeriod());
+                    product.setPeriod(cp.getPeriod().doubleValue());
 
                     List<ProductRates> productRatesList = new ArrayList<>();
                     if(product.getRates()!=null) {

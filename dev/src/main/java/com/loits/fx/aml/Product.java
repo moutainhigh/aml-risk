@@ -29,12 +29,12 @@ public class Product {
     private List<ProductRates> rates;
     private String meta1;
     private String meta2;
-    private BigDecimal period;
+    private Double period;
 
     public Product() {
     }
 
-    public Product(Long id, String code, String productDescription, String module, Date commencedDate, Date terminatedDate, Double interestRate, Double defaultRate, Double value, Double productRisk, Double valueRisk, Double interestRateRisk, Double termRisk, Double calculatedRisk, List<Transaction> transactions, Boolean riskFactorAvailability, List<ProductRates> rates, String meta1, String meta2, BigDecimal period) {
+    public Product(Long id, String code, String productDescription, String module, Date commencedDate, Date terminatedDate, Double interestRate, Double defaultRate, Double value, Double productRisk, Double valueRisk, Double interestRateRisk, Double termRisk, Double calculatedRisk, List<Transaction> transactions, Boolean riskFactorAvailability, List<ProductRates> rates, String meta1, String meta2, Double period) {
         this.id = id;
         this.code = code;
         this.productDescription = productDescription;
