@@ -552,7 +552,9 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                     channelUsage.setChannelName(t.getChannel().getChannelName());
                     channelUsage.setChannelDescription(t.getChannel().getChannelDescription());
                     channelUsage.setDate(t.getTxnDate());
-                    channelUsage.setAmount(t.getTxnAmount().doubleValue());
+                    if(t.getTxnAmount()!=null){
+                        channelUsage.setAmount(t.getTxnAmount().doubleValue());
+                    }
 
                     channelUsageList.add(channelUsage);
                 }
@@ -645,18 +647,45 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                     if(product.getRates()!=null) {
                         for (com.loits.aml.dto.ProductRates amlProductRate : cp.getProduct().getRates()) {
                             ProductRates productRate = new ProductRates();
-                            productRate.setRate(amlProductRate.getRate().doubleValue());
-                            productRate.setAccumulatedRate(amlProductRate.getAccumulatedRate().doubleValue());
-                            productRate.setCompanyRatio(amlProductRate.getCompanyRatio().doubleValue());
-                            productRate.setInvestorRatio(amlProductRate.getInvestorRatio().doubleValue());
-                            productRate.setProfitRate(amlProductRate.getProfitRate().doubleValue());
-                            productRate.setProfitFeeRate(amlProductRate.getProfitFeeRate().doubleValue());
-                            productRate.setPeriod(amlProductRate.getPeriod().doubleValue());
+                            if(amlProductRate.getRate()!=null){
+                                productRate.setRate(amlProductRate.getRate().doubleValue());
+                            }
+                            if(amlProductRate.getAccumulatedRate()!=null){
+                                productRate.setAccumulatedRate(amlProductRate.getAccumulatedRate().doubleValue());
+                            }
+
+                            if(amlProductRate.getCompanyRatio()!=null){
+                                productRate.setCompanyRatio(amlProductRate.getCompanyRatio().doubleValue());
+                            }
+
+                            if(amlProductRate.getInvestorRatio()!=null){
+                                productRate.setInvestorRatio(amlProductRate.getInvestorRatio().doubleValue());
+                            }
+
+                            if(amlProductRate.getProfitRate()!=null){
+                                productRate.setProfitRate(amlProductRate.getProfitRate().doubleValue());
+                            }
+
+                            if(amlProductRate.getProfitFeeRate()!=null){
+                                productRate.setProfitFeeRate(amlProductRate.getProfitFeeRate().doubleValue());
+                            }
+
+                            if(amlProductRate.getPeriod()!=null){
+                                productRate.setPeriod(amlProductRate.getPeriod().doubleValue());
+
+                            }
+
                             productRate.setPayMode(amlProductRate.getPayMode());
                             productRate.setStatus(amlProductRate.getStatus());
                             productRate.setDate(amlProductRate.getDate());
-                            productRate.setFromAmt(amlProductRate.getFromAmt().doubleValue());
-                            productRate.setToAmt(amlProductRate.getToAmt().doubleValue());
+
+                            if(amlProductRate.getFromAmt()!=null){
+                                productRate.setFromAmt(amlProductRate.getFromAmt().doubleValue());
+                            }
+
+                            if(amlProductRate.getToAmt()!=null){
+                                productRate.setToAmt(amlProductRate.getToAmt().doubleValue());
+                            }
                             productRatesList.add(productRate);
                         }
                     }
@@ -667,7 +696,9 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 for (Transaction tr : cp.getTransactions()) {
                     com.loits.fx.aml.Transaction transaction = new com.loits.fx.aml.Transaction();
                     transaction.setType(tr.getTxnMode());
-                    transaction.setAmount(tr.getTxnAmount().doubleValue());
+                    if(tr.getTxnAmount()!=null){
+                        transaction.setAmount(tr.getTxnAmount().doubleValue());
+                    }
                     transaction.setDate(tr.getTxnDate());
                     ruleTransactionsList.add(transaction);
                 }
