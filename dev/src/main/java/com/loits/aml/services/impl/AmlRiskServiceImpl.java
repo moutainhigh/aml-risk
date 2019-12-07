@@ -634,30 +634,30 @@ public class AmlRiskServiceImpl implements AmlRiskService {
                 if(cp.getProduct()!=null){
                     product.setCode(cp.getProduct().getCode());
                     product.setDefaultRate(cp.getProduct().getDefaultRate());
-                    product.setPmeta1(cp.getProduct().getMeta1());
-                    product.setPmeta2(cp.getProduct().getMeta2());
-                    product.setPeriod(cp.getPeriod().doubleValue());
+//                    product.setPmeta1(cp.getProduct().getMeta1());
+//                    product.setPmeta2(cp.getProduct().getMeta2());
+//                    product.setPeriod(cp.getPeriod().doubleValue());
 
-                    List<ProductRates> productRatesList = new ArrayList<>();
-                    if(product.getRates()!=null) {
-                        for (com.loits.aml.dto.ProductRates amlProductRate : cp.getProduct().getRates()) {
-                            ProductRates productRate = new ProductRates();
-                            productRate.setRate(amlProductRate.getRate().doubleValue());
-                            productRate.setAccumulatedRate(amlProductRate.getAccumulatedRate().doubleValue());
-                            productRate.setCompanyRatio(amlProductRate.getCompanyRatio().doubleValue());
-                            productRate.setInvestorRatio(amlProductRate.getInvestorRatio().doubleValue());
-                            productRate.setProfitRate(amlProductRate.getProfitRate().doubleValue());
-                            productRate.setProfitFeeRate(amlProductRate.getProfitFeeRate().doubleValue());
-                            productRate.setPeriod(amlProductRate.getPeriod().doubleValue());
-                            productRate.setPayMode(amlProductRate.getPayMode());
-                            productRate.setStatus(amlProductRate.getStatus());
-                            productRate.setDate(amlProductRate.getDate());
-                            productRate.setFromAmt(amlProductRate.getFromAmt().doubleValue());
-                            productRate.setToAmt(amlProductRate.getToAmt().doubleValue());
-                            productRatesList.add(productRate);
-                        }
-                    }
-                    product.setRates(productRatesList);
+//                    List<ProductRates> productRatesList = new ArrayList<>();
+//                    if(product.getRates()!=null) {
+//                        for (com.loits.aml.dto.ProductRates amlProductRate : cp.getProduct().getRates()) {
+//                            ProductRates productRate = new ProductRates();
+//                            productRate.setRate(amlProductRate.getRate().doubleValue());
+//                            productRate.setAccumulatedRate(amlProductRate.getAccumulatedRate().doubleValue());
+//                            productRate.setCompanyRatio(amlProductRate.getCompanyRatio().doubleValue());
+//                            productRate.setInvestorRatio(amlProductRate.getInvestorRatio().doubleValue());
+//                            productRate.setProfitRate(amlProductRate.getProfitRate().doubleValue());
+//                            productRate.setProfitFeeRate(amlProductRate.getProfitFeeRate().doubleValue());
+//                            productRate.setPeriod(amlProductRate.getPeriod().doubleValue());
+//                            productRate.setPayMode(amlProductRate.getPayMode());
+//                            productRate.setStatus(amlProductRate.getStatus());
+//                            productRate.setDate(amlProductRate.getDate());
+//                            productRate.setFromAmt(amlProductRate.getFromAmt().doubleValue());
+//                            productRate.setToAmt(amlProductRate.getToAmt().doubleValue());
+//                            productRatesList.add(productRate);
+//                        }
+//                    }
+//                    product.setRates(productRatesList);
                 }
 
                 List<com.loits.fx.aml.Transaction> ruleTransactionsList = new ArrayList<>();
@@ -689,14 +689,15 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             headers.put("user", user);
 
             //Calculate product risk by sending request to Product Risk Service
-            /*try {
+            try {
                 productRisk = (ProductRisk) httpService.sendData("Product-risk", String.format(env.getProperty("aml.api.product-risk"), tenent),
                         null, headers, ProductRisk.class, productRisk);
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
-            }*/
+            }
+
 
         } else {
             logger.debug("No CustomerProducts available to calculate Product Risk. Aborting...");
