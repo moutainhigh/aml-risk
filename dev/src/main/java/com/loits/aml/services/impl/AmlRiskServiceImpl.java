@@ -364,7 +364,7 @@ public class AmlRiskServiceImpl implements AmlRiskService {
 
             ChannelRisk channelRisk = calculateChannelRisk(customer.getId(), ruleModule, user, tenent);
 
-            ProductRisk productRisk = new ProductRisk();//calculateProductRisk(customer.getId(), ruleModule, user, tenent);
+            ProductRisk productRisk = calculateProductRisk(customer.getId(), ruleModule, user, tenent);
 
             if (customerRisk.getCalculatedRisk() != null) {
                 if (channelRisk.getCalculatedRisk() == null) {
@@ -688,16 +688,15 @@ public class AmlRiskServiceImpl implements AmlRiskService {
             HashMap<String, String> headers = new HashMap<>();
             headers.put("user", user);
 
-            //Calculate customer category risk by sending request to Category Risk Service
-            try {
+            //Calculate product risk by sending request to Product Risk Service
+            /*try {
                 productRisk = (ProductRisk) httpService.sendData("Product-risk", String.format(env.getProperty("aml.api.product-risk"), tenent),
                         null, headers, ProductRisk.class, productRisk);
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
-            }
-
+            }*/
 
         } else {
             logger.debug("No CustomerProducts available to calculate Product Risk. Aborting...");
