@@ -1,0 +1,61 @@
+databaseChangeLog:
+- changeSet:
+    id: 1
+    author: lahirubandara (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              primaryKey: true
+            name: id
+            type: INT
+        - column:
+            name: date
+            type: datetime
+        - column:
+            name: reference
+            type: VARCHAR(5000)
+        - column:
+            name: module
+            type: VARCHAR(100)
+        - column:
+            name: type
+            type: VARCHAR(45)
+        - column:
+            name: s_date
+            type: datetime
+        - column:
+            name: e_date
+            type: datetime
+        - column:
+            name: m_date
+            type: datetime
+        - column:
+            name: cron_status
+            type: VARCHAR(100)
+        - column:
+            name: criticality
+            type: VARCHAR(100)
+        - column:
+            name: raise_notification
+            type: VARCHAR(100)
+        - column:
+            name: meta
+            type: LONGTEXT
+        - column:
+            name: calc_id
+            type: INT
+        - column:
+            name: job_id
+            type: VARCHAR(500)
+        - column:
+            name: total_records
+            type: INT
+        - column:
+            name: updated_count
+            type: INT
+        - column:
+            name: error_count
+            type: INT
+        tableName: sync_async_tasks

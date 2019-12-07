@@ -25,60 +25,33 @@ databaseChangeLog:
             type: datetime
         - column:
             name: job_id
-            type: VARCHAR(45)
+            type: VARCHAR(500)
         - column:
             constraints:
               nullable: false
             name: cron_status
             type: VARCHAR(1)
         - column:
+            name: total_records
+            type: INT
+        - column:
+            name: updated_count
+            type: INT
+        - column:
+            name: error_count
+            type: INT
+        - column:
             constraints:
               nullable: false
             name: module
             type: VARCHAR(35)
-        tableName: sync_status
-
-- changeSet:
-    id: 2
-    author: lahirub@i360.lk
-    changes:
-    - addColumn:
-        columns:
         - column:
-            name: records_fetched
-            type: INT
+            name: meta
+            type: LONGTEXT
         - column:
-            name: records_saved
-            type: INT
+            name: criticality
+            type: VARCHAR(100)
         - column:
-            name: records_pushed
-            type: INT
-        tableName: sync_status
-
-- changeSet:
-    id: 3
-    author: lahirub@i360.lk
-    changes:
-    - addColumn:
-        columns:
-        - column:
-            name: sync_id
-            type: INT
-        tableName: sync_status
-
-
-- changeSet:
-    id: 4
-    author: lahirub@i360.lk
-    changes:
-    - dropColumn:
-        columnName: sync_id
-        tableName: sync_status
-
-- changeSet:
-    id: 5
-    author: lahirub@i360.lk
-    changes:
-    - dropTable:
-        cascadeConstraints: true
+            name: raise_notification
+            type: VARCHAR(100)
         tableName: sync_status

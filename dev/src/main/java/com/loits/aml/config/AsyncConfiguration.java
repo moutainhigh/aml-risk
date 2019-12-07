@@ -1,5 +1,6 @@
 package com.loits.aml.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -11,15 +12,21 @@ import java.util.concurrent.Executor;
 @Configuration
 public class AsyncConfiguration {
 
+  @Value("${loits.tp.size}")
+  int THREAD_POOL_SIZE;
 
-    @Bean
-    public Executor taskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(100);
-        executor.setMaxPoolSize(150);
-        executor.setQueueCapacity(300);
-        executor.setThreadNamePrefix("AMLAsyncTasks-");
-        executor.initialize();
-        return executor;
-    }
+  @Value("${loits.tp.queue.size}")
+  int THREAD_POOL_QUEUE_SIZE;
+
+  @Bean
+  public Executor taskExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(THREAD_POOL_SIZE);
+    executor.setMaxPoolSize(THREAD_POOL_SIZE * 2);
+    executor.setQueueCapacity(THREAD_POOL_QUEUE_SIZE);
+
+    executor.setThreadNamePrefix("AMLRiskCalculationTasks-");
+    executor.initialize();
+    return executor;
+  }
 }
