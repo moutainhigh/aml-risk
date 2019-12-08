@@ -60,8 +60,8 @@ public class CalcStatus extends BaseEntity implements Serializable {
   @Column(name = "criticality")
   private String criticality;
 
-  @Column(name = "raise_notifications")
-  private String raiseNotifications;
+  @Column(name = "raise_notification")
+  private String raiseNotification;
 
   @OneToMany(mappedBy = "calcStatus", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
   private List<CalcTasks> tasks;

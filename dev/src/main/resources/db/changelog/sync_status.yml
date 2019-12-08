@@ -15,6 +15,12 @@ databaseChangeLog:
             name: type
             type: VARCHAR(45)
         - column:
+            name: page
+            type: INT
+        - column:
+            name: size
+            type: INT
+        - column:
             name: s_date
             type: datetime
         - column:
@@ -31,54 +37,4 @@ databaseChangeLog:
               nullable: false
             name: cron_status
             type: VARCHAR(1)
-        - column:
-            constraints:
-              nullable: false
-            name: module
-            type: VARCHAR(35)
-        tableName: sync_status
-
-- changeSet:
-    id: 2
-    author: lahirub@i360.lk
-    changes:
-    - addColumn:
-        columns:
-        - column:
-            name: records_fetched
-            type: INT
-        - column:
-            name: records_saved
-            type: INT
-        - column:
-            name: records_pushed
-            type: INT
-        tableName: sync_status
-
-- changeSet:
-    id: 3
-    author: lahirub@i360.lk
-    changes:
-    - addColumn:
-        columns:
-        - column:
-            name: sync_id
-            type: INT
-        tableName: sync_status
-
-
-- changeSet:
-    id: 4
-    author: lahirub@i360.lk
-    changes:
-    - dropColumn:
-        columnName: sync_id
-        tableName: sync_status
-
-- changeSet:
-    id: 5
-    author: lahirub@i360.lk
-    changes:
-    - dropTable:
-        cascadeConstraints: true
         tableName: sync_status

@@ -6,6 +6,7 @@ import com.loits.aml.commons.CalcStatusCodes;
 import com.loits.aml.commons.CalcTypes;
 import com.loits.aml.config.RestResponsePage;
 import com.loits.aml.domain.CalcStatus;
+import com.loits.aml.domain.CalcTasks;
 import com.loits.aml.dto.Customer;
 import com.loits.aml.mt.TenantHolder;
 import com.loits.aml.repo.CalcStatusRepository;
@@ -18,7 +19,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -61,7 +61,6 @@ public class RiskServiceImpl implements RiskService {
 
     return CompletableFuture.runAsync(() -> {
       try {
-        Sort sort = new Sort(Sort.Direction.ASC, "id");
         TenantHolder.setTenantId(tenent);
         List<CompletableFuture<?>> futuresList = new ArrayList<>();
         logger.debug("Customer base risk calculation process started");
@@ -78,7 +77,6 @@ public class RiskServiceImpl implements RiskService {
         String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
         HashMap<String, String> parameters = new HashMap<>();
         parameters.put("size", "1");
-        parameters.put("sort", sort.toString());
         parameters.put("projection", "");
 
         //Send request to Customer Service
@@ -152,9 +150,12 @@ public class RiskServiceImpl implements RiskService {
     return CompletableFuture.runAsync(() -> {
 
       TenantHolder.setTenantId(tenent);
+      HashMap<String, Object> meta = new HashMap<>();
 
       // Log sync status for this segment - init status
-      CalcStatus thisCalc = this.calcStatusRepository.findById(calId).get();
+      CalcTasks thisTask = this.calcStatusService.saveCalcTask(new CalcTasks(), calId,
+              String.valueOf(Thread.currentThread().getId()),
+              CalcStatusCodes.CALC_INITIATED, meta);
 
       try {
         logger.debug(String.format("Starting to calculate risk for tenent : %s , page: %s , size:" +
@@ -163,11 +164,13 @@ public class RiskServiceImpl implements RiskService {
         List<Customer> customerList = null;
         //Customer customer = null;
         ObjectMapper objectMapper = new ObjectMapper();
+        int errorCount = 0, successCount = 0;
 
         //Request parameters to Customer Service
         String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
         HashMap<String, String> parameters = new HashMap<>();
         parameters.put("page", String.valueOf(page));
+        parameters.put("page", "id,asc");
         parameters.put("size", String.valueOf(size));
 
         try {
@@ -175,39 +178,64 @@ public class RiskServiceImpl implements RiskService {
           customerList = httpService.getDataFromPage("Customer", customerServiceUrl, parameters,
                   new TypeReference<List<Customer>>() {
                   });
-//          customer = objectMapper.convertValue(customerList.get(0), Customer.class);
           logger.debug("Customers successfully retrieved");
         } catch (Exception e) {
           logger.debug("Customer retrieval failed with " + e.getMessage());
         }
 
-        for (Customer customer : customerList) {
-          Boolean calculateCustRisk;
-          if (customer.getRiskCalculationStatus() == 0 || customer.getRiskCalculationStatus() != customer.getVersion()) {
-            calculateCustRisk = true;
-          } else {
-            calculateCustRisk = false;
+        if (customerList != null && !customerList.isEmpty()) {
+          meta.put("fetched", customerList.size());
+
+          // update calc status
+          this.calcStatusService.saveCalcTask(new CalcTasks(), calId,
+                  String.valueOf(Thread.currentThread().getId()),
+                  CalcStatusCodes.CALC_UPDATED, meta);
+
+          for (Customer customer : customerList) {
+            Boolean calculateCustRisk;
+            if (customer.getRiskCalculationStatus() == null
+                    || customer.getRiskCalculationStatus() == 0
+                    || customer.getRiskCalculationStatus() != customer.getVersion()) {
+              calculateCustRisk = true;
+            } else {
+              calculateCustRisk = false;
+            }
+            try {
+              amlRiskService.runRiskCronJob(calculateCustRisk, user, tenent, customer);
+              logger.debug("Risk calculated for customer with id " + customer.getId());
+              //customer.setRiskCalculationStatus(customer.getVersion());
+              successCount += 1;
+            } catch (Exception e) {
+              e.printStackTrace();
+              this.calcStatusService.saveCalcLog(thisTask, "Customer risk calculation failed",
+                      e.getMessage(), "CustomerId", String.valueOf(customer.getId()), "Customer",
+                      e);
+              logger.debug("Risk not calculated for customer id " + customer.getId());
+              errorCount += 1;
+            }
           }
-          try {
-            amlRiskService.runRiskCronJob(calculateCustRisk, user, tenent, customer);
-            logger.debug("Risk calculated for customer with id " + customer.getId());
-            //customer.setRiskCalculationStatus(customer.getVersion());
-          } catch (Exception e) {
-            e.printStackTrace();
-            logger.debug("Risk not calculated for customer id " + customer.getId());
-          }
+        } else {
+          logger.debug("Did not load any customers for risk calculation");
+          meta.put("fetched", 0);
         }
 
-        // Log sync status for this segment - completed status
-//        syncStatusService.updateSyncStatus(thisSync, CalcStatusCodes.SYNC_COMPLETED);
+        meta.put("saved", successCount);
+        meta.put("errorCount", errorCount);
+
+        // update calc status
+        this.calcStatusService.saveCalcTask(new CalcTasks(), calId,
+                String.valueOf(Thread.currentThread().getId()),
+                CalcStatusCodes.CALC_COMPLETED, meta);
 
         logger.debug(String.format("Risk calculation for page : %s completed", page));
 
       } catch (Exception e) {
         logger.error("Risk Calculation for segment - process error");
 
-        // Log sync status for this segment - error status
-//        syncStatusService.updateSyncStatus(thisSync, CalcStatusCodes.SYNC_ERROR);
+        // update calc status
+        this.calcStatusService.saveCalcTask(new CalcTasks(), calId,
+                String.valueOf(Thread.currentThread().getId()),
+                CalcStatusCodes.CALC_ERROR, meta);
 
         e.printStackTrace();
       } finally {

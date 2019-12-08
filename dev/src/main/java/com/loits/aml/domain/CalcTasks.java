@@ -8,6 +8,7 @@ import javax.persistence.*;
 import javax.validation.constraints.Size;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Entity
@@ -27,13 +28,13 @@ public class CalcTasks extends BaseEntity {
   private String type;
 
   @Column(name = "s_date")
-  private Timestamp sDate;
+  private Date sDate;
 
   @Column(name = "e_date")
-  private Timestamp eDate;
+  private Date eDate;
 
   @Column(name = "m_date")
-  private Timestamp mDate;
+  private Date mDate;
 
   @Column(name = "cron_status")
   private String cronStatus;
@@ -45,13 +46,13 @@ public class CalcTasks extends BaseEntity {
   private String raiseNotifications;
 
   @JoinColumn(name = "total_records")
-  private Long totalRecords;
+  private int totalRecords;
 
   @JoinColumn(name = "updated_count")
-  private Long updatedCount;
+  private int updatedCount;
 
   @JoinColumn(name = "error_count")
-  private Long errorCount;
+  private int errorCount;
 
   @Lob
   @JoinColumn(name = "meta")
@@ -60,10 +61,12 @@ public class CalcTasks extends BaseEntity {
   @Column(name = "job_id")
   private String jobId;
 
-
   @JsonIgnore
   @ManyToOne
   @JoinColumn(name = "calc_id")
   private CalcStatus calcStatus;
+
+  @OneToMany(mappedBy = "calcTask", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+  private List<CalcLog> calcLogs;
 
 }

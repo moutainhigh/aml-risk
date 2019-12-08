@@ -54,4 +54,4 @@ databaseChangeLog:
         - column:
             name: raise_notification
             type: VARCHAR(100)
-        tableName: sync_status
+        tableName: calc_status
