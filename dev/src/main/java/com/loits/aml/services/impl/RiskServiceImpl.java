@@ -71,6 +71,9 @@ public class RiskServiceImpl implements RiskService {
   @Value("${loits.tp.queue.size}")
   int THREAD_POOL_QUEUE_SIZE;
 
+  @Value("${aml.risk-calculation.segment-size}")
+  int SEGMENT_SIZE;
+
 
   @Override
   public CompletableFuture<?> calculateRiskForCustomerBase(String user, String tenent) {
@@ -101,14 +104,13 @@ public class RiskServiceImpl implements RiskService {
 
         int totRecords = customerResultPage.getTotalPages(); //Total pages = Total Customers
         int pageSize = 0;
-        int totalThreadedTasks = (THREAD_POOL_QUEUE_SIZE * THREAD_POOL_SIZE);
 
         // calculate customer risk in segments.
         // Max. allowed segments --PARALLEL_THREADS
         int noOfAsyncTasks = 1;
 
-        if (totRecords >= totalThreadedTasks) {
-          noOfAsyncTasks = totRecords / totalThreadedTasks;
+        if (totRecords >= SEGMENT_SIZE) {
+          noOfAsyncTasks = totRecords / SEGMENT_SIZE;
           pageSize = noOfAsyncTasks;
         } else pageSize = totRecords;
 
@@ -124,8 +126,8 @@ public class RiskServiceImpl implements RiskService {
 
           // if last page, might need to make an adjustment
           if (i == noOfAsyncTasks - 1 &&
-                  totRecords >= totalThreadedTasks) {
-            int orphanRecordCount = totRecords % totalThreadedTasks;
+                  totRecords >= SEGMENT_SIZE) {
+            int orphanRecordCount = totRecords % SEGMENT_SIZE;
             pageSize += orphanRecordCount;
             meta.put("finalPageSize", pageSize);
           }

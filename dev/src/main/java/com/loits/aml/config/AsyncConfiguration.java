@@ -23,7 +23,11 @@ public class AsyncConfiguration {
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
     executor.setCorePoolSize(THREAD_POOL_SIZE);
     executor.setMaxPoolSize(THREAD_POOL_SIZE * 2);
-    executor.setQueueCapacity(THREAD_POOL_QUEUE_SIZE);
+
+    if (THREAD_POOL_QUEUE_SIZE == -1)
+      executor.setQueueCapacity(Integer.MAX_VALUE);
+    else
+      executor.setQueueCapacity(THREAD_POOL_QUEUE_SIZE);
 
     executor.setThreadNamePrefix("AMLRiskCalculationTasks-");
     executor.initialize();
