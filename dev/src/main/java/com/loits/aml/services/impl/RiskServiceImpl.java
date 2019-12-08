@@ -90,7 +90,7 @@ public class RiskServiceImpl implements RiskService {
         int noOfAsyncTasks = 1;
 
         if (totRecords >= totalThreadedTasks) {
-          noOfAsyncTasks = totRecords /totalThreadedTasks ;
+          noOfAsyncTasks = totRecords / totalThreadedTasks;
           pageSize = noOfAsyncTasks;
         } else pageSize = totRecords;
 
@@ -227,7 +227,7 @@ public class RiskServiceImpl implements RiskService {
           meta.put("fetched", 0);
         }
 
-        meta.put("saved", successCount);
+        meta.put("updated", successCount);
         meta.put("errorCount", errorCount);
 
         // update calc status
