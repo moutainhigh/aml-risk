@@ -24,56 +24,63 @@ import java.util.ArrayList;
 @Service
 public class KieServiceImpl implements KieService {
 
-    private static KieServicesConfiguration conf;
-    private static KieServicesClient kieServicesClient;
-    private static final MarshallingFormat FORMAT = MarshallingFormat.JSON;
+  private static KieServicesConfiguration conf;
+  private static KieServicesClient kieServicesClient;
+  private static final MarshallingFormat FORMAT = MarshallingFormat.JSON;
 
-    @Value("${loits.aml.pam.url}")
-    private String redhatServerUrl;
+  @Value("${loits.aml.pam.url}")
+  private String redhatServerUrl;
 
-    @Value("${loits.aml.pam.username}")
-    private String username;
+  @Value("${loits.aml.pam.username}")
+  private String username;
 
-    @Value("${loits.aml.pam.password}")
-    private String password;
+  @Value("${loits.aml.pam.password}")
+  private String password;
 
-    @Value("${loits.aml.pam.container}")
-    private String containerId;
+  @Value("${loits.aml.pam.container}")
+  private String containerId;
 
-    @PostConstruct
-    public void init(){
-        //Connect to the RedHat Server
-        conf = KieServicesFactory.newRestConfiguration(redhatServerUrl, username, password);
-        conf.setMarshallingFormat(FORMAT);
-        kieServicesClient = KieServicesFactory.newKieServicesClient(conf);
+  @Value("${loits.aml.pam.enable}")
+  private String ENABLE_PAM;
+
+
+  @PostConstruct
+  public void init() {
+    // Connect to the RedHat Server
+    if (ENABLE_PAM != null && ENABLE_PAM.equalsIgnoreCase("true")) {
+      conf = KieServicesFactory.newRestConfiguration(redhatServerUrl, username, password);
+      conf.setMarshallingFormat(FORMAT);
+      kieServicesClient = KieServicesFactory.newKieServicesClient(conf);
     }
+  }
 
-    @Override
-    public OverallRisk getOverallRisk(OverallRisk overallRisk) throws FXDefaultException {
-        OverallRisk calculatedOverallRisk = null;
-        //Kie API
-        System.out.println("== Sending commands to the server ==");
-        RuleServicesClient rulesClient = kieServicesClient.getServicesClient(RuleServicesClient.class);
-        KieCommands commandsFactory = KieServices.Factory.get().getCommands();
-        BatchExecutionCommandImpl command = new BatchExecutionCommandImpl();
-        command.setLookup("kie-session");
+  @Override
+  public OverallRisk getOverallRisk(OverallRisk overallRisk) throws FXDefaultException {
+    OverallRisk calculatedOverallRisk = null;
+    //Kie API
+    System.out.println("== Sending commands to the server ==");
+    RuleServicesClient rulesClient = kieServicesClient.getServicesClient(RuleServicesClient.class);
+    KieCommands commandsFactory = KieServices.Factory.get().getCommands();
+    BatchExecutionCommandImpl command = new BatchExecutionCommandImpl();
+    command.setLookup("kie-session");
 
-        //Create Commands
-        FireAllRulesCommand fireAllRulesCommand = new FireAllRulesCommand();
-        //Insert channels to kiesession
+    //Create Commands
+    FireAllRulesCommand fireAllRulesCommand = new FireAllRulesCommand();
+    //Insert channels to kiesession
 
-        command.addCommand(new InsertObjectCommand(overallRisk));
-        command.addCommand(fireAllRulesCommand);
-        command.addCommand(commandsFactory.newGetObjects("OverallRisk"));
+    command.addCommand(new InsertObjectCommand(overallRisk));
+    command.addCommand(fireAllRulesCommand);
+    command.addCommand(commandsFactory.newGetObjects("OverallRisk"));
 
-        ServiceResponse<ExecutionResults> response = rulesClient.executeCommandsWithResults(containerId, command);
+    ServiceResponse<ExecutionResults> response =
+            rulesClient.executeCommandsWithResults(containerId, command);
 
-        if (response.getType().toString().equals("FAILURE")) {
-            new FXDefaultException();
-        } else {
-            ArrayList obj = (ArrayList) response.getResult().getValue("OverallRisk");
-            calculatedOverallRisk = (OverallRisk) obj.get(0);
-        }
-        return calculatedOverallRisk;
+    if (response.getType().toString().equals("FAILURE")) {
+      new FXDefaultException();
+    } else {
+      ArrayList obj = (ArrayList) response.getResult().getValue("OverallRisk");
+      calculatedOverallRisk = (OverallRisk) obj.get(0);
     }
+    return calculatedOverallRisk;
+  }
 }

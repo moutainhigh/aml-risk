@@ -1,0 +1,43 @@
+databaseChangeLog:
+- changeSet:
+    id: 1
+    author: lahirubandara (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              primaryKey: true
+            name: id
+            type: INT
+        - column:
+            name: date
+            type: datetime
+        - column:
+            name: description
+            type: VARCHAR(5000)
+        - column:
+            name: reference
+            type: VARCHAR(5000)
+        - column:
+            name: ref_table
+            type: VARCHAR(100)
+        - column:
+            name: ref_key
+            type: VARCHAR(100)
+        - column:
+            name: ref_value
+            type: VARCHAR(100)
+        - column:
+            name: criticality
+            type: VARCHAR(100)
+        - column:
+            name: raise_notification
+            type: VARCHAR(1)
+        - column:
+            name: stacktrace
+            type: LONGTEXT
+        - column:
+            name: task_id
+            type: INT
+        tableName: calc_log

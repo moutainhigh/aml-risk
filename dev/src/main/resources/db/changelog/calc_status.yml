@@ -1,0 +1,57 @@
+databaseChangeLog:
+- changeSet:
+    id: 1570082351109-3
+    author: lahirubandara (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+            name: id
+            type: INT
+        - column:
+            name: type
+            type: VARCHAR(45)
+        - column:
+            name: s_date
+            type: datetime
+        - column:
+            name: e_date
+            type: datetime
+        - column:
+            name: m_date
+            type: datetime
+        - column:
+            name: job_id
+            type: VARCHAR(500)
+        - column:
+            constraints:
+              nullable: false
+            name: cron_status
+            type: VARCHAR(1)
+        - column:
+            name: total_records
+            type: INT
+        - column:
+            name: updated_count
+            type: INT
+        - column:
+            name: error_count
+            type: INT
+        - column:
+            constraints:
+              nullable: false
+            name: module
+            type: VARCHAR(35)
+        - column:
+            name: meta
+            type: LONGTEXT
+        - column:
+            name: criticality
+            type: VARCHAR(100)
+        - column:
+            name: raise_notification
+            type: VARCHAR(100)
+        tableName: calc_status

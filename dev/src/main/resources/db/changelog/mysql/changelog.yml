@@ -1,21 +1,27 @@
 databaseChangeLog:
-  - include:
-      file: "db/changelog/aml_risk.yml"
-  - include:
-      file: "db/changelog/mysql/sequence.yml"
-  - include:
-      file: "db/changelog/module.yml"
-  - include:
-      file: "db/changelog/geo_location.yml"
-  - include:
-      file: "db/changelog/service_metadata.yml"
-  - include:
-      file: "db/changelog/kafka_error_log.yml"
-  - include:
-      file: "db/changelog/sync_status.yml"
-  - include:
-      file: "db/changelog/customer.yml"
-  - include:
-      file: "db/changelog/module_customer.yml"
-  - include:
-      file: "db/changelog/customer_identification.yml"
+- include:
+    file: "db/changelog/aml_risk.yml"
+- include:
+    file: "db/changelog/mysql/sequence.yml"
+- include:
+    file: "db/changelog/module.yml"
+- include:
+    file: "db/changelog/geo_location.yml"
+- include:
+    file: "db/changelog/service_metadata.yml"
+- include:
+    file: "db/changelog/kafka_error_log.yml"
+#- include:
+#    file: "db/changelog/sync_status.yml"
+- include:
+    file: "db/changelog/customer.yml"
+- include:
+    file: "db/changelog/module_customer.yml"
+- include:
+    file: "db/changelog/customer_identification.yml"
+- include:
+    file: "db/changelog/calc_tasks.yml"
+- include:
+    file: "db/changelog/calc_status.yml"
+- include:
+    file: "db/changelog/calc_log.yml"
