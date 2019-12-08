@@ -9,7 +9,7 @@ import java.util.Date;
 
 @Data
 @Entity
-@Table(name = "transfer_log")
+@Table(name = "calc_log")
 public class CalcLog extends BaseEntity {
 
   @Column(name = "date")
