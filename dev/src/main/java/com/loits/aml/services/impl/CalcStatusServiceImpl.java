@@ -119,6 +119,8 @@ public class CalcStatusServiceImpl implements CalcStatusService {
       for (Map.Entry<String, Object> entry : meta.entrySet()) {
         if (entry.getKey().equalsIgnoreCase("fetched")) {
           calcTask.setTotalRecords((Integer) entry.getValue());
+        } else if (entry.getKey().equalsIgnoreCase("processed")) {
+          calcTask.setProcessedCount((Integer) entry.getValue());
         } else if (entry.getKey().equalsIgnoreCase("updated")) {
           calcTask.setUpdatedCount((Integer) entry.getValue());
         } else if (entry.getKey().equalsIgnoreCase("errorCount")) {

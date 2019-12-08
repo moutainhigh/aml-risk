@@ -4,26 +4,36 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loits.aml.commons.CalcStatusCodes;
 import com.loits.aml.commons.CalcTypes;
+import com.loits.aml.config.NullAwareBeanUtilsBean;
 import com.loits.aml.config.RestResponsePage;
+import com.loits.aml.config.Translator;
+import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.domain.CalcStatus;
 import com.loits.aml.domain.CalcTasks;
+import com.loits.aml.domain.GeoLocation;
+import com.loits.aml.dto.Address;
 import com.loits.aml.dto.Customer;
+import com.loits.aml.dto.OnboardingCustomer;
+import com.loits.aml.dto.RiskCustomer;
 import com.loits.aml.mt.TenantHolder;
 import com.loits.aml.repo.CalcStatusRepository;
-import com.loits.aml.services.AmlRiskService;
-import com.loits.aml.services.CalcStatusService;
-import com.loits.aml.services.HTTPService;
-import com.loits.aml.services.RiskService;
+import com.loits.aml.repo.GeoLocationRepository;
+import com.loits.aml.repo.ModuleRepository;
+import com.loits.aml.services.*;
+import com.loits.fx.aml.CustomerRisk;
+import com.loits.fx.aml.Module;
+import com.loits.fx.aml.OverallRisk;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -35,10 +45,19 @@ public class RiskServiceImpl implements RiskService {
   Environment env;
 
   @Autowired
-  AmlRiskService amlRiskService;
+  AMLRiskService amlRiskService;
 
   @Autowired
   CalcStatusService calcStatusService;
+
+  @Autowired
+  KieService kieService;
+
+  @Autowired
+  ModuleRepository moduleRepository;
+
+  @Autowired
+  GeoLocationRepository geoLocationRepository;
 
   @Autowired
   CalcStatusRepository calcStatusRepository;
@@ -55,7 +74,6 @@ public class RiskServiceImpl implements RiskService {
 
   @Override
   public CompletableFuture<?> calculateRiskForCustomerBase(String user, String tenent) {
-
     return CompletableFuture.runAsync(() -> {
       try {
         TenantHolder.setTenantId(tenent);
@@ -78,7 +96,7 @@ public class RiskServiceImpl implements RiskService {
 
         //Send request to Customer Service
         RestResponsePage customerResultPage =
-                amlRiskService.sendServiceRequest(customerServiceUrl, parameters,
+                httpService.sendServiceRequest(customerServiceUrl, parameters,
                         null, "Customer");
 
         int totRecords = customerResultPage.getTotalPages(); //Total pages = Total Customers
@@ -113,7 +131,8 @@ public class RiskServiceImpl implements RiskService {
           }
 
           // send customer fetch -- tenant, page, size
-          futuresList.add(this.calculateCustomerRisk(thisCalc.getId(), user, tenent, i, pageSize));
+          futuresList.add(this.calculateCustomerSegmentRisk(thisCalc.getId(), user, tenent, i,
+                  pageSize));
         }
 
         meta.put("asyncTaskCount", futuresList.size());
@@ -161,9 +180,138 @@ public class RiskServiceImpl implements RiskService {
     });
   }
 
-  private CompletableFuture<?> calculateCustomerRisk(Long calId, String user, String tenent,
-                                                     int page,
-                                                     int size) {
+  @Override
+  public Object calcOnboardingRisk(OnboardingCustomer onboardingCustomer, String user,
+                                   String tenent) throws FXDefaultException, IOException,
+          ClassNotFoundException {
+
+    //Check if a module exists by sent module code
+    if (!moduleRepository.existsByCode(onboardingCustomer.getModule())) {
+      throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"),
+              new Date(), HttpStatus.BAD_REQUEST, false);
+    }
+
+    //Create new object to be sent to Category Risk server for risk calculation
+    RiskCustomer riskCustomer = new RiskCustomer();
+
+    //Find module sent with onboarding customer
+    com.loits.aml.domain.Module dbModule =
+            moduleRepository.findByCode(onboardingCustomer.getModule()).get();
+
+    Module ruleModule = new Module();
+    ruleModule.setCode(dbModule.getCode());
+    if (dbModule.getParent() != null) {
+      Module ruleModuleParent = new Module();
+      ruleModuleParent.setCode(dbModule.getParent().getCode());
+      ruleModule.setParent(ruleModuleParent);
+    }
+    //set module to RiskCustomer object
+    riskCustomer.setModule(ruleModule);
+
+    //copy similar properties from onboarding customer to risk customer
+    //set id field to ignore when copying
+    HashSet<String> ignoreFields = new HashSet<String>();
+    //ignore module field and addresses on property transfer (Similar reference but data type
+    // different)
+    ignoreFields.add("module");
+    ignoreFields.add("addressesByCustomerCode");
+
+    try {
+      NullAwareBeanUtilsBean utilsBean = new NullAwareBeanUtilsBean();
+      utilsBean.setIgnoreFields(ignoreFields);
+      utilsBean.copyProperties(riskCustomer, onboardingCustomer);
+    } catch (IllegalAccessException e) {
+      e.printStackTrace();
+    } catch (InvocationTargetException e) {
+      e.printStackTrace();
+    }
+
+    //List for creating onboarding customer Addresses by GeoLocation
+    List<Address> riskAddresses = new ArrayList<>();
+
+    if (onboardingCustomer.getAddressesByCustomerCode() != null) {
+      //Get addresses of onboarding customer
+      for (Address address : onboardingCustomer.getAddressesByCustomerCode()) {
+        //If address has a district
+        if (address.getDistrict() != null && geoLocationRepository.existsByLocationName(address.getDistrict())) {
+
+          GeoLocation geoLocation =
+                  geoLocationRepository.findTopByLocationName(address.getDistrict()).get();
+          Address riskAddress1 = new Address();
+          com.loits.fx.aml.GeoLocation ruleGeoLocation = new com.loits.fx.aml.GeoLocation();
+
+          NullAwareBeanUtilsBean utilsBean = new NullAwareBeanUtilsBean();
+          ignoreFields.clear();
+          ignoreFields.add("parent");
+          utilsBean.setIgnoreFields(ignoreFields);
+          com.loits.fx.aml.GeoLocation tempGeoLocation = ruleGeoLocation;
+
+          do {
+            try {
+              utilsBean.copyProperties(tempGeoLocation, geoLocation);
+              geoLocation = geoLocation.getParent();
+              if (geoLocation != null) {
+                tempGeoLocation.setParent(new com.loits.fx.aml.GeoLocation());
+                tempGeoLocation = tempGeoLocation.getParent();
+              }
+            } catch (IllegalAccessException e) {
+              e.printStackTrace();
+            } catch (InvocationTargetException e) {
+              e.printStackTrace();
+            }
+          } while (geoLocation != null);
+
+          riskAddress1.setGeoLocation(ruleGeoLocation);
+          riskAddresses.add(riskAddress1);
+        } else {
+          if (geoLocationRepository.existsByLocationName(address.getCountry())) {
+            GeoLocation countryGeo =
+                    geoLocationRepository.findTopByLocationName(address.getCountry()).get();
+            Address riskAddress1 = new Address();
+            com.loits.fx.aml.GeoLocation ruleGeoLocation = new com.loits.fx.aml.GeoLocation();
+
+            NullAwareBeanUtilsBean utilsBean = new NullAwareBeanUtilsBean();
+            ignoreFields.clear();
+            ignoreFields.add("parent");
+            utilsBean.setIgnoreFields(ignoreFields);
+            try {
+              utilsBean.copyProperties(ruleGeoLocation, countryGeo);
+            } catch (IllegalAccessException e) {
+              e.printStackTrace();
+            } catch (InvocationTargetException e) {
+              e.printStackTrace();
+            }
+
+            riskAddress1.setGeoLocation(ruleGeoLocation);
+            riskAddresses.add(riskAddress1);
+          }
+        }
+
+      }
+      riskCustomer.setAddressesByCustomerCode(riskAddresses);
+    }
+
+    //Headers for CategoryRisk POST Req
+    HashMap<String, String> headers = new HashMap<>();
+    headers.put("user", user);
+
+    //Calculate customer category risk by sending request to Category Risk Service
+    CustomerRisk customerRisk = (CustomerRisk) httpService.sendData("Category-risk",
+            String.format(env.getProperty("aml.api.category-risk"), tenent),
+            null, headers, CustomerRisk.class, riskCustomer);
+
+    //Calculate overallrisk by sending request to rule-engine
+    OverallRisk overallRisk = new OverallRisk(riskCustomer.getId(), riskCustomer.getModule(),
+            customerRisk.getCalculatedRisk(), 0.0, 0.0, customerRisk.getPepsEnabled(),
+            customerRisk.getCustomerType().getHighRisk(),
+            customerRisk.getOccupation().getHighRisk());
+
+    return kieService.getOverallRisk(overallRisk);
+  }
+
+  private CompletableFuture<?> calculateCustomerSegmentRisk(Long calId, String user, String tenent,
+                                                            int page,
+                                                            int size) {
     return CompletableFuture.runAsync(() -> {
 
       TenantHolder.setTenantId(tenent);
@@ -181,7 +329,7 @@ public class RiskServiceImpl implements RiskService {
         List<Customer> customerList = null;
         //Customer customer = null;
         ObjectMapper objectMapper = new ObjectMapper();
-        int errorCount = 0, successCount = 0, fetchedCount = 0;
+        int errorCount = 0, successCount = 0, fetchedCount = 0, updatedCount = 0;
 
         //Request parameters to Customer Service
         String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
@@ -218,7 +366,9 @@ public class RiskServiceImpl implements RiskService {
               calculateCustRisk = false;
             }
             try {
-              amlRiskService.runRiskCronJob(calculateCustRisk, user, tenent, customer);
+              if (amlRiskService.runRiskCronJob(calculateCustRisk, user, tenent, customer)) {
+                updatedCount += 1;
+              }
               logger.debug("Risk calculated for customer with id " + customer.getId());
               //customer.setRiskCalculationStatus(customer.getVersion());
               successCount += 1;
@@ -236,7 +386,8 @@ public class RiskServiceImpl implements RiskService {
         }
 
         meta.put("fetched", fetchedCount);
-        meta.put("updated", successCount);
+        meta.put("processed", successCount);
+        meta.put("updated", updatedCount);
         meta.put("errorCount", errorCount);
 
         // update calc status

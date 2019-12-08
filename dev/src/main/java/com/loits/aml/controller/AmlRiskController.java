@@ -2,7 +2,7 @@ package com.loits.aml.controller;
 
 import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.dto.OnboardingCustomer;
-import com.loits.aml.services.AmlRiskService;
+import com.loits.aml.services.AMLRiskService;
 import com.loits.aml.services.RiskService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,7 +33,7 @@ public class AmlRiskController {
     Logger logger = LogManager.getLogger(AmlRiskController.class);
 
     @Autowired
-    AmlRiskService amlRiskService;
+    AMLRiskService amlRiskService;
 
     @Autowired
     RiskService riskService;

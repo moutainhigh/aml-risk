@@ -198,6 +198,45 @@ public class HttpServiceImpl implements HTTPService {
         return response;
     }
 
+
+
+  @Override
+  public RestResponsePage sendServiceRequest(String serviceUrl,
+                                             HashMap<String, String> parameters, HashMap<String,
+          String> headers, String service) throws
+          FXDefaultException {
+    URIBuilder builder;
+    String url = null;
+    String jsonString = null;
+    RestResponsePage restResponsePage = null;
+    ObjectMapper objectMapper = new ObjectMapper();
+
+    try {
+      builder = new URIBuilder(serviceUrl);
+      for (Map.Entry<String, String> entry : parameters.entrySet()) {
+        builder.addParameter(entry.getKey(), entry.getValue());
+      }
+      url = builder.build().toString();
+    } catch (URISyntaxException e) {
+      throw new FXDefaultException();
+    }
+
+    HttpResponse httpResponse = sendGetRequest(url, service, headers);
+    if (httpResponse.getStatusLine().getStatusCode() == 200) {
+      try {
+        jsonString = EntityUtils.toString(httpResponse.getEntity());
+        restResponsePage = objectMapper.readValue(jsonString, RestResponsePage.class);
+      } catch (IOException e) {
+        throw new FXDefaultException();
+      }
+      return restResponsePage;
+    } else {
+      logger.debug("Service response : " + httpResponse.getStatusLine().getStatusCode());
+      throw new FXDefaultException("-1", "FAILED_REQUEST", "Service Request Failed to " + service
+              , new Date(), HttpStatus.BAD_REQUEST);
+    }
+  }
+
     private HttpResponse sendPostRequest(String url, String service, HashMap<String, String> headers, Object object) throws FXDefaultException {
 
         ObjectMapper objectMapper = new ObjectMapper();

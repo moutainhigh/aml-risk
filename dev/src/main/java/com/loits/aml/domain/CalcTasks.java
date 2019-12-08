@@ -15,12 +15,6 @@ import java.util.List;
 @Table(name = "calc_tasks")
 public class CalcTasks extends BaseEntity {
 
-  @Column(name = "module")
-  private String module;
-
-  @Column(name = "type")
-  private String type;
-
   @Column(name = "s_date")
   private Date sDate;
 
@@ -44,6 +38,9 @@ public class CalcTasks extends BaseEntity {
 
   @JoinColumn(name = "updated_count")
   private int updatedCount;
+
+  @JoinColumn(name = "processed_count")
+  private int processedCount;
 
   @JoinColumn(name = "error_count")
   private int errorCount;
