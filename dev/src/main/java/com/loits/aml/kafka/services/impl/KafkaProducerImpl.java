@@ -1,10 +1,8 @@
 package com.loits.aml.kafka.services.impl;
 
-import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.domain.AmlRisk;
 import com.loits.aml.domain.KafkaErrorLog;
 import com.loits.aml.kafka.services.KafkaProducer;
-import com.loits.aml.mt.TenantHolder;
 import com.loits.aml.repo.KafkaErrorLogRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,7 +14,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Timestamp;
 import java.util.Date;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * @author Minoli De Silva - Infinitum360
@@ -35,23 +32,19 @@ public class KafkaProducerImpl implements KafkaProducer {
   KafkaErrorLogRepository kafkaErrorLogRepository;
 
   @Override
-  public CompletableFuture<?> publishToTopic(String topic, AmlRisk amlRisk) {
-    return CompletableFuture.runAsync(() -> {
-      logger.debug("Publishing data to topic aml-risk-create started. Tenent: "+amlRisk.getTenent());
-      TenantHolder.setTenantId(amlRisk.getTenent());
-      try {
-        kafkaTemplate.send(topic, amlRisk);
-        logger.debug("Publishing to kafka  successful for aml-risk with id "+amlRisk.getId());
-      }catch(Exception e){
-        logError(e, topic, amlRisk);
-        logger.debug("Publishing to kafka failed for aml-risk with id "+amlRisk.getId());
-        e.printStackTrace();
-      }
-      TenantHolder.clear();
-    });
+  public void publishToTopic(String topic, AmlRisk amlRisk) {
+    logger.debug("Publishing data to topic aml-risk-create started. Tenent: " + amlRisk.getTenent());
+    try {
+      kafkaTemplate.send(topic, amlRisk);
+      logger.debug("Publishing to kafka  successful for aml-risk with id " + amlRisk.getId());
+    } catch (Exception e) {
+      logError(e, topic, amlRisk);
+      logger.debug("Publishing to kafka failed for aml-risk with id " + amlRisk.getId());
+      e.printStackTrace();
+    }
   }
 
-  public void logError(Exception e, String topic, Object object){
+  public void logError(Exception e, String topic, Object object) {
     KafkaErrorLog kafkaErrorLog = new KafkaErrorLog();
     kafkaErrorLog.setTimestamp(new Timestamp(new Date().getTime()));
     kafkaErrorLog.setErrorMessage(e.getMessage());
