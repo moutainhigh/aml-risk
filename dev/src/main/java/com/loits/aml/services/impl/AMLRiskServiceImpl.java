@@ -306,32 +306,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
         throw new FXDefaultException();
       }
     }
-  }
-
-
-  public HttpResponse sendGetRequest(String url, String service, HashMap<String, String> headers) throws
-          FXDefaultException {
-
-    HttpClient client = HttpClientBuilder.create().build();
-    HttpResponse response = null;
-
-    HttpGet httpReq = new HttpGet(url);
-    httpReq.setHeader("Content-type", "application/json");
-    if (headers != null) {
-      for (Map.Entry<String, String> entry : headers.entrySet()) {
-        httpReq.setHeader(entry.getKey(), entry.getValue());
-      }
-    }
-    try {
-      response = client.execute(httpReq);
-    } catch (IOException e) {
-      throw new FXDefaultException("", "Rest Request to " + service + " Failed", e.getMessage(),
-              new Date(), HttpStatus.BAD_REQUEST);
-    }
-    return response;
-  }
-
-
+  } 
 
   @Override
   public boolean runRiskCronJob(Boolean calculateCustRisk, String user, String tenent,
