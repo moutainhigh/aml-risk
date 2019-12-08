@@ -86,7 +86,8 @@ public class CalcStatusServiceImpl implements CalcStatusService {
     }
 
     // set appropriate date
-    if (currentStatus.equalsIgnoreCase(CalcStatusCodes.CALC_COMPLETED)) {
+    if (currentStatus.equalsIgnoreCase(CalcStatusCodes.CALC_COMPLETED)
+            || currentStatus.equalsIgnoreCase(CalcStatusCodes.CALC_ERROR)) {
       calcStatus.setEDate(new Timestamp(new Date().getTime()));
     } else calcStatus.setMDate(new Timestamp(new Date().getTime()));
     calcStatus.setCronStatus(currentStatus);

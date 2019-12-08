@@ -46,9 +46,6 @@ public class RiskServiceImpl implements RiskService {
   @Autowired
   HTTPService httpService;
 
-  @Value("${api.customer-risk-calculation-allowed-parallel-threads}")
-  int PARALLEL_THREADS;
-
   @Value("${loits.tp.size}")
   int THREAD_POOL_SIZE;
 
@@ -86,13 +83,14 @@ public class RiskServiceImpl implements RiskService {
 
         int totRecords = customerResultPage.getTotalPages(); //Total pages = Total Customers
         int pageSize = 0;
+        int totalThreadedTasks = (THREAD_POOL_QUEUE_SIZE * THREAD_POOL_SIZE);
 
         // calculate customer risk in segments.
         // Max. allowed segments --PARALLEL_THREADS
         int noOfAsyncTasks = 1;
 
-        if (totRecords >= (THREAD_POOL_QUEUE_SIZE * THREAD_POOL_SIZE)) {
-          noOfAsyncTasks = totRecords / (THREAD_POOL_QUEUE_SIZE * THREAD_POOL_SIZE);
+        if (totRecords >= totalThreadedTasks) {
+          noOfAsyncTasks = totRecords /totalThreadedTasks ;
           pageSize = noOfAsyncTasks;
         } else pageSize = totRecords;
 
@@ -108,8 +106,8 @@ public class RiskServiceImpl implements RiskService {
 
           // if last page, might need to make an adjustment
           if (i == noOfAsyncTasks - 1 &&
-                  totRecords >= PARALLEL_THREADS) {
-            int orphanRecordCount = totRecords % PARALLEL_THREADS;
+                  totRecords >= totalThreadedTasks) {
+            int orphanRecordCount = totRecords % totalThreadedTasks;
             pageSize += orphanRecordCount;
             meta.put("finalPageSize", pageSize);
           }
@@ -131,7 +129,17 @@ public class RiskServiceImpl implements RiskService {
                 .whenComplete((result, ex) -> {
                   if (ex != null) {
                     logger.debug("All customer risk calculations processes error");
-                  } else logger.debug("All customer risk calculations processes completed");
+                    this.calcStatusService.saveCalcStatus(tenent, thisCalc,
+                            String.valueOf(Thread.currentThread().getId()),
+                            CalcStatusCodes.CALC_ERROR,
+                            CalcTypes.CUST_RISK_CALC, meta);
+                  } else {
+                    logger.debug("All customer risk calculations processes completed");
+                    this.calcStatusService.saveCalcStatus(tenent, thisCalc,
+                            String.valueOf(Thread.currentThread().getId()),
+                            CalcStatusCodes.CALC_COMPLETED,
+                            CalcTypes.CUST_RISK_CALC, meta);
+                  }
                 });
 
       } catch (Exception e) {
@@ -187,7 +195,7 @@ public class RiskServiceImpl implements RiskService {
           meta.put("fetched", customerList.size());
 
           // update calc status
-          this.calcStatusService.saveCalcTask(new CalcTasks(), calId,
+          this.calcStatusService.saveCalcTask(thisTask, calId,
                   String.valueOf(Thread.currentThread().getId()),
                   CalcStatusCodes.CALC_UPDATED, meta);
 
@@ -223,7 +231,7 @@ public class RiskServiceImpl implements RiskService {
         meta.put("errorCount", errorCount);
 
         // update calc status
-        this.calcStatusService.saveCalcTask(new CalcTasks(), calId,
+        this.calcStatusService.saveCalcTask(thisTask, calId,
                 String.valueOf(Thread.currentThread().getId()),
                 CalcStatusCodes.CALC_COMPLETED, meta);
 
@@ -233,7 +241,7 @@ public class RiskServiceImpl implements RiskService {
         logger.error("Risk Calculation for segment - process error");
 
         // update calc status
-        this.calcStatusService.saveCalcTask(new CalcTasks(), calId,
+        this.calcStatusService.saveCalcTask(thisTask, calId,
                 String.valueOf(Thread.currentThread().getId()),
                 CalcStatusCodes.CALC_ERROR, meta);
 
