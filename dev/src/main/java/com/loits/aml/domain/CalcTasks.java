@@ -15,12 +15,6 @@ import java.util.List;
 @Table(name = "calc_tasks")
 public class CalcTasks extends BaseEntity {
 
-  @Column(name = "date")
-  private Date date;
-
-  @Column(name = "reference")
-  private String reference;
-
   @Column(name = "module")
   private String module;
 

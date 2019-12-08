@@ -59,3 +59,19 @@ databaseChangeLog:
             name: error_count
             type: INT
         tableName: calc_tasks
+
+- changeSet:
+    id: 2
+    author: lahirub@i360.lk
+    changes:
+    - dropColumn:
+        columnName: date
+        tableName: calc_tasks
+
+- changeSet:
+    id: 3
+    author: lahirub@i360.lk
+    changes:
+    - dropColumn:
+        columnName: reference
+        tableName: calc_tasks

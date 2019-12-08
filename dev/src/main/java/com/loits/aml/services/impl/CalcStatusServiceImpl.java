@@ -119,10 +119,10 @@ public class CalcStatusServiceImpl implements CalcStatusService {
       for (Map.Entry<String, Object> entry : meta.entrySet()) {
         if (entry.getKey().equalsIgnoreCase("fetched")) {
           calcTask.setTotalRecords((Integer) entry.getValue());
-        } else if (entry.getKey().equalsIgnoreCase("saved")) {
-          calcTask.setTotalRecords((Integer) entry.getValue());
+        } else if (entry.getKey().equalsIgnoreCase("updated")) {
+          calcTask.setUpdatedCount((Integer) entry.getValue());
         } else if (entry.getKey().equalsIgnoreCase("errorCount")) {
-          calcTask.setTotalRecords((Integer) entry.getValue());
+          calcTask.setErrorCount((Integer) entry.getValue());
         }
       }
       calcTask.setMeta(gson.toJson(meta));
