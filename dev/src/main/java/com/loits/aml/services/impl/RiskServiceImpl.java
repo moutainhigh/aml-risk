@@ -127,18 +127,27 @@ public class RiskServiceImpl implements RiskService {
         CompletableFuture.allOf(
                 futuresList.toArray(new CompletableFuture[futuresList.size()]))
                 .whenComplete((result, ex) -> {
-                  if (ex != null) {
-                    logger.debug("All customer risk calculations processes error");
-                    this.calcStatusService.saveCalcStatus(tenent, thisCalc,
-                            String.valueOf(Thread.currentThread().getId()),
-                            CalcStatusCodes.CALC_ERROR,
-                            CalcTypes.CUST_RISK_CALC, meta);
-                  } else {
-                    logger.debug("All customer risk calculations processes completed");
-                    this.calcStatusService.saveCalcStatus(tenent, thisCalc,
-                            String.valueOf(Thread.currentThread().getId()),
-                            CalcStatusCodes.CALC_COMPLETED,
-                            CalcTypes.CUST_RISK_CALC, meta);
+                  try {
+                    TenantHolder.setTenantId(tenent);
+                    if (ex != null) {
+                      logger.debug("All customer risk calculations processes error");
+                      this.calcStatusService.saveCalcStatus(tenent, thisCalc,
+                              String.valueOf(Thread.currentThread().getId()),
+                              CalcStatusCodes.CALC_ERROR,
+                              CalcTypes.CUST_RISK_CALC, meta);
+                    } else {
+                      logger.debug("All customer risk calculations processes completed");
+                      this.calcStatusService.saveCalcStatus(tenent, thisCalc,
+                              String.valueOf(Thread.currentThread().getId()),
+                              CalcStatusCodes.CALC_COMPLETED,
+                              CalcTypes.CUST_RISK_CALC, meta);
+                    }
+                  } catch (Exception e) {
+                    logger.error("Risk calcualtion task completion logging error");
+                    e.printStackTrace();
+                  } finally {
+                    // clear tenant
+                    TenantHolder.clear();
                   }
                 });
 
@@ -172,7 +181,7 @@ public class RiskServiceImpl implements RiskService {
         List<Customer> customerList = null;
         //Customer customer = null;
         ObjectMapper objectMapper = new ObjectMapper();
-        int errorCount = 0, successCount = 0;
+        int errorCount = 0, successCount = 0, fetchedCount = 0;
 
         //Request parameters to Customer Service
         String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
@@ -192,8 +201,8 @@ public class RiskServiceImpl implements RiskService {
         }
 
         if (customerList != null && !customerList.isEmpty()) {
-          meta.put("fetched", customerList.size());
 
+          fetchedCount = customerList.size();
           // update calc status
           this.calcStatusService.saveCalcTask(thisTask, calId,
                   String.valueOf(Thread.currentThread().getId()),
@@ -224,9 +233,9 @@ public class RiskServiceImpl implements RiskService {
           }
         } else {
           logger.debug("Did not load any customers for risk calculation");
-          meta.put("fetched", 0);
         }
 
+        meta.put("fetched", fetchedCount);
         meta.put("updated", successCount);
         meta.put("errorCount", errorCount);
 
