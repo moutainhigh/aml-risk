@@ -111,7 +111,7 @@ public class RiskServiceImpl implements RiskService {
 
         if (totRecords >= SEGMENT_SIZE) {
           noOfAsyncTasks = totRecords / SEGMENT_SIZE;
-          pageSize = noOfAsyncTasks;
+          pageSize = SEGMENT_SIZE;
         } else pageSize = totRecords;
 
         logger.debug(String.format("Task parameters. No of Async Tasks : %s, Page size : %s, " +
