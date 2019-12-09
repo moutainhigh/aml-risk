@@ -119,7 +119,7 @@ public class RiskServiceImpl implements RiskService {
 
         meta.put("fetched", 1);
         meta.put("totalCustomers", totRecords);
-        meta.put("noOfSegments", noOfAsyncTasks);
+        meta.put("noOfSegments", (noOfAsyncTasks + 1)); // index starts at 0
         meta.put("tpSize", THREAD_POOL_SIZE);
         meta.put("tpQueueSize", THREAD_POOL_QUEUE_SIZE);
 
@@ -320,6 +320,9 @@ public class RiskServiceImpl implements RiskService {
       TenantHolder.setTenantId(tenent);
       HashMap<String, Object> meta = new HashMap<>();
 
+      meta.put("page", page);
+      meta.put("size", size);
+
       // Log sync status for this segment - init status
       CalcTasks thisTask = this.calcStatusService.saveCalcTask(new CalcTasks(), calId,
               String.valueOf(Thread.currentThread().getId()),
@@ -338,7 +341,7 @@ public class RiskServiceImpl implements RiskService {
         String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
         HashMap<String, String> parameters = new HashMap<>();
         parameters.put("page", String.valueOf(page));
-        parameters.put("page", "id,asc");
+        parameters.put("sort", "id,asc");
         parameters.put("size", String.valueOf(size));
 
         try {
