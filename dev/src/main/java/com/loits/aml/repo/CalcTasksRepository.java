@@ -11,6 +11,4 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 public interface CalcTasksRepository extends PagingAndSortingRepository<CalcTasks, Long>,
         QuerydslPredicateExecutor<CalcTasks> {
 
-  CalcTasks findFirstByType(String type, Sort sort);
-
 }
