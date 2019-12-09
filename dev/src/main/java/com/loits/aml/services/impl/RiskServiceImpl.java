@@ -331,7 +331,7 @@ public class RiskServiceImpl implements RiskService {
         List<Customer> customerList = null;
         //Customer customer = null;
         ObjectMapper objectMapper = new ObjectMapper();
-        int errorCount = 0, successCount = 0, fetchedCount = 0, updatedCount = 0;
+        int errorCount = 0, successCount = 0,  updatedCount = 0;
 
         //Request parameters to Customer Service
         String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
@@ -351,8 +351,13 @@ public class RiskServiceImpl implements RiskService {
         }
 
         if (customerList != null && !customerList.isEmpty()) {
+          meta.put("fetched", customerList.size());
 
-          fetchedCount = customerList.size();
+          // update calc status
+          this.calcStatusService.saveCalcTask(thisTask, calId,
+                  String.valueOf(Thread.currentThread().getId()),
+                  CalcStatusCodes.CALC_COMPLETED, meta);
+
           // update calc status
           this.calcStatusService.saveCalcTask(thisTask, calId,
                   String.valueOf(Thread.currentThread().getId()),
@@ -385,9 +390,9 @@ public class RiskServiceImpl implements RiskService {
           }
         } else {
           logger.debug("Did not load any customers for risk calculation");
+          meta.put("fetched", 0);
         }
 
-        meta.put("fetched", fetchedCount);
         meta.put("processed", successCount);
         meta.put("updated", updatedCount);
         meta.put("errorCount", errorCount);
