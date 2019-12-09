@@ -129,7 +129,7 @@ public class RiskServiceImpl implements RiskService {
           if (i == noOfAsyncTasks &&
                   totRecords >= SEGMENT_SIZE) {
             int orphanRecordCount = totRecords % SEGMENT_SIZE;
-            pageSize += orphanRecordCount;
+            pageSize = orphanRecordCount;
             meta.put("finalPageSize", pageSize);
           }
 
