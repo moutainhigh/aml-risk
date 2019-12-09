@@ -123,23 +123,19 @@ public class RiskServiceImpl implements RiskService {
         meta.put("tpSize", THREAD_POOL_SIZE);
         meta.put("tpQueueSize", THREAD_POOL_QUEUE_SIZE);
 
-        for (int i = 0; i < noOfAsyncTasks; i++) {
+        for (int i = 0; i <= noOfAsyncTasks; i++) {
 
           // if last page, might need to make an adjustment
-          if (i == noOfAsyncTasks - 1 &&
+          if (i == noOfAsyncTasks &&
                   totRecords >= SEGMENT_SIZE) {
             int orphanRecordCount = totRecords % SEGMENT_SIZE;
             pageSize += orphanRecordCount;
             meta.put("finalPageSize", pageSize);
           }
 
-          try {
-            // send customer fetch -- tenant, page, size
-            this.calculateCustomerSegmentRisk(thisCalc.getId(), user, tenent, i,
-                    pageSize);
-          } catch (Exception e) {
-            e.printStackTrace();
-          }
+          // send customer fetch -- tenant, page, size
+          futuresList.add(this.calculateCustomerSegmentRisk(thisCalc.getId(), user, tenent, i,
+                  pageSize));
         }
 
         meta.put("asyncTaskCount", futuresList.size());
@@ -147,35 +143,35 @@ public class RiskServiceImpl implements RiskService {
         // LOG Calculation task to DB.
         this.calcStatusService.saveCalcStatus(tenent, thisCalc,
                 String.valueOf(Thread.currentThread().getId()),
-                CalcStatusCodes.CALC_COMPLETED,
+                CalcStatusCodes.CALC_UPDATED,
                 CalcTypes.CUST_RISK_CALC, meta);
 
-//        CompletableFuture.allOf(
-//                futuresList.toArray(new CompletableFuture[futuresList.size()])).
-//                .whenComplete((result, ex) -> {
-//                  try {
-//                    TenantHolder.setTenantId(tenent);
-//                    if (ex != null) {
-//                      logger.debug("All customer risk calculations processes error");
-//                      this.calcStatusService.saveCalcStatus(tenent, thisCalc,
-//                              String.valueOf(Thread.currentThread().getId()),
-//                              CalcStatusCodes.CALC_ERROR,
-//                              CalcTypes.CUST_RISK_CALC, meta);
-//                    } else {
-//                      logger.debug("All customer risk calculations processes completed");
-//                      this.calcStatusService.saveCalcStatus(tenent, thisCalc,
-//                              String.valueOf(Thread.currentThread().getId()),
-//                              CalcStatusCodes.CALC_COMPLETED,
-//                              CalcTypes.CUST_RISK_CALC, meta);
-//                    }
-//                  } catch (Exception e) {
-//                    logger.error("Risk calcualtion task completion logging error");
-//                    e.printStackTrace();
-//                  } finally {
-//                    // clear tenant
-//                    TenantHolder.clear();
-//                  }
-//                });
+        CompletableFuture.allOf(
+                futuresList.toArray(new CompletableFuture[futuresList.size()]))
+                .whenComplete((result, ex) -> {
+                  try {
+                    TenantHolder.setTenantId(tenent);
+                    if (ex != null) {
+                      logger.debug("All customer risk calculations processes error");
+                      this.calcStatusService.saveCalcStatus(tenent, thisCalc,
+                              String.valueOf(Thread.currentThread().getId()),
+                              CalcStatusCodes.CALC_ERROR,
+                              CalcTypes.CUST_RISK_CALC, meta);
+                    } else {
+                      logger.debug("All customer risk calculations processes completed");
+                      this.calcStatusService.saveCalcStatus(tenent, thisCalc,
+                              String.valueOf(Thread.currentThread().getId()),
+                              CalcStatusCodes.CALC_COMPLETED,
+                              CalcTypes.CUST_RISK_CALC, meta);
+                    }
+                  } catch (Exception e) {
+                    logger.error("Risk calcualtion task completion logging error");
+                    e.printStackTrace();
+                  } finally {
+                    // clear tenant
+                    TenantHolder.clear();
+                  }
+                });
 
       } catch (Exception e) {
         logger.error("Customer Risk Calculation process error");
