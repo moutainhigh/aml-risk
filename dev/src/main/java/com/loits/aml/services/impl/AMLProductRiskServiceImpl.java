@@ -106,7 +106,7 @@ public class AMLProductRiskServiceImpl implements AMLProductRiskService {
           product.setPeriod(cp.getPeriod().doubleValue());
 
           List<ProductRates> productRatesList = new ArrayList<>();
-          if (product.getRates() != null) {
+          if (cp.getProduct().getRates() != null) {
             for (com.loits.aml.dto.ProductRates amlProductRate : cp.getProduct().getRates()) {
               ProductRates productRate = new ProductRates();
               productRate.setRate(amlProductRate.getRate().doubleValue());
