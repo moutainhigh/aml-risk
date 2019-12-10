@@ -109,7 +109,7 @@ public class RiskServiceImpl implements RiskService {
         // Max. allowed segments --PARALLEL_THREADS
         int noOfAsyncTasks = 1;
 
-        if (totRecords >= SEGMENT_SIZE) {
+        if (totRecords > SEGMENT_SIZE) {
           noOfAsyncTasks = totRecords / SEGMENT_SIZE;
           pageSize = SEGMENT_SIZE;
         } else pageSize = totRecords;
@@ -119,15 +119,15 @@ public class RiskServiceImpl implements RiskService {
 
         meta.put("fetched", 1);
         meta.put("totalCustomers", totRecords);
-        meta.put("noOfSegments", (noOfAsyncTasks + 1)); // index starts at 0
+        meta.put("noOfSegments", noOfAsyncTasks); // index starts at 0
         meta.put("tpSize", THREAD_POOL_SIZE);
         meta.put("tpQueueSize", THREAD_POOL_QUEUE_SIZE);
 
-        for (int i = 0; i <= noOfAsyncTasks; i++) {
+        for (int i = 0; i < noOfAsyncTasks; i++) {
 
           // if last page, might need to make an adjustment
-          if (i == noOfAsyncTasks &&
-                  totRecords >= SEGMENT_SIZE) {
+          if (i == (noOfAsyncTasks-1) &&
+                  totRecords > SEGMENT_SIZE) {
             int orphanRecordCount = totRecords % SEGMENT_SIZE;
             pageSize = orphanRecordCount;
             meta.put("finalPageSize", pageSize);
