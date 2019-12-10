@@ -62,15 +62,12 @@ public class AMLProductRiskServiceImpl implements AMLProductRiskService {
     logger.debug("Product Risk calculation started...");
     List<CustomerProduct> customerProductList = null;
     ObjectMapper objectMapper = new ObjectMapper();
-    ProductRisk productRisk = new ProductRisk();
-
-    //Get the products for customer
+    ProductRisk productRisk = new ProductRisk();        //Get the products for customer
     //Request parameters to AML Service
     String amlServiceProductsUrl = String.format(env.getProperty("aml.api.aml-customer-products")
             , tenent);
     HashMap<String, String> productsParameters = new HashMap<>();
     productsParameters.put("customer.id", customerId.toString());
-
     try {
       customerProductList = httpService.getDataFromList("AML", amlServiceProductsUrl,
               productsParameters, new TypeReference<List<CustomerProduct>>() {
@@ -80,13 +77,11 @@ public class AMLProductRiskServiceImpl implements AMLProductRiskService {
       throw new FXDefaultException("-1", "ERROR", "Exception occured in retrieving Customer " +
               "Products", new Date(), HttpStatus.BAD_REQUEST, false);
     }
-
     if (customerProductList.size() > 0) {
       logger.debug("Customer Products available. Starting calculation...");
       productRisk.setCustomerCode(customerId);
       productRisk.setModule(ruleModule);
       productRisk.setToday(new Date());
-
       List<Product> productList = new ArrayList<>();
       for (CustomerProduct cp : customerProductList) {
         Product product = new Product();
@@ -97,41 +92,60 @@ public class AMLProductRiskServiceImpl implements AMLProductRiskService {
         product.setValue(cp.getValue());
         product.setCpmeta1(cp.getMeta1());
         product.setCpmeta2(cp.getMeta2());
-
         if (cp.getProduct() != null) {
           product.setCode(cp.getProduct().getCode());
           product.setDefaultRate(cp.getProduct().getDefaultRate());
           product.setPmeta1(cp.getProduct().getMeta1());
           product.setPmeta2(cp.getProduct().getMeta2());
-          product.setPeriod(cp.getPeriod().doubleValue());
-
+          if (cp.getPeriod() != null) {
+            product.setPeriod(cp.getPeriod().doubleValue());
+          }
           List<ProductRates> productRatesList = new ArrayList<>();
           if (product.getRates() != null) {
             for (com.loits.aml.dto.ProductRates amlProductRate : cp.getProduct().getRates()) {
               ProductRates productRate = new ProductRates();
-              productRate.setRate(amlProductRate.getRate().doubleValue());
-              productRate.setAccumulatedRate(amlProductRate.getAccumulatedRate().doubleValue());
-              productRate.setCompanyRatio(amlProductRate.getCompanyRatio().doubleValue());
-              productRate.setInvestorRatio(amlProductRate.getInvestorRatio().doubleValue());
-              productRate.setProfitRate(amlProductRate.getProfitRate().doubleValue());
-              productRate.setProfitFeeRate(amlProductRate.getProfitFeeRate().doubleValue());
-              productRate.setPeriod(amlProductRate.getPeriod().doubleValue());
+              if (amlProductRate.getRate() != null) {
+                productRate.setRate(amlProductRate.getRate().doubleValue());
+              }
+              if (amlProductRate.getAccumulatedRate() != null) {
+                productRate.setAccumulatedRate(amlProductRate.getAccumulatedRate().doubleValue());
+              }
+              if (amlProductRate.getCompanyRatio() != null) {
+                productRate.setCompanyRatio(amlProductRate.getCompanyRatio().doubleValue());
+              }
+              if (amlProductRate.getInvestorRatio() != null) {
+                productRate.setInvestorRatio(amlProductRate.getInvestorRatio().doubleValue());
+              }
+              if (amlProductRate.getProfitRate() != null) {
+                productRate.setProfitRate(amlProductRate.getProfitRate().doubleValue());
+              }
+              if (amlProductRate.getProfitFeeRate() != null) {
+                productRate.setProfitFeeRate(amlProductRate.getProfitFeeRate().doubleValue());
+              }
+              if (amlProductRate.getPeriod() != null) {
+                productRate.setPeriod(amlProductRate.getPeriod().doubleValue());
+              }
               productRate.setPayMode(amlProductRate.getPayMode());
               productRate.setStatus(amlProductRate.getStatus());
               productRate.setDate(amlProductRate.getDate());
-              productRate.setFromAmt(amlProductRate.getFromAmt().doubleValue());
-              productRate.setToAmt(amlProductRate.getToAmt().doubleValue());
+              if (amlProductRate.getFromAmt() != null) {
+                productRate.setFromAmt(amlProductRate.getFromAmt().doubleValue());
+              }
+              if (amlProductRate.getToAmt() != null) {
+                productRate.setToAmt(amlProductRate.getToAmt().doubleValue());
+              }
               productRatesList.add(productRate);
             }
           }
           product.setRates(productRatesList);
         }
-
         List<com.loits.fx.aml.Transaction> ruleTransactionsList = new ArrayList<>();
         for (Transaction tr : cp.getTransactions()) {
           com.loits.fx.aml.Transaction transaction = new com.loits.fx.aml.Transaction();
           transaction.setType(tr.getTxnMode());
-          transaction.setAmount(tr.getTxnAmount().doubleValue());
+          if (tr.getTxnAmount() != null) {
+            transaction.setAmount(tr.getTxnAmount().doubleValue());
+          }
           transaction.setDate(tr.getTxnDate());
           ruleTransactionsList.add(transaction);
         }
@@ -139,9 +153,7 @@ public class AMLProductRiskServiceImpl implements AMLProductRiskService {
         product.setTransactions(ruleTransactionsList);
         productList.add(product);
       }
-      productRisk.setProducts(productList);
-
-//            //TODO add to HTTPSERVice
+      productRisk.setProducts(productList);//            //TODO add to HTTPSERVice
 //            HttpResponse httpResponse = sendPostRequest(productRisk, String.format(env
 // .getProperty("aml.api.product-risk"), tenent), "ProductRisk", null);
 //            try {
@@ -150,13 +162,10 @@ public class AMLProductRiskServiceImpl implements AMLProductRiskService {
 //            } catch (IOException e) {
 //                logger.debug("Error deserializing productRisk object");
 //                e.printStackTrace();
-//            }
-
-      //Headers for CategoryRisk POST Req
+//            }            //Headers for CategoryRisk POST Req
       HashMap<String, String> headers = new HashMap<>();
-      headers.put("user", user);
-
-      //Calculate customer category risk by sending request to Category Risk Service
+      headers.put("user", user);            //Calculate product risk by sending request to
+      // Product Risk Service
       try {
         productRisk = (ProductRisk) httpService.sendData("Product-risk",
                 String.format(env.getProperty("aml.api.product-risk"), tenent),
@@ -166,8 +175,6 @@ public class AMLProductRiskServiceImpl implements AMLProductRiskService {
       } catch (ClassNotFoundException e) {
         e.printStackTrace();
       }
-
-
     } else {
       logger.debug("No CustomerProducts available to calculate Product Risk. Aborting...");
       productRisk.setCalculatedRisk(0.0);
