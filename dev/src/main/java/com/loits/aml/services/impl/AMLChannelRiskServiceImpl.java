@@ -111,8 +111,9 @@ public class AMLChannelRiskServiceImpl implements AMLChannelRiskService {
           channelUsage.setChannelName(t.getChannel().getChannelName());
           channelUsage.setChannelDescription(t.getChannel().getChannelDescription());
           channelUsage.setDate(t.getTxnDate());
-          channelUsage.setAmount(t.getTxnAmount().doubleValue());
-
+          if(t.getTxnAmount()!=null){
+            channelUsage.setAmount(t.getTxnAmount().doubleValue());
+          }
           channelUsageList.add(channelUsage);
         }
       }
