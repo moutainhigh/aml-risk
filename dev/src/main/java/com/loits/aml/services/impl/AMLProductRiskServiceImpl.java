@@ -57,7 +57,7 @@ public class AMLProductRiskServiceImpl implements AMLProductRiskService {
 
   @Override
   public ProductRisk calculateProductRisk(Long customerId, Module ruleModule, String user,
-                                          String tenent) throws
+                                          String tenent, List<Transaction> transactionList) throws
           FXDefaultException {
     logger.debug("Product Risk calculation started...");
     List<CustomerProduct> customerProductList = null;
@@ -97,6 +97,9 @@ public class AMLProductRiskServiceImpl implements AMLProductRiskService {
           product.setDefaultRate(cp.getProduct().getDefaultRate());
           product.setPmeta1(cp.getProduct().getMeta1());
           product.setPmeta2(cp.getProduct().getMeta2());
+          if(cp.getProduct().getModule()!=null) {
+            product.setModule(cp.getProduct().getModule().getCode());
+          }
           if (cp.getPeriod() != null) {
             product.setPeriod(cp.getPeriod().doubleValue());
           }
@@ -140,29 +143,26 @@ public class AMLProductRiskServiceImpl implements AMLProductRiskService {
           product.setRates(productRatesList);
         }
         List<com.loits.fx.aml.Transaction> ruleTransactionsList = new ArrayList<>();
-        for (Transaction tr : cp.getTransactions()) {
-          com.loits.fx.aml.Transaction transaction = new com.loits.fx.aml.Transaction();
-          transaction.setType(tr.getTxnMode());
-          if (tr.getTxnAmount() != null) {
-            transaction.setAmount(tr.getTxnAmount().doubleValue());
+
+        if(transactionList!=null) {
+          for (Transaction tr : transactionList) {
+            if (tr.getCustomerProduct()!=null && tr.getCustomerProduct().getId().equals(cp.getId())) {
+              com.loits.fx.aml.Transaction transaction = new com.loits.fx.aml.Transaction();
+              transaction.setType(tr.getTxnMode());
+              if(tr.getTxnAmount()!=null) {
+                transaction.setAmount(tr.getTxnAmount().doubleValue());
+              }
+              transaction.setDate(tr.getTxnDate());
+              ruleTransactionsList.add(transaction);
+            }
           }
-          transaction.setDate(tr.getTxnDate());
-          ruleTransactionsList.add(transaction);
         }
-        product.setModule(cp.getProduct().getModule().getCode());
         product.setTransactions(ruleTransactionsList);
         productList.add(product);
       }
-      productRisk.setProducts(productList);//            //TODO add to HTTPSERVice
-//            HttpResponse httpResponse = sendPostRequest(productRisk, String.format(env
-// .getProperty("aml.api.product-risk"), tenent), "ProductRisk", null);
-//            try {
-//                String jsonString = EntityUtils.toString(httpResponse.getEntity());
-//                productRisk = objectMapper.readValue(jsonString, ProductRisk.class);
-//            } catch (IOException e) {
-//                logger.debug("Error deserializing productRisk object");
-//                e.printStackTrace();
-//            }            //Headers for CategoryRisk POST Req
+      productRisk.setProducts(productList);
+
+      //Headers for CategoryRisk POST Req
       HashMap<String, String> headers = new HashMap<>();
       headers.put("user", user);            //Calculate product risk by sending request to
       // Product Risk Service
