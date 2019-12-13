@@ -87,6 +87,15 @@ public class AMLRiskServiceImpl implements AMLRiskService {
         this.sdf = new SimpleDateFormat(dateFormat);
     }
 
+  @Override
+  public Page<?> getAvailableCustomerRisk(String customerCode, Pageable pageable, String module,
+                                          String otherIdentity, Date from, Date to, String user,
+                                          String tenent) throws FXDefaultException {
+    List<com.loits.aml.domain.ModuleCustomer> moduleCustomerList = null;
+    com.loits.aml.domain.ModuleCustomer moduleCustomer = null;
+    com.loits.aml.domain.Module moduleObj = null;
+    List<CustomerRiskOutput> customerRiskOutputList = new ArrayList<>();
+    int size = 0;
 
     @Override
     public Page<?> getAvailableCustomerRisk(String customerCode, Pageable pageable, String module,
@@ -113,40 +122,15 @@ public class AMLRiskServiceImpl implements AMLRiskService {
             to.setTime(new Date().getTime());
         }
 
-        //Get risk of single customer
-        if (customerCode != null && !customerCode.isEmpty()) {
-            if (moduleCustomerRepository.existsByModuleAndModuleCustomerCode(moduleObj, customerCode)) {
-                moduleCustomer =
-                        moduleCustomerRepository.findOneByModuleAndModuleCustomerCodeAndRiskCalculatedOnBetween(moduleObj, customerCode, from, to);
-            } else {
-                throw new FXDefaultException("3003", "NO_DATA_FOUND", Translator.toLocale(
-                        "CUSTOMER_NOT_FOUND"), new Date(), HttpStatus.BAD_REQUEST, false);
-            }
-            com.loits.aml.domain.Customer customer = new com.loits.aml.domain.Customer();
-            if (moduleCustomer != null) {
-                customer = moduleCustomer.getCustomer();
-                if (customer != null) {
-                    CustomerRiskOutput customerRiskOutput = new CustomerRiskOutput();
-                    customerRiskOutput.setCustomerCode(moduleCustomer.getModuleCustomerCode());
-                    if (moduleCustomer.getModule() != null) {
-                        customerRiskOutput.setModule(moduleCustomer.getModule().getCode());
-                    }
-                    customerRiskOutput.setCalculatedRisk(customer.getCustomerRiskScore());
-                    customerRiskOutput.setRiskRating(customer.getCustomerRisk());
-                    customerRiskOutputList.add(customerRiskOutput);
-                }
-            }
+      size = customerRiskOutputList.size();
 
-            count = customerRiskOutputList.size();
+    } else {
+      if (moduleCustomerRepository.existsByModule(moduleObj)) {
+        moduleCustomerList =
+                moduleCustomerRepository.findAllByModuleAndRiskCalculatedOnBetween(moduleObj,
+                        from, to, pageable);
 
-        } else {
-            if (moduleCustomerRepository.existsByModule(moduleObj)) {
-                moduleCustomerList =
-                        moduleCustomerRepository.findAllByModuleAndRiskCalculatedOnBetween(moduleObj,
-                                from, to, pageable);
-                count = moduleCustomerRepository.findCountByModuleAndRiskCalculatedOnBetween(moduleObj,
-                        from, to);
-
+        size = moduleCustomerRepository.findCountByModuleAndRiskCalculatedOnBetween(moduleObj, from, to);
         for (com.loits.aml.domain.ModuleCustomer moduleCustomer1 : moduleCustomerList) {
           com.loits.aml.domain.Customer customer = null;
 
@@ -165,8 +149,24 @@ public class AMLRiskServiceImpl implements AMLRiskService {
         }
 
 
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), customerRiskOutputList.size());
+    int start = (int) pageable.getOffset();
+    int end = Math.min((start + pageable.getPageSize()), customerRiskOutputList.size());
+
+    if (start <= end) {
+      customerRiskOutputList = customerRiskOutputList.subList(start, end);
+    }
+
+    return new PageImpl<CustomerRiskOutput>(customerRiskOutputList,
+            pageable,
+            size);
+  }
+
+
+  public OverallRisk calculateRiskByCustomer(String user, String tenent, Long id) throws FXDefaultException {
+
+    List<Customer> customerList = null;
+    Customer customer = null;
+    ObjectMapper objectMapper = new ObjectMapper();
 
     //Request parameters to Customer Service
     String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
