@@ -2,8 +2,8 @@ package com.loits.aml.repo;
 
 import com.loits.aml.domain.Module;
 import com.loits.aml.domain.ModuleCustomer;
-import com.loits.aml.domain.QModuleCustomer;
 import com.querydsl.core.types.dsl.StringPath;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.querydsl.binding.QuerydslBinderCustomizer;
@@ -29,6 +29,11 @@ public interface ModuleCustomerRepository extends PagingAndSortingRepository<Mod
 
   boolean existsByModule(Module moduleObj);
 
-  List<ModuleCustomer> findAllByModuleAndRiskCalculatedOnBetween(Module module, Date from, Date to);
+  List<ModuleCustomer> findAllByModuleAndRiskCalculatedOnBetween(Module module,
+                                                                 Date from, Date to , Pageable pageable);
+
+  @Query("SELECT COUNT(c) FROM ModuleCustomer c WHERE c.module=?1 AND c.riskCalculatedOn BETWEEN ?2 AND ?3")
+  int findCountByModuleAndRiskCalculatedOnBetween(Module module,
+                                                                 Date from, Date to);
 
 }
