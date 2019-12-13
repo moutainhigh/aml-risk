@@ -143,7 +143,7 @@ public class AMLProductRiskServiceImpl implements AMLProductRiskService {
 
         if(transactionList!=null) {
           for (Transaction tr : transactionList) {
-            if (tr.getCustomerProduct().getId() == cp.getId()) {
+            if (tr.getCustomerProduct()!=null && tr.getCustomerProduct().getId() == cp.getId()) {
               com.loits.fx.aml.Transaction transaction = new com.loits.fx.aml.Transaction();
               transaction.setType(tr.getTxnMode());
               transaction.setAmount(tr.getTxnAmount().doubleValue());
