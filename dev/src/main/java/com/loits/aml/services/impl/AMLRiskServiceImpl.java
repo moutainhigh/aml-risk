@@ -224,6 +224,15 @@ public class AMLRiskServiceImpl implements AMLRiskService {
               .calculateProductRisk(customer.getId(), ruleModule, user,
                       tenent, transactionList);
 
+
+      if (channelRisk == null) {
+        channelRisk = new ChannelRisk();
+      }
+
+      if (productRisk == null) {
+        productRisk = new ProductRisk();
+      }
+
       if (customerRisk.getCalculatedRisk() != null) {
         if (channelRisk.getCalculatedRisk() == null) {
           channelRisk.setCalculatedRisk(0.0);
@@ -246,15 +255,6 @@ public class AMLRiskServiceImpl implements AMLRiskService {
           occupation.setHighRisk(false);
           customerRisk.setOccupation(occupation);
         }
-
-        if (channelRisk == null) {
-          channelRisk = new ChannelRisk();
-        }
-
-        if (productRisk == null) {
-          productRisk = new ProductRisk();
-        }
-
 
         OverallRisk overallRisk = new OverallRisk(customer.getId(), ruleModule,
                 customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(),
@@ -333,6 +333,15 @@ public class AMLRiskServiceImpl implements AMLRiskService {
       ProductRisk productRisk = this.amlProductRiskService.calculateProductRisk
               (customer.getId(), ruleModule, user, tenent, transactionList);
 
+
+      if (channelRisk == null) {
+        channelRisk = new ChannelRisk();
+      }
+
+      if (productRisk == null) {
+        productRisk = new ProductRisk();
+      }
+
       if (customerRisk.getCalculatedRisk() != null) {
         if (channelRisk.getCalculatedRisk() == null) {
           channelRisk.setCalculatedRisk(0.0);
@@ -353,14 +362,6 @@ public class AMLRiskServiceImpl implements AMLRiskService {
           Occupation occupation = new Occupation();
           occupation.setHighRisk(false);
           customerRisk.setOccupation(occupation);
-        }
-
-        if (channelRisk == null) {
-          channelRisk = new ChannelRisk();
-        }
-
-        if (productRisk == null) {
-          productRisk = new ProductRisk();
         }
 
         OverallRisk overallRisk = new OverallRisk(customer.getId(), ruleModule,
