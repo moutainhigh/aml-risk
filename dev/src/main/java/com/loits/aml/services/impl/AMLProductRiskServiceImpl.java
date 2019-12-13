@@ -97,6 +97,9 @@ public class AMLProductRiskServiceImpl implements AMLProductRiskService {
           product.setDefaultRate(cp.getProduct().getDefaultRate());
           product.setPmeta1(cp.getProduct().getMeta1());
           product.setPmeta2(cp.getProduct().getMeta2());
+          if(cp.getProduct().getModule()!=null) {
+            product.setModule(cp.getProduct().getModule().getCode());
+          }
           if (cp.getPeriod() != null) {
             product.setPeriod(cp.getPeriod().doubleValue());
           }
@@ -143,16 +146,17 @@ public class AMLProductRiskServiceImpl implements AMLProductRiskService {
 
         if(transactionList!=null) {
           for (Transaction tr : transactionList) {
-            if (tr.getCustomerProduct()!=null && tr.getCustomerProduct().getId() == cp.getId()) {
+            if (tr.getCustomerProduct()!=null && tr.getCustomerProduct().getId().equals(cp.getId())) {
               com.loits.fx.aml.Transaction transaction = new com.loits.fx.aml.Transaction();
               transaction.setType(tr.getTxnMode());
-              transaction.setAmount(tr.getTxnAmount().doubleValue());
+              if(transaction.getAmount()!=null) {
+                transaction.setAmount(tr.getTxnAmount().doubleValue());
+              }
               transaction.setDate(tr.getTxnDate());
               ruleTransactionsList.add(transaction);
             }
           }
         }
-        product.setModule(cp.getProduct().getModule().getCode());
         product.setTransactions(ruleTransactionsList);
         productList.add(product);
       }
