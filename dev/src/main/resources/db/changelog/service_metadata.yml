@@ -17,7 +17,7 @@ databaseChangeLog:
                   constraints:
                     primaryKey: true
                   name: meta_key
-                  type: VARCHAR(10)
+                  type: VARCHAR(45)
               - column:
                   name: meta_value
                   type: VARCHAR(500)
@@ -30,15 +30,6 @@ databaseChangeLog:
               - column:
                   name: modified_date
                   type: datetime
-            tableName: service_metadata
-
-  - changeSet:
-      id: 4
-      author: minolid@i360.lk
-      changes:
-        - modifyDataType:
-            columnName: meta_key
-            newDataType: VARCHAR(45)
             tableName: service_metadata
 
   - changeSet:
@@ -59,7 +50,7 @@ databaseChangeLog:
                   value: "url"
               - column:
                   name: created_date
-                  value: "${now}"
+                  valueDate: "${now}"
 
   - changeSet:
       id: 3
@@ -79,7 +70,7 @@ databaseChangeLog:
                   value: "url"
               - column:
                   name: created_date
-                  value: "${now}"
+                  valueDate: "${now}"
 
   - changeSet:
       id: 8
@@ -99,7 +90,7 @@ databaseChangeLog:
                   value: "url"
               - column:
                   name: created_date
-                  value: "${now}"
+                  valueDate: "${now}"
 
   - changeSet:
       id: 5
@@ -119,7 +110,7 @@ databaseChangeLog:
                   value: "url"
               - column:
                   name: created_date
-                  value: "${now}"
+                  valueDate: "${now}"
 
   - changeSet:
       id: 6
@@ -139,7 +130,7 @@ databaseChangeLog:
                   value: "url"
               - column:
                   name: created_date
-                  value: "${now}"
+                  valueDate: "${now}"
 
   - changeSet:
       id: 7
@@ -159,7 +150,7 @@ databaseChangeLog:
                   value: "url"
               - column:
                   name: created_date
-                  value: "${now}"
+                  valueDate: "${now}"
 
 
 

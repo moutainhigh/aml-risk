@@ -11,18 +11,6 @@ databaseChangeLog:
             name: id
             type: INT
         - column:
-            name: date
-            type: datetime
-        - column:
-            name: reference
-            type: VARCHAR(5000)
-        - column:
-            name: module
-            type: VARCHAR(100)
-        - column:
-            name: type
-            type: VARCHAR(45)
-        - column:
             name: s_date
             type: datetime
         - column:
@@ -58,47 +46,6 @@ databaseChangeLog:
         - column:
             name: error_count
             type: INT
-        tableName: calc_tasks
-
-- changeSet:
-    id: 2
-    author: lahirub@i360.lk
-    changes:
-    - dropColumn:
-        columnName: date
-        tableName: calc_tasks
-
-- changeSet:
-    id: 3
-    author: lahirub@i360.lk
-    changes:
-    - dropColumn:
-        columnName: reference
-        tableName: calc_tasks
-
-- changeSet:
-    id: 4
-    author: lahirub@i360.lk
-    changes:
-    - dropColumn:
-        columnName: module
-        tableName: calc_tasks
-
-- changeSet:
-    id: 5
-    author: lahirub@i360.lk
-    changes:
-    - dropColumn:
-        columnName: type
-        tableName: calc_tasks
-
-
-- changeSet:
-    id: 6
-    author: lahirub@i360.lk
-    changes:
-    - addColumn:
-        columns:
         - column:
             name: processed_count
             type: INT

@@ -24,18 +24,8 @@ databaseChangeLog:
               - column:
                   name: status
                   type: TINYINT(3)
-            tableName: customer
-
-  - changeSet:
-      id: 2
-      author: minolid@i360.lk (generated)
-      changes:
-        - addColumn:
-            columns:
               - column:
                   name: risk_calculated_on
                   type: DATETIME
             tableName: customer
-
-
 

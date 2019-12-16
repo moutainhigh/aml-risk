@@ -21,6 +21,9 @@ databaseChangeLog:
               - column:
                   name: module
                   type: VARCHAR(45)
+              - column:
+                  name: risk_calculated_on
+                  type: DATETIME
             tableName: module_customer
 
   - changeSet:
@@ -48,14 +51,3 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: customer
             validate: true
-
-  - changeSet:
-      id: 4
-      author: minolid@i360.lk (generated)
-      changes:
-        - addColumn:
-            columns:
-              - column:
-                  name: risk_calculated_on
-                  type: DATETIME
-            tableName: module_customer
