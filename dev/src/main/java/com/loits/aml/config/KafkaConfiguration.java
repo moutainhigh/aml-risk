@@ -61,6 +61,9 @@ public class KafkaConfiguration {
 
     @Value("${com.loits.aml.kafka.saslMechanism}")
     private String saslMechanism;
+
+    @Value("${com.loits.aml.kafka.topicsAutoCreate}")
+    private Boolean topicConfig;
     /*--- kafka- stream---*/
 
     /**
@@ -79,6 +82,7 @@ public class KafkaConfiguration {
         config.put("buffer.memory", bufferMemory);
         config.put("security.protocol", securityProtocol);
         config.put("sasl.mechanism", saslMechanism);
+        config.put("auto.create.topics.enable", topicConfig);
 
         config.put("sasl.jaas.config",
                 "org.apache.kafka.common.security.plain.PlainLoginModule required username=\""
@@ -110,6 +114,7 @@ public class KafkaConfiguration {
         config.put(JsonDeserializer.TRUSTED_PACKAGES, deserializablePackages);
         config.put("security.protocol", securityProtocol);
         config.put("sasl.mechanism", saslMechanism);
+        config.put("auto.create.topics.enable", topicConfig);
 
         config.put("sasl.jaas.config",
                 "org.apache.kafka.common.security.plain.PlainLoginModule required username=\""
