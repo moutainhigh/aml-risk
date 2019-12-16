@@ -43,6 +43,29 @@ public class KafkaConfiguration {
     @Value("${com.loits.aml.kafka.trustedpackages}")
     private String deserializablePackages;
 
+    /*--- kafka- stream---*/
+    @Value("${com.loits.aml.kafka.authToken}")
+    private String authToken;
+
+    @Value("${com.loits.aml.kafka.tenancyName}")
+    private String tenancyName;
+
+    @Value("${com.loits.aml.kafka.username}")
+    private String username;
+
+    @Value("${com.loits.aml.kafka.streampoolId}")
+    private String streampoolId;
+
+    @Value("${com.loits.aml.kafka.securityProtocol}")
+    private String securityProtocol;
+
+    @Value("${com.loits.aml.kafka.saslMechanism}")
+    private String saslMechanism;
+
+    @Value("${com.loits.aml.kafka.topicsAutoCreate}")
+    private Boolean topicConfig;
+    /*--- kafka- stream---*/
+
     /**
      * Publisher
      */
@@ -57,6 +80,18 @@ public class KafkaConfiguration {
         config.put("batch.size", batchSize);
         config.put("linger.ms", lingerMs);
         config.put("buffer.memory", bufferMemory);
+        config.put("security.protocol", securityProtocol);
+        config.put("sasl.mechanism", saslMechanism);
+        config.put("auto.create.topics.enable", topicConfig);
+
+        config.put("sasl.jaas.config",
+                "org.apache.kafka.common.security.plain.PlainLoginModule required username=\""
+                        + tenancyName + "/"
+                        + username + "/"
+                        + streampoolId + "\" "
+                        + "password=\""
+                        + authToken + "\";"
+        );
         return new DefaultKafkaProducerFactory<>(config);
     }
 
@@ -77,7 +112,18 @@ public class KafkaConfiguration {
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         config.put(JsonDeserializer.TRUSTED_PACKAGES, deserializablePackages);
+        config.put("security.protocol", securityProtocol);
+        config.put("sasl.mechanism", saslMechanism);
+        config.put("auto.create.topics.enable", topicConfig);
 
+        config.put("sasl.jaas.config",
+                "org.apache.kafka.common.security.plain.PlainLoginModule required username=\""
+                        + tenancyName + "/"
+                        + username + "/"
+                        + streampoolId + "\" "
+                        + "password=\""
+                        + authToken + "\";"
+        );
         return new DefaultKafkaConsumerFactory<String, Object>(config);
     }
 
