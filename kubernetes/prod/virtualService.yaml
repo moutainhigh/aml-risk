@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: aml-risk
+  namespace: fusionx-aml
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - fusionx-gateway.default.svc.cluster.local
+  http:
+  - match:
+    - uri:
+        prefix: /aml-risk
+    route:
+    - destination:
+        host: aml-risk.fusionx-aml.svc.cluster.local
+        port:
+          number: 8080
