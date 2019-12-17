@@ -612,7 +612,7 @@
                             <changeSetAuthor>admin</changeSetAuthor>
                             <changeLogFile>src/main/resources/db/changelog/oracle/changelog.xml</changeLogFile>
                             <driver>oracle.jdbc.driver.OracleDriver</driver>
-                            <url>jdbc:oracle:thin:@qafusionxdb_tpurgent?TNS_ADMIN=D:\wallet_QAFUSIONXDB</url>
+                            <url>jdbc:oracle:thin:@qafusionxdb_tpurgent?TNS_ADMIN=/opt/wallet/</url>
                             <username>${DB_USER}</username>
                             <password>${DB_PASSWORD}</password>
                         </configuration>
@@ -760,14 +760,11 @@
                         <configuration>
                             <promptOnNonLocalDatabase>false</promptOnNonLocalDatabase>
                             <changeSetAuthor>admin</changeSetAuthor>
-                            <changeLogFile>src/main/resources/db/changelog/mysql/changelog.yml
-                            </changeLogFile>
-                            <driver>com.mysql.jdbc.Driver</driver>
-                            <url>
-                                jdbc:mysql://${CONF_DB_IP_PORT}/AnRkr_aml_risk?createDatabaseIfNotExist=true
-                            </url>
-                            <username>${CONF_DB_USER}</username>
-                            <password>${CONF_DB_PASS}</password>
+                            <changeLogFile>src/main/resources/db/changelog/oracle/changelog.xml</changeLogFile>
+                            <driver>oracle.jdbc.driver.OracleDriver</driver>
+                            <url>jdbc:oracle:thin:@uatfusionxdb_tpurgent?TNS_ADMIN=/opt/wallet/</url>
+                            <username>${DB_USER}</username>
+                            <password>${DB_PASSWORD}</password>
                         </configuration>
                         <executions>
                             <execution>
@@ -913,12 +910,9 @@
                         <configuration>
                             <promptOnNonLocalDatabase>false</promptOnNonLocalDatabase>
                             <changeSetAuthor>admin</changeSetAuthor>
-                            <changeLogFile>src/main/resources/db/changelog/oracle/changelog.xml
-                            </changeLogFile>
+                            <changeLogFile>src/main/resources/db/changelog/oracle/changelog.xml</changeLogFile>
                             <driver>oracle.jdbc.driver.OracleDriver</driver>
-                            <url>
-                                jdbc:oracle:thin:@${DB_HOST}:${DB_PORT}/qadb_fra1x9.qadbvcnsubnet.qadbvcn.oraclevcn.com
-                            </url>
+                            <url>jdbc:oracle:thin:@prodfusionxdb_tpurgent?TNS_ADMIN=/opt/wallet/</url>
                             <username>${DB_USER}</username>
                             <password>${DB_PASSWORD}</password>
                         </configuration>
