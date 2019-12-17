@@ -33,9 +33,6 @@ public class Module {
     @Column(name = "created_on", nullable = true)
     private Timestamp createdOn;
 
-    @Column(name = "version", nullable = true)
-    private Long version;
-
     @ManyToOne
     @JoinColumn(name = "parent", referencedColumnName = "code")
     private Module parent;
@@ -52,7 +49,6 @@ public class Module {
                 ", country='" + country + '\'' +
                 ", createdBy='" + createdBy + '\'' +
                 ", createdOn=" + createdOn +
-                ", version=" + version +
                 ", tenent='" + tenent + '\'' +
                 '}';
     }
