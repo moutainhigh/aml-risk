@@ -23,5 +23,3 @@ databaseChangeLog:
     file: "db/changelog/sql/calc_status.yml"
 - include:
     file: "db/changelog/sql/calc_log.yml"
-- include:
-    file: "db/changelog/mysql/sequence.yml"

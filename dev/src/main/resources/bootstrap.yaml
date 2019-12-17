@@ -3,7 +3,7 @@ spring:
     name: aml-risk
   cloud:
     config:
-      uri: http://${CONF_URL_PORT}
+      uri: ${CONFIG_SERVER_URL}
       username: ${CONF_SERVER_USR}
       password: ${CONF_SERVER_PASS}
   profiles:

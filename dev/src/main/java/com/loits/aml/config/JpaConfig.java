@@ -94,6 +94,8 @@ public class JpaConfig {
         properties.put(AvailableSettings.MULTI_TENANT, MultiTenancyStrategy.DATABASE);
         properties.put(AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER, multiTenantConnectionProvider);
         properties.put(AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER, currentTenantIdentifierResolver);
+        properties.put(AvailableSettings.DIALECT, "org.hibernate.dialect.Oracle12cDialect");
+
         em.setJpaPropertyMap(properties);
 
         return em;
