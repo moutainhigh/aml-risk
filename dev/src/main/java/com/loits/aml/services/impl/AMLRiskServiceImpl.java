@@ -91,7 +91,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
         com.loits.aml.domain.ModuleCustomer moduleCustomer = null;
         com.loits.aml.domain.Module moduleObj = null;
         List<CustomerRiskOutput> customerRiskOutputList = new ArrayList<>();
-int size = 0;
+        int size = 0;
 
         if (!moduleRepository.existsById(module)) {
             throw new FXDefaultException("3001", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"),
@@ -218,7 +218,7 @@ int size = 0;
             CustomerRisk customerRisk = this.amlCustomerRiskService
                     .calculateCustomerRisk(customer, ruleModule, user, tenent);
 
-            List<com.loits.aml.dto.Transaction> transactionList= getTransactions(customer.getId(), tenent);
+            List<com.loits.aml.dto.Transaction> transactionList = getTransactions(customer.getId(), tenent);
 
             ChannelRisk channelRisk = this.amlChannelRiskService
                     .calculateChannelRisk(customer.getId(), ruleModule, user,
@@ -329,7 +329,7 @@ int size = 0;
 
             }
 
-            List<com.loits.aml.dto.Transaction> transactionList= getTransactions(customer.getId(), tenent);
+            List<com.loits.aml.dto.Transaction> transactionList = getTransactions(customer.getId(), tenent);
 
             ChannelRisk channelRisk = this.amlChannelRiskService.calculateChannelRisk
                     (customer.getId(), ruleModule, user, tenent, transactionList);
@@ -553,7 +553,7 @@ int size = 0;
         }
     }
 
-    List<com.loits.aml.dto.Transaction> getTransactions(Long customerId, String tenent){
+    List<com.loits.aml.dto.Transaction> getTransactions(Long customerId, String tenent) {
         List<com.loits.aml.dto.Transaction> transactionList = null;
 
         //Get the transactions for customer
