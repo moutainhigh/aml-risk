@@ -613,8 +613,8 @@
                             <changeLogFile>src/main/resources/db/changelog/oracle/changelog.xml</changeLogFile>
                             <driver>oracle.jdbc.driver.OracleDriver</driver>
                             <url>jdbc:oracle:thin:@qafusionxdb_tpurgent?TNS_ADMIN=/opt/wallet/</url>
-                            <username>${DB_USER}</username>
-                            <password>${DB_PASSWORD}</password>
+                            <username>ANRKR_AML_RISK</username>
+                            <password>${COMMON_DB_PASSWORD}</password>
                         </configuration>
                         <executions>
                             <execution>
@@ -763,8 +763,8 @@
                             <changeLogFile>src/main/resources/db/changelog/oracle/changelog.xml</changeLogFile>
                             <driver>oracle.jdbc.driver.OracleDriver</driver>
                             <url>jdbc:oracle:thin:@uatfusionxdb_tpurgent?TNS_ADMIN=/opt/wallet/</url>
-                            <username>${DB_USER}</username>
-                            <password>${DB_PASSWORD}</password>
+                            <username>ANRKR_AML_RISK</username>
+                            <password>${COMMON_DB_PASSWORD}</password>
                         </configuration>
                         <executions>
                             <execution>
@@ -913,8 +913,8 @@
                             <changeLogFile>src/main/resources/db/changelog/oracle/changelog.xml</changeLogFile>
                             <driver>oracle.jdbc.driver.OracleDriver</driver>
                             <url>jdbc:oracle:thin:@prodfusionxdb_tpurgent?TNS_ADMIN=/opt/wallet/</url>
-                            <username>${DB_USER}</username>
-                            <password>${DB_PASSWORD}</password>
+                            <username>ANRKR_AML_RISK</username>
+                            <password>${COMMON_DB_PASSWORD}</password>
                         </configuration>
                         <executions>
                             <execution>
