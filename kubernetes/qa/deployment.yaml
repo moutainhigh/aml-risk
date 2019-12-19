@@ -58,7 +58,7 @@ spec:
         readinessProbe:
           failureThreshold: 3
           httpGet:
-            path: /aml-risk/actuator/health
+            path: /aml-risk/api/v1/health
             port: 8080
             scheme: HTTP
           initialDelaySeconds: 120
@@ -68,7 +68,7 @@ spec:
         livenessProbe:
           failureThreshold: 3
           httpGet:
-            path: /aml-risk/actuator/health
+            path: /aml-risk/api/v1/health
             port: 8080
             scheme: HTTP
           initialDelaySeconds: 120
