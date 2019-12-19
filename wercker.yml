@@ -1,10 +1,34 @@
 #box: openjdk:8-jdk
-box: maven:3.5.2-jdk-8
+box: maven:3.6.1-jdk-8
 
 #this is for building the code for dev2
 build-test:
   steps:
-    # maven commands to compile the code
+  
+    #this is for downloading the wallet
+    - script:
+        name: Set API_KEY file
+        code:  |
+            echo -ne "-----BEGIN RSA PRIVATE KEY-----\n" > gen-api.pem
+            echo -ne $OS_APIKEY | tr " " "\n" >> gen-api.pem
+            echo -ne "\n-----END RSA PRIVATE KEY-----\n" >> gen-api.pem
+            
+    - oci-objectstore:
+        region:       $OS_REGION
+        tenancy-ocid: $OS_TENANCY_OCID
+        user-ocid:    $OS_USER_OCID
+        fingerprint:  $OS_FINGERPRINT
+        namespace:    $OS_NAMESPACE
+        bucket-name:  $OS_WALLET_BUCKET_NAME_TEST
+        command:      get
+        api-key:      "$(cat gen-api.pem)"
+        object-name:  $OS_WALLET_OBJECT_NAME
+
+    - script:
+        name: extract wallet
+        code: unzip $OS_WALLET_OBJECT_NAME -d /opt/wallet/
+
+  # maven commands to compile the code
   #  - wercker/maven:
   #    goals: package
   #    cache_repo: true
@@ -66,7 +90,7 @@ build-test:
         name: copy binary
         code: |
            cp /pipeline/source/dev/target/aml-risk-0.0.1-SNAPSHOT.jar "$WERCKER_OUTPUT_DIR"
-           cp -R /pipeline/source/sre/oke "$WERCKER_OUTPUT_DIR"
+           cp -R /pipeline/source/kubernetes "$WERCKER_OUTPUT_DIR"
            cp -R /pipeline/source/qa "$WERCKER_OUTPUT_DIR"
     
   # Notify if the steps are failure
@@ -81,6 +105,7 @@ build-test:
 #this if to run test cases which are built by qa engineer
 build-develop:
   steps:
+
     # maven commands to compile the code
   #  - wercker/maven:
   #    goals: package
@@ -92,14 +117,14 @@ build-develop:
         name: compile code
         code: |
           cd /pipeline/source/dev
-          mvn package
+          mvn package -DskipTests=true 
     
   # Copy binary to location that gets passed along to next workflow
     - script:
         name: copy binary
         code: |
            cp /pipeline/source/dev/target/aml-risk-0.0.1-SNAPSHOT.jar "$WERCKER_OUTPUT_DIR"
-           cp -R /pipeline/source/sre/oke "$WERCKER_OUTPUT_DIR"
+           cp -R /pipeline/source/kubernetes "$WERCKER_OUTPUT_DIR"
 
    # Notify if the steps are failure
   after-steps:
@@ -112,6 +137,32 @@ build-develop:
 #this if to run test cases which are built by qa engineer
 build-uat:
   steps:
+
+    #this is for downloading the wallet
+    - script:
+        name: Set API_KEY file
+        code:  |
+            echo -ne "-----BEGIN RSA PRIVATE KEY-----\n" > gen-api.pem
+            echo -ne $OS_APIKEY | tr " " "\n" >> gen-api.pem
+            echo -ne "\n-----END RSA PRIVATE KEY-----\n" >> gen-api.pem
+            
+    - oci-objectstore:
+        region:       $OS_REGION
+        tenancy-ocid: $OS_TENANCY_OCID
+        user-ocid:    $OS_USER_OCID
+        fingerprint:  $OS_FINGERPRINT
+        namespace:    $OS_NAMESPACE
+        bucket-name:  $OS_WALLET_BUCKET_NAME_UAT
+        command:      get
+        api-key:      "$(cat gen-api.pem)"
+        object-name:  $OS_WALLET_OBJECT_NAME
+
+    - script:
+        name: extract wallet
+        code: unzip $OS_WALLET_OBJECT_NAME -d /opt/wallet/
+
+
+
     # maven commands to compile the code
   #  - wercker/maven:
   #    goals: package
@@ -123,14 +174,14 @@ build-uat:
         name: compile code
         code: |
           cd /pipeline/source/dev
-          mvn package
+          mvn package -DskipTests=true 
     
   # Copy binary to location that gets passed along to next workflow
     - script:
         name: copy binary
         code: |
            cp /pipeline/source/dev/target/aml-risk-0.0.1-SNAPSHOT.jar "$WERCKER_OUTPUT_DIR"
-           cp -R /pipeline/source/sre/oke "$WERCKER_OUTPUT_DIR"
+           cp -R /pipeline/source/kubernetes "$WERCKER_OUTPUT_DIR"
 
    # Notify if the steps are failure
   after-steps:
@@ -143,6 +194,29 @@ build-uat:
 #this if for building the code for master
 build-master:
   steps:
+
+    #this is for downloading the wallet
+    - script:
+        name: Set API_KEY file
+        code:  |
+            echo -ne "-----BEGIN RSA PRIVATE KEY-----\n" > gen-api.pem
+            echo -ne $OS_APIKEY | tr " " "\n" >> gen-api.pem
+            echo -ne "\n-----END RSA PRIVATE KEY-----\n" >> gen-api.pem
+            
+    - oci-objectstore:
+        region:       $OS_REGION
+        tenancy-ocid: $OS_TENANCY_OCID
+        user-ocid:    $OS_USER_OCID
+        fingerprint:  $OS_FINGERPRINT
+        namespace:    $OS_NAMESPACE
+        bucket-name:  $OS_WALLET_BUCKET_NAME_MASTER
+        command:      get
+        api-key:      "$(cat gen-api.pem)"
+        object-name:  $OS_WALLET_OBJECT_NAME
+
+    - script:
+        name: extract wallet
+        code: unzip $OS_WALLET_OBJECT_NAME -d /opt/wallet/  
     # maven commands to compile the code
   #  - wercker/maven:
   #    goals: package
@@ -154,14 +228,14 @@ build-master:
         name: compile code
         code: |
           cd /pipeline/source/dev
-          mvn package
+          mvn package -DskipTests=true 
 
     # Copy binary to location that gets passed along to next workflow
     - script:
         name: copy binary
         code: |
            cp /pipeline/source/dev/target/aml-risk-0.0.1-SNAPSHOT.jar "$WERCKER_OUTPUT_DIR"
-           cp -R /pipeline/source/sre/oke "$WERCKER_OUTPUT_DIR"
+           cp -R /pipeline/source/kubernetes "$WERCKER_OUTPUT_DIR"
     
   # Notify if the steps are failure
   after-steps:
@@ -251,7 +325,7 @@ push-to-registry-master:
 
 # This is a new workflow for deploy to oke dev.
 deploy-to-oke-develop:
-  box: maven:3.5.2-jdk-8
+  box: maven:3.6.1-jdk-8
   steps:
   - script:
       name: Set API_KEY file
@@ -266,35 +340,39 @@ deploy-to-oke-develop:
       user-ocid:    $OS_USER_OCID
       fingerprint:  $OS_FINGERPRINT
       namespace:    $OS_NAMESPACE
-      bucket-name:  $OS_BUCKETNAME
+      bucket-name:  $OS_BUCKETNAME_DEV
       command:      get
       api-key:      "$(cat gen-api.pem)"
-      object-name:  $OS_OBJECT_NAME_DEV
+      object-name:  $OS_OBJECT_NAME
       
   - script:
       name: Set kubeconfig variable
-      code: export KUBECONFIG=$PWD/$OS_OBJECT_NAME_DEV
+      code: export KUBECONFIG=$PWD/$OS_OBJECT_NAME
       
   - wercker/kubectl@3.9.0:
       command: get nodes
       
   - wercker/kubectl@3.9.0:
-      name: aml-risk-deployment-dev
-      command: apply -f oke/deployment-dev.yml
+      name: aml-risk-deployment
+      command: apply -f kubernetes/dev/deployment.yaml
       
   - wercker/kubectl@3.9.0:
-      name: rolling update aml-risk-deployment-dev
-  #    command: set image deployment/aml-risk-dev aml-risk-dev=fra.ocir.io/lolctech/fxapiuser/aml-risk-dev:latest
+      name: rolling update aml-risk-deployment
+  #    command: set image deployment/aml-risk aml-risk=fra.ocir.io/lolctech/fxapiuser/aml-risk:latest
   #    above real rolling update method is temporarily remove untill decide a deployment jar project versioning
-      command: patch deployment aml-risk-dev -n=fusionx-aml -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk-dev", "env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
+      command: patch deployment aml-risk -n=fusionx-aml -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk", "env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
 
   - wercker/kubectl@3.9.0:
-      name: aml-risk-service-dev
-      command: apply -f oke/service-elb-dev.yml
+      name: aml-risk-service
+      command: apply -f kubernetes/dev/service.yaml
       
   - wercker/kubectl@3.9.0:
-      name: aml-risk-virtual-service-dev
-      command: apply -f oke/virtual-service-dev.yaml
+      name: aml-risk-virtual-service
+      command: apply -f kubernetes/dev/virtualService.yaml
+
+  - wercker/kubectl@3.9.0:
+      name: aml-risk-horizontal-pod-autoscaler
+      command: apply -f kubernetes/dev/horizontalPodAutoscaler.yaml      
 
   after-steps:
     - install-packages:
@@ -305,7 +383,7 @@ deploy-to-oke-develop:
 
 # This is a new workflow for deploy to oke test.
 deploy-to-oke-test:
-  box: maven:3.5.2-jdk-8
+  box: maven:3.6.1-jdk-8
   steps:
   - script:
       name: Set API_KEY file
@@ -320,35 +398,39 @@ deploy-to-oke-test:
       user-ocid:    $OS_USER_OCID
       fingerprint:  $OS_FINGERPRINT
       namespace:    $OS_NAMESPACE
-      bucket-name:  $OS_BUCKETNAME
+      bucket-name:  $OS_BUCKETNAME_TEST
       command:      get
       api-key:      "$(cat gen-api.pem)"
-      object-name:  $OS_OBJECT_NAME_TEST
+      object-name:  $OS_OBJECT_NAME
       
   - script:
       name: Set kubeconfig variable
-      code: export KUBECONFIG=$PWD/$OS_OBJECT_NAME_TEST
+      code: export KUBECONFIG=$PWD/$OS_OBJECT_NAME
       
   - wercker/kubectl@3.9.0:
       command: get nodes
       
   - wercker/kubectl@3.9.0:
-      name: aml-risk-deployment-test
-      command: apply -f oke/deployment-test.yml
+      name: aml-risk-deployment
+      command: apply -f kubernetes/qa/deployment.yaml
       
   - wercker/kubectl@3.9.0:
-      name: rolling update aml-risk-deployment-test
-  #    command: set image deployment/aml-risk-test aml-risk-test=fra.ocir.io/lolctech/fxapiuser/aml-risk-test:latest
+      name: rolling update aml-risk-deployment
+  #    command: set image deployment/aml-risk aml-risk=fra.ocir.io/lolctech/fxapiuser/aml-risk:latest
   #    above real rolling update method is temporarily remove untill decide a deployment jar project versioning
-      command: patch deployment aml-risk-test -n=fusionx-aml -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk-test", "env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
+      command: patch deployment aml-risk -n=fusionx-aml -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk", "env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
 
   - wercker/kubectl@3.9.0:
-      name: aml-risk-service-test
-      command: apply -f oke/service-elb-test.yml
+      name: aml-risk-service
+      command: apply -f kubernetes/qa/service.yaml
 
   - wercker/kubectl@3.9.0:
-      name: aml-risk-virtual-service-test
-      command: apply -f oke/virtual-service-test.yaml
+      name: aml-risk-virtual-service
+      command: apply -f kubernetes/qa/virtualService.yaml
+
+  - wercker/kubectl@3.9.0:
+      name: aml-risk-horizontal-pod-autoscaler
+      command: apply -f kubernetes/qa/horizontalPodAutoscaler.yaml         
       
   after-steps:
     - install-packages:
@@ -359,7 +441,7 @@ deploy-to-oke-test:
 
 # This is a new workflow for deploy to oke uat.
 deploy-to-oke-uat:
-  box: maven:3.5.2-jdk-8
+  box: maven:3.6.1-jdk-8
   steps:
   - script:
       name: Set API_KEY file
@@ -367,42 +449,46 @@ deploy-to-oke-uat:
          echo -ne "-----BEGIN RSA PRIVATE KEY-----\n" > gen-api.pem
          echo -ne $OS_APIKEY | tr " " "\n" >> gen-api.pem
          echo -ne "\n-----END RSA PRIVATE KEY-----\n" >> gen-api.pem
-         
+          
   - oci-objectstore:
       region:       $OS_REGION
       tenancy-ocid: $OS_TENANCY_OCID
       user-ocid:    $OS_USER_OCID
       fingerprint:  $OS_FINGERPRINT
       namespace:    $OS_NAMESPACE
-      bucket-name:  $OS_BUCKETNAME
+      bucket-name:  $OS_BUCKETNAME_UAT
       command:      get
       api-key:      "$(cat gen-api.pem)"
-      object-name:  $OS_OBJECT_NAME_UAT
+      object-name:  $OS_OBJECT_NAME
       
   - script:
       name: Set kubeconfig variable
-      code: export KUBECONFIG=$PWD/$OS_OBJECT_NAME_UAT
+      code: export KUBECONFIG=$PWD/$OS_OBJECT_NAME
       
   - wercker/kubectl@3.9.0:
       command: get nodes
       
   - wercker/kubectl@3.9.0:
-      name: aml-risk-deployment-uat
-      command: apply -f oke/deployment-uat.yml
+      name: aml-risk-deployment
+      command: apply -f kubernetes/uat/deployment.yaml
       
   - wercker/kubectl@3.9.0:
-      name: rolling update aml-risk-deployment-uat
-  #    command: set image deployment/aml-risk-uat aml-risk-uat=fra.ocir.io/lolctech/fxapiuser/aml-risk-uat:latest
+      name: rolling update aml-risk-deployment
+  #    command: set image deployment/aml-risk aml-risk=fra.ocir.io/lolctech/fxapiuser/aml-risk:latest
   #    above real rolling update method is temporarily remove untill decide a deployment jar project versioning
-      command: patch deployment aml-risk-uat -n=fusionx-aml -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk-uat", "env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
+      command: patch deployment aml-risk -n=fusionx-aml -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk", "env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
 
   - wercker/kubectl@3.9.0:
-      name: aml-risk-service-uat
-      command: apply -f oke/service-elb-uat.yml
+      name: aml-risk-service
+      command: apply -f kubernetes/uat/service.yaml
 
   - wercker/kubectl@3.9.0:
-      name: aml-risk-virtual-service-uat
-      command: apply -f oke/virtual-service-uat.yaml
+      name: aml-risk-virtual-service
+      command: apply -f kubernetes/uat/virtualService.yaml
+
+  - wercker/kubectl@3.9.0:
+      name: aml-risk-horizontal-pod-autoscaler
+      command: apply -f kubernetes/uat/horizontalPodAutoscaler.yaml        
       
   after-steps:
     - install-packages:
@@ -413,7 +499,7 @@ deploy-to-oke-uat:
 
 # This is a new workflow for deploy to oke master.
 deploy-to-oke-master:
-  box: maven:3.5.2-jdk-8
+  box: maven:3.6.1-jdk-8
   steps:
   - script:
       name: Set API_KEY file
@@ -428,35 +514,39 @@ deploy-to-oke-master:
       user-ocid:    $OS_USER_OCID
       fingerprint:  $OS_FINGERPRINT
       namespace:    $OS_NAMESPACE
-      bucket-name:  $OS_BUCKETNAME
+      bucket-name:  $OS_BUCKETNAME_MASTER
       command:      get
       api-key:      "$(cat gen-api.pem)"
-      object-name:  $OS_OBJECT_NAME_MASTER
+      object-name:  $OS_OBJECT_NAME
       
   - script:
       name: Set kubeconfig variable
-      code: export KUBECONFIG=$PWD/$OS_OBJECT_NAME_MASTER
+      code: export KUBECONFIG=$PWD/$OS_OBJECT_NAME
       
   - wercker/kubectl@3.9.0:
       command: get nodes
       
   - wercker/kubectl@3.9.0:
-      name: aml-risk-deployment-master
-      command: apply -f oke/deployment-master.yml
+      name: aml-risk-deployment
+      command: apply -f kubernetes/prod/deployment.yaml
       
   - wercker/kubectl@3.9.0:
-      name: rolling update aml-risk-deployment-master
-  #    command: set image deployment/aml-risk-master aml-risk-master=fra.ocir.io/lolctech/fxapiuser/aml-risk-master:latest
+      name: rolling update aml-risk-deployment
+  #    command: set image deployment/aml-risk aml-risk=fra.ocir.io/lolctech/fxapiuser/aml-risk:latest
   #    above rreal rolling update method is temporarily remove untill decide a deployment jar project versioning
-      command: patch deployment aml-risk-master -n=fusionx-aml -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk-master", "env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
+      command: patch deployment aml-risk -n=fusionx-aml -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk", "env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
 
   - wercker/kubectl@3.9.0:
-      name: aml-risk-service-master
-      command: apply -f oke/service-elb-master.yml
+      name: aml-risk-service
+      command: apply -f kubernetes/prod/service.yaml
 
   - wercker/kubectl@3.9.0:
-      name: aml-risk-virtual-service-master
-      command: apply -f oke/virtual-service-master.yaml
+      name: aml-risk-virtual-service
+      command: apply -f kubernetes/prod/virtualService.yaml
+
+  - wercker/kubectl@3.9.0:
+      name: aml-risk-horizontal-pod-autoscaler
+      command: apply -f kubernetes/prod/horizontalPodAutoscaler.yaml       
       
   after-steps:
     - install-packages:

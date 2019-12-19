@@ -1,7 +1,7 @@
 databaseChangeLog:
 - changeSet:
       id: 1568978666107-3
-      author: Minoli (generated)
+      author: minolid@i360.lk (generated)
       changes:
         - createTable:
             columns:
@@ -52,17 +52,9 @@ databaseChangeLog:
             - column:
                 name: risk_text
                 type: TEXT
-            tableName: aml_risk
-
-- changeSet:
-    id: 2
-    author: minolid@i360.lk
-    changes:
-      - addColumn:
-          columns:
             - column:
                 name: risk_calculation_status
                 type: BIGINT
-          tableName: aml_risk
+            tableName: aml_risk
 
 

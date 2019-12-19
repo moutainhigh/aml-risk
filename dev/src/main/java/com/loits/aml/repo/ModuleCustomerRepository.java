@@ -29,11 +29,9 @@ public interface ModuleCustomerRepository extends PagingAndSortingRepository<Mod
 
   boolean existsByModule(Module moduleObj);
 
-  List<ModuleCustomer> findAllByModuleAndRiskCalculatedOnBetween(Module module,
-                                                                 Date from, Date to , Pageable pageable);
+  List<ModuleCustomer> findAllByModuleAndRiskCalculatedOnBetween(Module module, Date from, Date to, Pageable pageable);
 
   @Query("SELECT COUNT(c) FROM ModuleCustomer c WHERE c.module=?1 AND c.riskCalculatedOn BETWEEN ?2 AND ?3")
-  int findCountByModuleAndRiskCalculatedOnBetween(Module module,
-                                                                 Date from, Date to);
+  int findCountByModuleAndRiskCalculatedOnBetween(Module module, Date from, Date to);
 
 }

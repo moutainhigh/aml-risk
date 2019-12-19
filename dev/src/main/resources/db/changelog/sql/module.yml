@@ -39,11 +39,6 @@ databaseChangeLog:
                 nullable: false
             name: created_on
             type: DATETIME
-        - column:
-            constraints:
-                nullable: false
-            name: version
-            type: BIGINT
         tableName: module
 - changeSet:
       id: 2

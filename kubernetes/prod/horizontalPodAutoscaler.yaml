@@ -1,0 +1,13 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: aml-risk-autoscaller
+  namespace: fusionx-aml
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: aml-risk
+  minReplicas: 3
+  maxReplicas: 9
+  targetCPUUtilizationPercentage: 80

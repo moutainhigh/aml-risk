@@ -34,9 +34,6 @@ databaseChangeLog:
         - column:
             name: status
             type: TINYINT(3)
-        - column:
-            name: version
-            type: BIGINT
         tableName: geo_location
 - changeSet:
       id: 2

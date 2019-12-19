@@ -91,6 +91,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
         com.loits.aml.domain.ModuleCustomer moduleCustomer = null;
         com.loits.aml.domain.Module moduleObj = null;
         List<CustomerRiskOutput> customerRiskOutputList = new ArrayList<>();
+        int size = 0;
 
         if (!moduleRepository.existsById(module)) {
             throw new FXDefaultException("3001", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"),
@@ -131,11 +132,15 @@ public class AMLRiskServiceImpl implements AMLRiskService {
                 }
             }
 
+            size = customerRiskOutputList.size();
+
         } else {
             if (moduleCustomerRepository.existsByModule(moduleObj)) {
                 moduleCustomerList =
                         moduleCustomerRepository.findAllByModuleAndRiskCalculatedOnBetween(moduleObj,
                                 from, to, pageable);
+
+                size = moduleCustomerRepository.findCountByModuleAndRiskCalculatedOnBetween(moduleObj, from, to);
 
                 for (com.loits.aml.domain.ModuleCustomer moduleCustomer1 : moduleCustomerList) {
                     com.loits.aml.domain.Customer customer = null;
@@ -170,8 +175,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
         }
 
         return new PageImpl<CustomerRiskOutput>(customerRiskOutputList,
-                pageable,
-                customerRiskOutputList.size());
+                pageable, size);
     }
 
 
