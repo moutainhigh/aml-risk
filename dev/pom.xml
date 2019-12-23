@@ -991,13 +991,6 @@
                             </configuration>
                         </plugin>
                         <plugin>
-                            <groupId>org.springframework.boot</groupId>
-                            <artifactId>spring-boot-maven-plugin</artifactId>
-                            <configuration>
-                                <includeSystemScope>true</includeSystemScope>
-                            </configuration>
-                        </plugin>
-                        <plugin>
                             <groupId>org.eclipse.m2e</groupId>
                             <artifactId>lifecycle-mapping</artifactId>
                             <version>1.0.0</version>
