@@ -9,40 +9,40 @@ import java.util.Date;
 
 @Data
 @Entity
-@Table(name = "calc_log")
+@Table(name = "CALC_LOG")
 public class CalcLog extends BaseEntity {
 
-  @Column(name = "date")
+  @Column(name = "RUN_DATE")
   private Date date;
 
-  @Column(name = "description")
+  @Column(name = "DESCRIPTION")
   private String description;
 
-  @Column(name = "reference")
+  @Column(name = "REFERENCE")
   private String reference;
 
-  @Column(name = "ref_table")
+  @Column(name = "REF_TABLE")
   private String refTable;
 
-  @Column(name = "ref_key")
+  @Column(name = "REF_KEY")
   private String refKey;
 
-  @Column(name = "ref_value")
+  @Column(name = "REF_VALUE")
   private String refValue;
 
-  @Column(name = "criticality")
+  @Column(name = "CRITICALITY")
   private String criticality;
 
-  @Column(name = "raise_notification")
+  @Column(name = "RAISE_NOTIFICATION")
   private String raiseNotifications;
 
   @Lob
-  @Column(name = "stacktrace")
+  @Column(name = "STACKTRACE")
   private String stacktrace;
 
   @JsonIgnore
   @ManyToOne
-  @JoinColumn(name = "task_id")
+  @JoinColumn(name = "TASK_ID")
   private CalcTasks calcTask;
 
 }

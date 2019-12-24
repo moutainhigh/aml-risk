@@ -9,7 +9,7 @@ import java.util.Date;
 
 @Data
 @Entity
-@Table(name = "module_customer")
+@Table(name = "MODULE_CUSTOMER")
 public class ModuleCustomer{
 
   @Id
@@ -17,15 +17,15 @@ public class ModuleCustomer{
   private Long id;
 
   @ManyToOne(fetch = FetchType.EAGER)
-  @JoinColumn(name = "customer", referencedColumnName = "id")
+  @JoinColumn(name = "CUSTOMER", referencedColumnName = "ID")
   private Customer customer;
 
   @Basic
-  @Column(name = "module_customer_code", nullable = true, length = 45)
+  @Column(name = "MODULE_CUSTOMER_CODE", nullable = true, length = 45)
   private String moduleCustomerCode;
 
   @ManyToOne(fetch = FetchType.EAGER)
-  @JoinColumn(name = "module")
+  @JoinColumn(name = "MODULE")
   private Module module;
 
   @Temporal(TemporalType.TIMESTAMP)

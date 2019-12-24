@@ -12,26 +12,26 @@ import java.util.Date;
  */
 @Data
 @Entity
-@Table(name = "service_metadata")
+@Table(name = "SERVICE_METADATA")
 public class ServiceMetadata implements Serializable {
   private static final long serialVersionUID = 1L;
 
   @Id
-  @Column(name = "meta_key")
+  @Column(name = "META_KEY")
   private String metaKey;
 
-  @Column(name = "meta_value")
+  @Column(name = "META_VALUE")
   private String metaValue;
 
-  @Column(name = "type")
+  @Column(name = "TYPE")
   private String metaType;
 
   @Temporal(TemporalType.TIMESTAMP)
-  @Column(name = "created_date")
+  @Column(name = "CREATED_DATE")
   private Date createdDate;
 
   @Temporal(TemporalType.TIMESTAMP)
-  @Column(name = "modified_date")
+  @Column(name = "MODIFIED_DATE")
   private Date ModifiedDate;
 
 

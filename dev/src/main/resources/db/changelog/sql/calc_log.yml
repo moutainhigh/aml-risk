@@ -41,3 +41,22 @@ databaseChangeLog:
             name: task_id
             type: INT
         tableName: calc_log
+
+- changeSet:
+    id: 2
+    author: lahirub@i360.lk
+    changes:
+    - dropColumn:
+        columnName: date
+        tableName: calc_log
+
+- changeSet:
+    id: 3
+    author: lahirub@i360.lk
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: run_date
+            type: datetime
+        tableName: calc_log

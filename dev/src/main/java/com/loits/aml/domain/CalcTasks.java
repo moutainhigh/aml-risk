@@ -12,49 +12,49 @@ import java.util.List;
 
 @Data
 @Entity
-@Table(name = "calc_tasks")
+@Table(name = "CALC_TASKS")
 public class CalcTasks extends BaseEntity {
 
-  @Column(name = "s_date")
+  @Column(name = "S_DATE")
   private Date sDate;
 
-  @Column(name = "e_date")
+  @Column(name = "E_DATE")
   private Date eDate;
 
-  @Column(name = "m_date")
+  @Column(name = "M_DATE")
   private Date mDate;
 
-  @Column(name = "cron_status")
+  @Column(name = "CRON_STATUS")
   private String cronStatus;
 
-  @Column(name = "criticality")
+  @Column(name = "CRITICALITY")
   private String criticality;
 
-  @Column(name = "raise_notification")
+  @Column(name = "RAISE_NOTIFICATION")
   private String raiseNotifications;
 
-  @JoinColumn(name = "total_records")
+  @JoinColumn(name = "TOTAL_RECORDS")
   private int totalRecords;
 
-  @JoinColumn(name = "updated_count")
+  @JoinColumn(name = "UPDATED_COUNT")
   private int updatedCount;
 
-  @JoinColumn(name = "processed_count")
+  @JoinColumn(name = "PROCESSED_COUNT")
   private int processedCount;
 
-  @JoinColumn(name = "error_count")
+  @JoinColumn(name = "ERROR_COUNT")
   private int errorCount;
 
   @Lob
-  @JoinColumn(name = "meta")
+  @JoinColumn(name = "META")
   private String meta;
 
-  @Column(name = "job_id")
+  @Column(name = "JOB_ID")
   private String jobId;
 
   @JsonIgnore
   @ManyToOne
-  @JoinColumn(name = "calc_id")
+  @JoinColumn(name = "CALC_ID")
   private CalcStatus calcStatus;
 
   @OneToMany(mappedBy = "calcTask", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
