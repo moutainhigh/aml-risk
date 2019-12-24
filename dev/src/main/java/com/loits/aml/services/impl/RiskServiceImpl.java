@@ -20,9 +20,7 @@ import com.loits.aml.repo.CalcStatusRepository;
 import com.loits.aml.repo.GeoLocationRepository;
 import com.loits.aml.repo.ModuleRepository;
 import com.loits.aml.services.*;
-import com.loits.fx.aml.CustomerRisk;
-import com.loits.fx.aml.Module;
-import com.loits.fx.aml.OverallRisk;
+import com.loits.fx.aml.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -303,11 +301,30 @@ public class RiskServiceImpl implements RiskService {
             String.format(env.getProperty("aml.api.category-risk"), tenent),
             null, headers, CustomerRisk.class, riskCustomer);
 
-    //Calculate overallrisk by sending request to rule-engine
-    OverallRisk overallRisk = new OverallRisk(riskCustomer.getId(), riskCustomer.getModule(),
-            customerRisk.getCalculatedRisk(), 0.0, 0.0, customerRisk.getPepsEnabled(),
-            customerRisk.getCustomerType().getHighRisk(),
-            customerRisk.getOccupation().getHighRisk());
+    if (customerRisk.getCalculatedRisk() == null) {
+      customerRisk.setCalculatedRisk(0.0);
+    }
+
+    if (customerRisk.getPepsEnabled() == null) {
+      customerRisk.setPepsEnabled(false);
+    }
+
+    if (customerRisk.getCustomerType() == null) {
+      CustomerType customerType = new CustomerType();
+      customerType.setHighRisk(false);
+      customerRisk.setCustomerType(customerType);
+    }
+    if (customerRisk.getOccupation() == null) {
+      Occupation occupation = new Occupation();
+      occupation.setHighRisk(false);
+      customerRisk.setOccupation(occupation);
+    }
+
+      //Calculate overallrisk by sending request to rule-engine
+      OverallRisk overallRisk = new OverallRisk(riskCustomer.getId(), riskCustomer.getModule(),
+              customerRisk.getCalculatedRisk(), 0.0, 0.0, customerRisk.getPepsEnabled(),
+              customerRisk.getCustomerType().getHighRisk(),
+              customerRisk.getOccupation().getHighRisk());
 
     return kieService.getOverallRisk(overallRisk);
   }
