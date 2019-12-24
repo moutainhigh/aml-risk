@@ -14,22 +14,22 @@ import java.util.List;
 
 @Data
 @Entity
-@Table(name = "customer")
+@Table(name = "CUSTOMER")
 public class Customer implements Serializable {
 
     @Id
-    @Column(name = "id")
+    @Column(name = "ID")
     private Long id;
 
-    @Column(name = "name")
+    @Column(name = "NAME")
     private String name;
 
     @Basic
-    @Column(name = "risk")
+    @Column(name = "RISK")
     private String customerRisk;
 
     @Basic
-    @Column(name = "risk_score")
+    @Column(name = "RISK_SCORE")
     private Double customerRiskScore;
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)

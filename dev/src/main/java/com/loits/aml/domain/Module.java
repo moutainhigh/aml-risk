@@ -8,33 +8,34 @@ import java.sql.Timestamp;
 @Data
 @Entity
 public class Module {
+
     @Id
     @Basic
-    @Column(name = "code", nullable = false, length = 45)
+    @Column(name = "CODE", nullable = false, length = 45)
     private String code;
 
     @Basic
-    @Column(name = "name", nullable = true, length = 60)
+    @Column(name = "NAME", nullable = true, length = 60)
     private String name;
 
     @Basic
-    @Column(name = "type", nullable = true, length = 30)
+    @Column(name = "TYPE", nullable = true, length = 30)
     private String type;
 
     @Basic
-    @Column(name = "country", nullable = true, length = 45)
+    @Column(name = "COUNTRY", nullable = true, length = 45)
     private String country;
 
     @Basic
-    @Column(name = "created_by", nullable = true, length = 45)
+    @Column(name = "CREATED_BY", nullable = true, length = 45)
     private String createdBy;
 
     @Basic
-    @Column(name = "created_on", nullable = true)
+    @Column(name = "CREATED_ON", nullable = true)
     private Timestamp createdOn;
 
     @ManyToOne
-    @JoinColumn(name = "parent", referencedColumnName = "code")
+    @JoinColumn(name = "PARENT", referencedColumnName = "code")
     private Module parent;
 
     @Transient
