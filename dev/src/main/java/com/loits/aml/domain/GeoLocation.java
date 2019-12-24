@@ -10,33 +10,33 @@ import java.sql.Timestamp;
 
 @Data
 @Entity
-@Table(name = "geo_location")
+@Table(name = "GEO_LOCATION")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GeoLocation{
 
   @Id
   @Basic
-  @Column(name="id")
+  @Column(name="ID")
   private Long id;
 
-  @Column(name = "location_category", nullable = true, length = 45)
+  @Column(name = "LOCATION_CATEGORY", nullable = true, length = 45)
   private String locationCategory;
 
-  @Column(name = "location_key", nullable = true, length = 45)
+  @Column(name = "LOCATION_KEY", nullable = true, length = 45)
   private String locationKey;
 
-  @Column(name = "location_name", nullable = true, length = 45)
+  @Column(name = "LOCATION_NAME", nullable = true, length = 45)
   private String locationName;
 
-  @Column(name = "location_description", nullable = true, length = 45)
+  @Column(name = "LOCATION_DESCRIPTION", nullable = true, length = 45)
   private String locationDescription;
 
 
-  @Column(name = "status", nullable = true)
+  @Column(name = "STATUS", nullable = true)
   private Byte status;
 
   @ManyToOne
-  @JoinColumn(name = "parent", referencedColumnName = "id")
+  @JoinColumn(name = "PARENT", referencedColumnName = "id")
   private GeoLocation parent;
 
   @Transient

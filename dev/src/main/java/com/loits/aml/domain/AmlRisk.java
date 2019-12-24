@@ -12,51 +12,51 @@ import java.sql.Timestamp;
 public class AmlRisk extends BaseEntity {
 
     @Basic
-    @Column(name = "customer", nullable = false)
+    @Column(name = "CUSTOMER", nullable = false)
     private Long customer;
 
     @Basic
-    @Column(name = "module", nullable = true, length = 45)
+    @Column(name = "MODULE", nullable = true, length = 45)
     private String module;
 
     @Basic
-    @Column(name = "customer_risk", nullable = true, precision = 0)
+    @Column(name = "CUSTOMER_RISK", nullable = true, precision = 0)
     private Double customerRisk;
 
     @Basic
-    @Column(name = "customer_risk_id", nullable = false)
+    @Column(name = "CUSTOMER_RISK_ID", nullable = false)
     private Long customerRiskId;
 
     @Basic
-    @Column(name = "product_risk", nullable = true, precision = 0)
+    @Column(name = "PRODUCT_RISK", nullable = true, precision = 0)
     private Double productRisk;
 
     @Basic
-    @Column(name = "product_risk_id", nullable = false)
+    @Column(name = "PRODUCT_RISK_ID", nullable = false)
     private Long productRiskId;
 
     @Basic
-    @Column(name = "channel_risk", nullable = true, precision = 0)
+    @Column(name = "CHANNEL_RISK", nullable = true, precision = 0)
     private Double channelRisk;
 
     @Basic
-    @Column(name = "channel_risk_id", nullable = false)
+    @Column(name = "CHANNEL_RISK_ID", nullable = false)
     private Long channelRiskId;
 
     @Basic
-    @Column(name = "created_on", nullable = true)
+    @Column(name = "CREATED_ON", nullable = true)
     private Timestamp createdOn;
 
     @Basic
-    @Column(name = "created_by", nullable = true, length = 45)
+    @Column(name = "CREATED_BY", nullable = true, length = 45)
     private String createdBy;
 
     @Basic
-    @Column(name = "risk_rating", nullable = true, length = 45)
+    @Column(name = "RISK_RATING", nullable = true, length = 45)
     private String riskRating;
 
     @Basic
-    @Column(name = "risk", nullable = true, precision = 0)
+    @Column(name = "RISK", nullable = true, precision = 0)
     private Double risk;
 
     @Basic
@@ -67,7 +67,7 @@ public class AmlRisk extends BaseEntity {
     private String tenent;
 
     @Basic
-    @Column (name="risk_calculation_status")
+    @Column (name="RISK_CALCULATION_STATUS")
     private Long riskCalculationStatus;
 
 }

@@ -8,21 +8,21 @@ import javax.persistence.*;
 
 @Data
 @Entity
-@Table(name = "customer_identification")
+@Table(name = "CUSTOMER_IDENTIFICATION")
 public class CustomerIdentification {
 
     @Id
     @Column
     private Long id;
 
-    @Column(name = "type")
+    @Column(name = "TYPE")
     private String type;
 
-    @Column(name = "value")
+    @Column(name = "VALUE")
     private String value;
 
     @JsonIgnore
-    @JoinColumn(name = "customer", referencedColumnName = "id")
+    @JoinColumn(name = "CUSTOMER", referencedColumnName = "ID")
     @ManyToOne(fetch = FetchType.LAZY, targetEntity = Customer.class)
     private Customer customer;
 

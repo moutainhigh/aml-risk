@@ -11,34 +11,34 @@ import java.sql.Timestamp;
 
 @Data
 @Entity
-@Table(name = "kafka_error_log")
+@Table(name = "KAFKA_ERROR_LOG")
 public class KafkaErrorLog extends BaseEntity {
     @Basic
-    @Column(name = "topic", nullable = false, length = 45)
+    @Column(name = "TOPIC", nullable = false, length = 45)
     private String topic;
 
     @Basic
-    @Column(name = "data", nullable = true)
+    @Column(name = "DATA", nullable = true)
     private String data;
 
     @Basic
-    @Column(name = "type", nullable = true, length = 45)
+    @Column(name = "TYPE", nullable = true, length = 45)
     private String type;
 
     @Basic
-    @Column(name = "sub_type", nullable = true, length = 45)
+    @Column(name = "SUB_TYPE", nullable = true, length = 45)
     private String subType;
 
     @Basic
-    @Column(name = "error_message", nullable = true, length = 150)
+    @Column(name = "ERROR_MESSAGE", nullable = true, length = 150)
     private String errorMessage;
 
     @Basic
-    @Column(name = "trace", nullable = true, length = -1)
+    @Column(name = "TRACE", nullable = true, length = -1)
     private String trace;
 
     @Basic
-    @Column(name = "timestamp", nullable = false)
+    @Column(name = "TIMESTAMP", nullable = false)
     private Timestamp timestamp;
 
     public KafkaErrorLog() {

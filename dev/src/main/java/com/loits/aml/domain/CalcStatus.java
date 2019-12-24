@@ -18,49 +18,49 @@ import java.util.List;
  */
 @Data
 @Entity
-@Table(name = "calc_status")
+@Table(name = "CALC_STATUS")
 public class CalcStatus extends BaseEntity implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  @Column(name = "type")
+  @Column(name = "TYPE")
   private String type;
 
-  @Column(name = "s_date")
+  @Column(name = "S_DATE")
   private Date sDate;
 
-  @Column(name = "e_date")
+  @Column(name = "E_DATE")
   private Date eDate;
 
-  @Column(name = "m_date")
+  @Column(name = "M_DATE")
   private Date mDate;
 
-  @Column(name = "job_id")
+  @Column(name = "JOB_ID")
   private String jobId;
 
-  @Column(name = "cron_status")
+  @Column(name = "CRON_STATUS")
   private String cronStatus;
 
-  @JoinColumn(name = "module")
+  @JoinColumn(name = "MODULE")
   private String module;
 
-  @JoinColumn(name = "total_records")
+  @JoinColumn(name = "TOTAL_RECORDS")
   private int totalRecords;
 
-  @JoinColumn(name = "updated_count")
+  @JoinColumn(name = "UPDATED_COUNT")
   private int updatedCount;
 
-  @JoinColumn(name = "error_count")
+  @JoinColumn(name = "ERROR_COUNT")
   private int errorCount;
 
   @Lob
-  @JoinColumn(name = "meta")
+  @JoinColumn(name = "META")
   private String meta;
 
-  @Column(name = "criticality")
+  @Column(name = "CRITICALITY")
   private String criticality;
 
-  @Column(name = "raise_notification")
+  @Column(name = "RAISE_NOTIFICATION")
   private String raiseNotification;
 
   @OneToMany(mappedBy = "calcStatus", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
