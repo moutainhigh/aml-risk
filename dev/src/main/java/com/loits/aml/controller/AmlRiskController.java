@@ -85,12 +85,13 @@ public class AmlRiskController {
   @PostMapping(path = "/{tenent}/calculate", produces = "application/json")
   public ResponseEntity<?> calculateRiskBulk(@PathVariable(value = "tenent") String tenent,
                                              @RequestHeader(value = "user", defaultValue
-                                                     = "sysUser") String user
+                                                     = "sysUser") String user,
+                                             @RequestParam(value = "pages", required = false)  Integer pageLimit
   ) throws FXDefaultException {
 
     logger.debug(String.format("Starting to calculate risk for the customer base. " +
             "User : %s , Tenent : %s", user, tenent));
-    Resource resource = new Resource(riskService.calculateRiskForCustomerBase(user, tenent));
+    Resource resource = new Resource(riskService.calculateRiskForCustomerBase(user, tenent,pageLimit));
     return ResponseEntity.ok(resource);
   }
 }

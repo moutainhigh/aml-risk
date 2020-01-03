@@ -9,7 +9,7 @@ import java.util.concurrent.CompletableFuture;
 
 public interface RiskService {
 
-  CompletableFuture<?> calculateRiskForCustomerBase(String user, String tenent);
+  CompletableFuture<?> calculateRiskForCustomerBase(String user, String tenent,Integer pageLimit);
 
   Object calcOnboardingRisk(OnboardingCustomer customer, String user, String tenent)
           throws FXDefaultException, IOException, ClassNotFoundException;
