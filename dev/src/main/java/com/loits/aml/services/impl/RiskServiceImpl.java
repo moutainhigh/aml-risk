@@ -124,7 +124,7 @@ public class RiskServiceImpl implements RiskService {
         for (int i = 0; i < noOfAsyncTasks; i++) {
 
           // if last page, might need to make an adjustment
-          if (i == (noOfAsyncTasks-1) &&
+          if (i == (noOfAsyncTasks - 1) &&
                   totRecords > SEGMENT_SIZE) {
             int orphanRecordCount = totRecords % SEGMENT_SIZE;
             pageSize = orphanRecordCount;
@@ -320,11 +320,11 @@ public class RiskServiceImpl implements RiskService {
       customerRisk.setOccupation(occupation);
     }
 
-      //Calculate overallrisk by sending request to rule-engine
-      OverallRisk overallRisk = new OverallRisk(riskCustomer.getId(), riskCustomer.getModule(),
-              customerRisk.getCalculatedRisk(), 0.0, 0.0, customerRisk.getPepsEnabled(),
-              customerRisk.getCustomerType().getHighRisk(),
-              customerRisk.getOccupation().getHighRisk());
+    //Calculate overallrisk by sending request to rule-engine
+    OverallRisk overallRisk = new OverallRisk(riskCustomer.getId(), riskCustomer.getModule(),
+            customerRisk.getCalculatedRisk(), 0.0, 0.0, customerRisk.getPepsEnabled(),
+            customerRisk.getCustomerType().getHighRisk(),
+            customerRisk.getOccupation().getHighRisk());
 
     return kieService.getOverallRisk(overallRisk);
   }
@@ -369,15 +369,16 @@ public class RiskServiceImpl implements RiskService {
           logger.debug("Customers successfully retrieved");
         } catch (Exception e) {
           logger.debug("Customer retrieval failed with " + e.getMessage());
+          // Log error and return
+          // update calc status
+          e.printStackTrace();
+          this.calcStatusService.saveCalcLog(thisTask, "Customer risk calculation data fetch " +
+                          "failed",
+                  e.getMessage(), "CustomerId", parameters.toString(), "Customer", e);
         }
 
         if (customerList != null && !customerList.isEmpty()) {
           meta.put("fetched", customerList.size());
-
-          // update calc status
-          this.calcStatusService.saveCalcTask(thisTask, calId,
-                  String.valueOf(Thread.currentThread().getId()),
-                  CalcStatusCodes.CALC_COMPLETED, meta);
 
           // update calc status
           this.calcStatusService.saveCalcTask(thisTask, calId,
@@ -434,6 +435,9 @@ public class RiskServiceImpl implements RiskService {
                 CalcStatusCodes.CALC_ERROR, meta);
 
         e.printStackTrace();
+
+        this.calcStatusService.saveCalcLog(thisTask, "Customer risk calculation unknown error",
+                e.getMessage(), "CustomerId","", "Customer", e);
       } finally {
         // clear tenant
         TenantHolder.clear();
