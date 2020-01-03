@@ -74,7 +74,8 @@ public class RiskServiceImpl implements RiskService {
 
 
   @Override
-  public CompletableFuture<?> calculateRiskForCustomerBase(String user, String tenent) {
+  public CompletableFuture<?> calculateRiskForCustomerBase(String user, String tenent,
+                                                           Integer pageLimit) {
     return CompletableFuture.runAsync(() -> {
       try {
         TenantHolder.setTenantId(tenent);
@@ -121,7 +122,9 @@ public class RiskServiceImpl implements RiskService {
         meta.put("tpSize", THREAD_POOL_SIZE);
         meta.put("tpQueueSize", THREAD_POOL_QUEUE_SIZE);
 
-        for (int i = 0; i < noOfAsyncTasks; i++) {
+        // override loop coult based on passed in query limit param. -- mainly used for testing
+        // and debugging purposes
+        for (int i = 0; i < (pageLimit == null ? noOfAsyncTasks : pageLimit.intValue()); i++) {
 
           // if last page, might need to make an adjustment
           if (i == (noOfAsyncTasks - 1) &&
@@ -437,7 +440,7 @@ public class RiskServiceImpl implements RiskService {
         e.printStackTrace();
 
         this.calcStatusService.saveCalcLog(thisTask, "Customer risk calculation unknown error",
-                e.getMessage(), "CustomerId","", "Customer", e);
+                e.getMessage(), "CustomerId", "", "Customer", e);
       } finally {
         // clear tenant
         TenantHolder.clear();
