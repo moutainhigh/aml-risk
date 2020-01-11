@@ -30,7 +30,7 @@
         <validation-api.version>2.0.1.Final</validation-api.version>
 
         <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
+        <maven.build.timestamp.format>yyyy/MM/dd-HH:mm-a</maven.build.timestamp.format>
 
         <!-- application properties-->
         <buildNo>-1 (dev)</buildNo>
@@ -352,6 +352,15 @@
         </dependencies>
     </dependencyManagement>
 
+    <build>
+        <resources>
+            <resource>
+                <filtering>true</filtering>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
+    </build>
+
     <profiles>
         <profile>
             <id>dev</id>
@@ -365,7 +374,7 @@
             </activation>
             <properties>
                 <!--application build properties-->
-                <api.build-version>${buildNo}</api.build-version>
+                <api.build-version>${maven.build.timestamp}</api.build-version>
 
                 <!--Test properties-->
                 <app.port.name>server.port=8094</app.port.name>
