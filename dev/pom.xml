@@ -571,7 +571,7 @@
             </activation>
             <properties>
                 <!--application build properties-->
-                <api.build-version>${buildNo}</api.build-version>
+                <api.build-version>${maven.build.timestamp}</api.build-version>
 
                 <!--Test properties-->
                 <app.port.name></app.port.name>
@@ -728,7 +728,7 @@
             </activation>
             <properties>
                 <!--application build properties-->
-                <api.build-version>${buildNo}</api.build-version>
+                <api.build-version>${maven.build.timestamp}</api.build-version>
 
                 <!--Test properties-->
                 <app.port.name></app.port.name>
@@ -884,7 +884,7 @@
             </activation>
             <properties>
                 <!--application build properties-->
-                <api.build-version>${buildNo}</api.build-version>
+                <api.build-version>${maven.build.timestamp}</api.build-version>
 
                 <!--Test properties-->
                 <app.port.name></app.port.name>
