@@ -95,3 +95,4 @@ public class AmlRiskController {
     return ResponseEntity.ok(resource);
   }
 }
+
