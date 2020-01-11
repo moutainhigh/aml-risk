@@ -15,8 +15,8 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 import java.util.HashMap;
 import java.util.Map;
 
-//@EnableKafka
-//@Configuration
+@EnableKafka
+@Configuration
 public class KafkaConfiguration {
 
     @Value("${loits.fusionx.kafka.url}")
