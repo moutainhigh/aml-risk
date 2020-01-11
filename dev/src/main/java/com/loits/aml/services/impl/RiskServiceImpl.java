@@ -74,7 +74,7 @@ public class RiskServiceImpl implements RiskService {
 
 
     @Override
-    public CompletableFuture<?> calculateRiskForCustomerBase(String user, String tenent, Integer pageLimit) {
+    public CompletableFuture<?> calculateRiskForCustomerBase(String user, String tenent, Integer pageLimit,Integer recordLimit) {
         return CompletableFuture.runAsync(() -> {
             try {
                 TenantHolder.setTenantId(tenent);
@@ -123,6 +123,8 @@ public class RiskServiceImpl implements RiskService {
                     noOfAsyncTasks = pageLimit.intValue();
                     isDebugMode = true;
                     logger.debug("No of pages is overridden by environment value : No of segments : " + noOfAsyncTasks);
+
+                    pageSize = recordLimit.intValue();
                 }
 
                 logger.debug(String.format("Task parameters. No of Async Tasks : %s, Page size : %s, " +
