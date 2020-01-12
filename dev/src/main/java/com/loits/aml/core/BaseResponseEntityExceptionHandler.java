@@ -32,6 +32,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
@@ -157,13 +158,25 @@ public class BaseResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	@ExceptionHandler(Exception.class)
 	protected ResponseEntity<FXDefaultException> handleAnyError(Exception ex, WebRequest request) {
 		ex.printStackTrace();
+
 		System.out.println("in BaseResponseEntityExceptionHandler.handleAnyError()");
 		FXDefaultException fxd = new FXDefaultException("1999", "Unhandled error:" + ex.getMessage(),
 				ex.getLocalizedMessage(), new Date());
 		fxd.setStackTrace(ex.getStackTrace());
+
 		return createError("9999", "UNHANDLED_ERROR", ex, HttpStatus.INTERNAL_SERVER_ERROR, "Unhandled Error.");
 		// return new ResponseEntity<FXDefaultException>(fxd, new HttpHeaders(),
 		// HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
+
+	private ResponseEntity<FXDefaultException> createError(String errorCode, String errorShortDescription,
+														   final Exception ex, final HttpStatus httpStatus, final String logRef) {
+		final String message = Optional.of(ex.getMessage()).orElse(ex.getClass().getSimpleName());
+		FXDefaultException fxd = new FXDefaultException(errorCode, errorShortDescription, message, new Date(),
+				httpStatus);
+		fxd.setStackTrace(ex.getStackTrace());
+		return new ResponseEntity<>(fxd, httpStatus);
 	}
 
 
