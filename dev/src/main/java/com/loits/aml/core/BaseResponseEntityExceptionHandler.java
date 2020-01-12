@@ -155,14 +155,17 @@ public class BaseResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	 * @return
 	 */
 	@ExceptionHandler(Exception.class)
-	public ResponseEntity<Object> handleAllExceptions(Exception ex, WebRequest request) {
+	protected ResponseEntity<FXDefaultException> handleAnyError(Exception ex, WebRequest request) {
 		ex.printStackTrace();
-		logger.error("General error handler");
-		FXDefaultException fxDefaultException = new FXDefaultException("1999", ex.getMessage(), "Opps!, something went wrong. Please try again", new Date(), BAD_REQUEST, false);
-		ex.setStackTrace(new StackTraceElement[0]);
-		fxDefaultException.setStackTrace(ex.getStackTrace());
-		return new ResponseEntity<Object>(fxDefaultException, fxDefaultException.getHttpStatus());
+		System.out.println("in BaseResponseEntityExceptionHandler.handleAnyError()");
+		FXDefaultException fxd = new FXDefaultException("1999", "Unhandled error:" + ex.getMessage(),
+				ex.getLocalizedMessage(), new Date());
+		fxd.setStackTrace(ex.getStackTrace());
+		return createError("9999", "UNHANDLED_ERROR", ex, HttpStatus.INTERNAL_SERVER_ERROR, "Unhandled Error.");
+		// return new ResponseEntity<FXDefaultException>(fxd, new HttpHeaders(),
+		// HttpStatus.INTERNAL_SERVER_ERROR);
 	}
+
 
 	/**
 	 * Error in Req body
