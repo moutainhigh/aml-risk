@@ -48,9 +48,9 @@ public class KieServiceImpl implements KieService {
   public void init() {
     // Connect to the RedHat Server
     if (ENABLE_PAM != null && ENABLE_PAM.equalsIgnoreCase("true")) {
-      conf = KieServicesFactory.newRestConfiguration(redhatServerUrl, username, password);
-      conf.setMarshallingFormat(FORMAT);
-      kieServicesClient = KieServicesFactory.newKieServicesClient(conf);
+//      conf = KieServicesFactory.newRestConfiguration(redhatServerUrl, username, password);
+//      conf.setMarshallingFormat(FORMAT);
+//      kieServicesClient = KieServicesFactory.newKieServicesClient(conf);
     }
   }
 
