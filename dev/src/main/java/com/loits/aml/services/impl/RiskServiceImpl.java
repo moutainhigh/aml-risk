@@ -82,7 +82,7 @@ public class RiskServiceImpl implements RiskService {
             size = Integer.MAX_VALUE;
             page = 0;
         }
-        logger.debug("Batchwise risk calculation process started with start index "+size+" and end index "+page);
+        logger.debug("Batchwise risk calculation process started with size "+size+" and page number "+page);
         calculateCustomerSegmentRisk(-1l, user, tenent, page,
                 size);
         return true;
