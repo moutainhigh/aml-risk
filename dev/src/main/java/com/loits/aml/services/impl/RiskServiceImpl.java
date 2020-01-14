@@ -72,7 +72,21 @@ public class RiskServiceImpl implements RiskService {
     @Value("${aml.risk-calculation.segment-size}")
     int SEGMENT_SIZE;
 
+    @Override
+    public Object calculateRiskForBatch(String user, String tenent, Integer size, Integer page) throws FXDefaultException {
+        if(size<0 || page <0){
+            throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("INVALID_INDEX"), new Date(), HttpStatus.BAD_REQUEST, false);
+        }
 
+        if(size==null || page==null){
+            size = Integer.MAX_VALUE;
+            page = 0;
+        }
+        logger.debug("Batchwise risk calculation process started with start index "+size+" and end index "+page);
+        calculateCustomerSegmentRisk(-1l, user, tenent, page,
+                size);
+        return true;
+    }
     @Override
     public CompletableFuture<?> calculateRiskForCustomerBase(String user, String tenent, Integer pageLimit,Integer recordLimit) {
         return CompletableFuture.runAsync(() -> {
