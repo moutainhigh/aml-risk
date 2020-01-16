@@ -47,15 +47,19 @@ public class KieServiceImpl implements KieService {
   @PostConstruct
   public void init() {
     // Connect to the RedHat Server
-    if (ENABLE_PAM != null && ENABLE_PAM.equalsIgnoreCase("true")) {
-      conf = KieServicesFactory.newRestConfiguration(redhatServerUrl, username, password, 60000);
-      conf.setMarshallingFormat(FORMAT);
-      kieServicesClient = KieServicesFactory.newKieServicesClient(conf);
-    }
+//    if (ENABLE_PAM != null && ENABLE_PAM.equalsIgnoreCase("true")) {
+//      conf = KieServicesFactory.newRestConfiguration(redhatServerUrl, username, password, 60000);
+//      conf.setMarshallingFormat(FORMAT);
+//      kieServicesClient = KieServicesFactory.newKieServicesClient(conf);
+//    }
   }
 
   @Override
   public OverallRisk getOverallRisk(OverallRisk overallRisk) throws FXDefaultException {
+    conf = KieServicesFactory.newRestConfiguration(redhatServerUrl, username, password, 60000);
+    conf.setMarshallingFormat(FORMAT);
+    kieServicesClient = KieServicesFactory.newKieServicesClient(conf);
+
     OverallRisk calculatedOverallRisk = null;
     //Kie API
     System.out.println("== Sending commands to the server ==");
@@ -81,6 +85,8 @@ public class KieServiceImpl implements KieService {
       ArrayList obj = (ArrayList) response.getResult().getValue("OverallRisk");
       calculatedOverallRisk = (OverallRisk) obj.get(0);
     }
+    kieServicesClient.close();
+    conf.dispose();
     return calculatedOverallRisk;
   }
 }
