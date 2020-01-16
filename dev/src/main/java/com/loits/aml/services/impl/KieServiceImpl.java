@@ -3,6 +3,8 @@ package com.loits.aml.services.impl;
 import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.services.KieService;
 import com.loits.fx.aml.OverallRisk;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.drools.core.command.runtime.BatchExecutionCommandImpl;
 import org.drools.core.command.runtime.rule.FireAllRulesCommand;
 import org.drools.core.command.runtime.rule.InsertObjectCommand;
@@ -27,6 +29,8 @@ public class KieServiceImpl implements KieService {
   private static KieServicesConfiguration conf;
   private static KieServicesClient kieServicesClient;
   private static final MarshallingFormat FORMAT = MarshallingFormat.JSON;
+
+  Logger logger = LogManager.getLogger(KieServiceImpl.class);
 
   @Value("${loits.aml.pam.url}")
   private String redhatServerUrl;
@@ -76,17 +80,29 @@ public class KieServiceImpl implements KieService {
     command.addCommand(fireAllRulesCommand);
     command.addCommand(commandsFactory.newGetObjects("OverallRisk"));
 
-    ServiceResponse<ExecutionResults> response =
-            rulesClient.executeCommandsWithResults(containerId, command);
+    try {
 
-    if (response.getType().toString().equals("FAILURE")) {
-      new FXDefaultException();
-    } else {
-      ArrayList obj = (ArrayList) response.getResult().getValue("OverallRisk");
-      calculatedOverallRisk = (OverallRisk) obj.get(0);
+      logger.debug("Sending component risks to the rule engine to calculate Overall Risk");
+      //Sending request to the rule engine to calculate overall risk
+      ServiceResponse<ExecutionResults> response =
+              rulesClient.executeCommandsWithResults(containerId, command);
+
+      if (response.getType().toString().equals("FAILURE")) {
+        logger.debug("Overall Risk calculation failed from the rule engine for customer " + overallRisk.getCustomerCode() + " with message " + response.getMsg());
+        return overallRisk;
+      } else {
+        logger.debug("Overall Risk calculation Successful from the rule engine");
+        ArrayList obj = (ArrayList) response.getResult().getValue("OverallRisk");
+        calculatedOverallRisk = (OverallRisk) obj.get(0);
+      }
+    }catch (Exception e){
+      e.printStackTrace();
+      logger.debug("Unable to get response from the rule engine");
+      calculatedOverallRisk = overallRisk;
+    }finally {
+      kieServicesClient.close();
+      conf.dispose();
+      return calculatedOverallRisk;
     }
-    kieServicesClient.close();
-    conf.dispose();
-    return calculatedOverallRisk;
   }
 }
