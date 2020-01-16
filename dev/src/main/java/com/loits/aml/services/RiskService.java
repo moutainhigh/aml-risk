@@ -15,4 +15,5 @@ public interface RiskService {
           throws FXDefaultException, IOException, ClassNotFoundException;
 
 
+    Object calculateRiskForBatch(String user, String tenent, Integer size, Integer page) throws FXDefaultException;
 }

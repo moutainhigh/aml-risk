@@ -95,5 +95,17 @@ public class AmlRiskController {
     Resource resource = new Resource(riskService.calculateRiskForCustomerBase(user, tenent,pageLimit, recordLimit));
     return ResponseEntity.ok(resource);
   }
+
+  @GetMapping(path = "/{tenent}/calculate-batch", produces = "application/json")
+  public ResponseEntity<?> calculateRiskBatch(@PathVariable(value = "tenent") String tenent,
+                                               @RequestHeader(value = "user", defaultValue =
+                                                       "sysUser") String user,
+                                              @RequestParam(value = "size", required = false) Integer size,
+                                              @RequestParam(value = "page", required = false) Integer page
+
+                                              ) throws FXDefaultException {
+    Resource resource = new Resource(riskService.calculateRiskForBatch(user, tenent, size, page));
+    return ResponseEntity.ok(resource);
+  }
 }
 
