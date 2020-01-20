@@ -288,138 +288,144 @@ public class AMLRiskServiceImpl implements AMLRiskService {
 
     String module = "lending";//TODO customer.getCustomerModule().getModule();
     Module ruleModule = null;
-    if (!moduleRepository.existsById(module)) {
-      logger.debug("Failure in assigning module to customer in risk calculation");
-    } else {
-      com.loits.aml.domain.Module dbModule = moduleRepository.findByCode(module).get();
-      ruleModule = new Module();
-      ruleModule.setCode(dbModule.getCode());
-      if (dbModule.getParent() != null) {
-        Module ruleModuleParent = new Module();
-        ruleModuleParent.setCode(dbModule.getParent().getCode());
-        ruleModule.setParent(ruleModuleParent);
-      }
-      CustomerRisk customerRisk = null;
-
-      // calculate customer category risk
-      Boolean calculateCustRisk;
-      if (customer.getRiskCalculationStatus() == null
-              || customer.getRiskCalculationStatus() == 0
-              || customer.getRiskCalculationStatus() != customer.getVersion()) {
-        calculateCustRisk = true;
+    try {
+      if (!moduleRepository.existsById(module)) {
+        logger.debug("Failure in assigning module to customer in risk calculation");
       } else {
-        calculateCustRisk = false;
-      }
+        com.loits.aml.domain.Module dbModule = moduleRepository.findByCode(module).get();
+        ruleModule = new Module();
+        ruleModule.setCode(dbModule.getCode());
+        if (dbModule.getParent() != null) {
+          Module ruleModuleParent = new Module();
+          ruleModuleParent.setCode(dbModule.getParent().getCode());
+          ruleModule.setParent(ruleModuleParent);
+        }
+        CustomerRisk customerRisk = null;
 
-      if (calculateCustRisk || !amlRiskRepository.existsByCustomer(customer.getId())) {
-        customerRisk = this.amlCustomerRiskService.calculateCustomerRisk(customer, ruleModule,
-                user, tenent);
-      } else {
-        AmlRisk amlRisk =
-                amlRiskRepository.findTopByCustomerOrderByCreatedOnDesc(customer.getId()).get();
-        customerRisk = new CustomerRisk();
-        customerRisk.setOccupation(new Occupation());
-        customerRisk.setCustomerType(new CustomerType());
-        customerRisk.setCalculatedRisk(amlRisk.getCustomerRisk());
-        customerRisk.setId(amlRisk.getCustomerRiskId());
-        if (amlRisk.getRiskText() != null) {
-          if (amlRisk.getRiskText().contains("A politically exposed person")) {
-            customerRisk.setPepsEnabled(true);
-          }
-          customerRisk.setCustomerType(new CustomerType());
+        // calculate customer category risk
+        Boolean calculateCustRisk;
+        if (customer.getRiskCalculationStatus() == null
+                || customer.getRiskCalculationStatus() == 0
+                || customer.getRiskCalculationStatus() != customer.getVersion()) {
+          calculateCustRisk = true;
+        } else {
+          calculateCustRisk = false;
+        }
+
+        if (calculateCustRisk || !amlRiskRepository.existsByCustomer(customer.getId())) {
+          customerRisk = this.amlCustomerRiskService.calculateCustomerRisk(customer, ruleModule,
+                  user, tenent);
+        } else {
+          AmlRisk amlRisk =
+                  amlRiskRepository.findTopByCustomerOrderByCreatedOnDesc(customer.getId()).get();
+          customerRisk = new CustomerRisk();
           customerRisk.setOccupation(new Occupation());
-          if (amlRisk.getRiskText().contains("customer-type")) {
-            customerRisk.getCustomerType().setHighRisk(true);
+          customerRisk.setCustomerType(new CustomerType());
+          customerRisk.setCalculatedRisk(amlRisk.getCustomerRisk());
+          customerRisk.setId(amlRisk.getCustomerRiskId());
+          if (amlRisk.getRiskText() != null) {
+            if (amlRisk.getRiskText().contains("A politically exposed person")) {
+              customerRisk.setPepsEnabled(true);
+            }
+            customerRisk.setCustomerType(new CustomerType());
+            customerRisk.setOccupation(new Occupation());
+            if (amlRisk.getRiskText().contains("customer-type")) {
+              customerRisk.getCustomerType().setHighRisk(true);
+            }
+
+            if (amlRisk.getRiskText().contains("occupation")) {
+              customerRisk.getOccupation().setHighRisk(true);
+            }
+          } else {
+            customerRisk.setPepsEnabled(false);
+            customerRisk.getCustomerType().setHighRisk(false);
+            customerRisk.getOccupation().setHighRisk(false);
           }
 
-          if (amlRisk.getRiskText().contains("occupation")) {
-            customerRisk.getOccupation().setHighRisk(true);
+        }
+
+
+        List<com.loits.aml.dto.Transaction> transactionList = null;
+        if (riskCalcParams.isCalcChannelRisk() || riskCalcParams.isCalcProductRisk()) {
+          transactionList = getTransactions(customer.getId(),
+                  tenent);
+        }
+
+
+        ChannelRisk channelRisk = null;
+        if (riskCalcParams.isCalcChannelRisk()) {
+          // Channel risk
+          channelRisk = this.amlChannelRiskService.calculateChannelRisk
+                  (customer.getId(), ruleModule, user, tenent, transactionList);
+        } else {
+          logger.debug("Channel risk calculation skipped with task params");
+        }
+
+        ProductRisk productRisk = null;
+        if (riskCalcParams.isCalcProductRisk()) {
+          // Product risk
+          productRisk = this.amlProductRiskService.calculateProductRisk
+                  (customer.getId(), ruleModule, user, tenent, transactionList);
+        } else {
+          logger.debug("Product risk calculation skipped with task params");
+        }
+
+        if (channelRisk == null)
+          channelRisk = new ChannelRisk();
+        if (productRisk == null)
+          productRisk = new ProductRisk();
+
+
+        if (customerRisk.getCalculatedRisk() != null) {
+          if (channelRisk.getCalculatedRisk() == null) {
+            channelRisk.setCalculatedRisk(0.0);
+          }
+          if (productRisk.getCalculatedRisk() == null) {
+            productRisk.setCalculatedRisk(0.0);
+          }
+          if (customerRisk.getPepsEnabled() == null) {
+            customerRisk.setPepsEnabled(false);
+          }
+
+          if (customerRisk.getCustomerType() == null) {
+            CustomerType customerType = new CustomerType();
+            customerType.setHighRisk(false);
+            customerRisk.setCustomerType(customerType);
+          }
+          if (customerRisk.getOccupation() == null) {
+            Occupation occupation = new Occupation();
+            occupation.setHighRisk(false);
+            customerRisk.setOccupation(occupation);
+          }
+
+          OverallRisk overallRisk = new OverallRisk(customer.getId(), ruleModule,
+                  customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(),
+                  channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(),
+                  customerRisk.getCustomerType().getHighRisk(),
+                  customerRisk.getOccupation().getHighRisk());
+
+          overallRisk = kieService.getOverallRisk(overallRisk);
+
+          //Save AMLRISK record
+          AmlRisk risk = saveRiskRecord(overallRisk, customerRisk.getId(), productRisk.getId(),
+                  channelRisk.getId(), tenent, user, customer.getVersion(), module);
+
+          if (risk != null) {
+            logger.debug("New risk has been calculated for given customer");
+            return true;
+          } else {
+            logger.debug("New risk has been calculated for given customer");
           }
         } else {
-          customerRisk.setPepsEnabled(false);
-          customerRisk.getCustomerType().setHighRisk(false);
-          customerRisk.getOccupation().setHighRisk(false);
+          logger.debug("Failure in calculating risk for Customer with id " + customer.getId());
         }
-
       }
-
-
-      List<com.loits.aml.dto.Transaction> transactionList = null;
-      if (riskCalcParams.isCalcChannelRisk() || riskCalcParams.isCalcProductRisk()) {
-        transactionList = getTransactions(customer.getId(),
-                tenent);
-      }
-
-
-      ChannelRisk channelRisk = null;
-      if (riskCalcParams.isCalcChannelRisk()) {
-        // Channel risk
-        channelRisk = this.amlChannelRiskService.calculateChannelRisk
-                (customer.getId(), ruleModule, user, tenent, transactionList);
-      } else {
-        logger.debug("Channel risk calculation skipped with task params");
-      }
-
-      ProductRisk productRisk = null;
-      if (riskCalcParams.isCalcProductRisk()) {
-        // Product risk
-        productRisk = this.amlProductRiskService.calculateProductRisk
-                (customer.getId(), ruleModule, user, tenent, transactionList);
-      } else {
-        logger.debug("Product risk calculation skipped with task params");
-      }
-
-      if (channelRisk == null)
-        channelRisk = new ChannelRisk();
-      if (productRisk == null)
-        productRisk = new ProductRisk();
-
-
-      if (customerRisk.getCalculatedRisk() != null) {
-        if (channelRisk.getCalculatedRisk() == null) {
-          channelRisk.setCalculatedRisk(0.0);
-        }
-        if (productRisk.getCalculatedRisk() == null) {
-          productRisk.setCalculatedRisk(0.0);
-        }
-        if (customerRisk.getPepsEnabled() == null) {
-          customerRisk.setPepsEnabled(false);
-        }
-
-        if (customerRisk.getCustomerType() == null) {
-          CustomerType customerType = new CustomerType();
-          customerType.setHighRisk(false);
-          customerRisk.setCustomerType(customerType);
-        }
-        if (customerRisk.getOccupation() == null) {
-          Occupation occupation = new Occupation();
-          occupation.setHighRisk(false);
-          customerRisk.setOccupation(occupation);
-        }
-
-        OverallRisk overallRisk = new OverallRisk(customer.getId(), ruleModule,
-                customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(),
-                channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(),
-                customerRisk.getCustomerType().getHighRisk(),
-                customerRisk.getOccupation().getHighRisk());
-
-        overallRisk = kieService.getOverallRisk(overallRisk);
-
-        //Save AMLRISK record
-        AmlRisk risk = saveRiskRecord(overallRisk, customerRisk.getId(), productRisk.getId(),
-                channelRisk.getId(), tenent, user, customer.getVersion(), module);
-
-        if (risk != null) {
-          logger.debug("New risk has been calculated for given customer");
-          return true;
-        } else {
-          logger.debug("New risk has been calculated for given customer");
-        }
-      } else {
-        logger.debug("Failure in calculating risk for Customer with id " + customer.getId());
-      }
+      return false;
+    } catch (Exception e) {
+      logger.error("Risk Calculation failed");
+      e.printStackTrace();
+      throw e;
     }
-    return false;
   }
 
   AmlRisk saveRiskRecord(OverallRisk overallRisk, Long customerRiskId,
