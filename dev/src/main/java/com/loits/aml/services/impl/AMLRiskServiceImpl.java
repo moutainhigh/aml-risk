@@ -344,8 +344,11 @@ public class AMLRiskServiceImpl implements AMLRiskService {
       }
 
 
-      List<com.loits.aml.dto.Transaction> transactionList = getTransactions(customer.getId(),
-              tenent);
+      List<com.loits.aml.dto.Transaction> transactionList = null;
+      if (riskCalcParams.isCalcChannelRisk() || riskCalcParams.isCalcProductRisk()) {
+        transactionList = getTransactions(customer.getId(),
+                tenent);
+      }
 
 
       ChannelRisk channelRisk = null;
@@ -353,6 +356,8 @@ public class AMLRiskServiceImpl implements AMLRiskService {
         // Channel risk
         channelRisk = this.amlChannelRiskService.calculateChannelRisk
                 (customer.getId(), ruleModule, user, tenent, transactionList);
+      } else {
+        logger.debug("Channel risk calculation skipped with task params");
       }
 
       ProductRisk productRisk = null;
@@ -360,6 +365,8 @@ public class AMLRiskServiceImpl implements AMLRiskService {
         // Product risk
         productRisk = this.amlProductRiskService.calculateProductRisk
                 (customer.getId(), ruleModule, user, tenent, transactionList);
+      } else {
+        logger.debug("Product risk calculation skipped with task params");
       }
 
       if (channelRisk == null)
