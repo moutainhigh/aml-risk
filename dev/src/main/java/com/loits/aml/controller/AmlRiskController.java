@@ -87,7 +87,7 @@ public class AmlRiskController {
   public ResponseEntity<?> calculateRiskBulk(@PathVariable(value = "tenent") String tenent,
                                              @RequestHeader(value = "user", defaultValue
                                                      = "sysUser") String user,
-                                             @RequestParam RiskCalcParams riskCalcParams) throws FXDefaultException {
+                                              RiskCalcParams riskCalcParams) throws FXDefaultException {
 
     logger.debug(String.format("Starting to calculate risk for the customer base. " +
             "User : %s , Tenent : %s, Params : %s", user, tenent, riskCalcParams.toString()));
@@ -100,7 +100,7 @@ public class AmlRiskController {
   public ResponseEntity<?> calculateRiskBatch(@PathVariable(value = "tenent") String tenent,
                                               @RequestHeader(value = "user", defaultValue =
                                                       "sysUser") String user,
-                                              @RequestParam RiskCalcParams riskCalcParams
+                                              RiskCalcParams riskCalcParams
   ) throws FXDefaultException {
     logger.debug(String.format("Starting to calculate risk for the customer base in basic looping" +
             " mode. User : %s , Tenent : %s, Params : %s", user, tenent,
