@@ -86,7 +86,7 @@ public class KieServiceImpl implements KieService {
               rulesClient.executeCommandsWithResults(containerId, command);
 
       if (!KieServiceResponse.ResponseType.SUCCESS.equals(response.getType())) {
-        logger.debug("Overall Risk calculation failed from the rule engine for customer " + overallRisk.getCustomerCode() + " with message " + response.getMsg());
+        logger.debug("Overall Risk calculation failed from the rulRisk calculation for pagee engine for customer " + overallRisk.getCustomerCode() + " with message " + response.getMsg());
         return overallRisk;
       } else {
         logger.debug("Overall Risk calculation Successful from the rule engine");
