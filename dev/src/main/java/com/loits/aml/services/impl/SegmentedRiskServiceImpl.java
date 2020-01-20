@@ -3,25 +3,16 @@ package com.loits.aml.services.impl;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loits.aml.commons.CalcStatusCodes;
-import com.loits.aml.commons.CalcTypes;
 import com.loits.aml.commons.RiskCalcParams;
-import com.loits.aml.config.NullAwareBeanUtilsBean;
-import com.loits.aml.config.RestResponsePage;
 import com.loits.aml.config.Translator;
 import com.loits.aml.core.FXDefaultException;
-import com.loits.aml.domain.CalcStatus;
 import com.loits.aml.domain.CalcTasks;
-import com.loits.aml.domain.GeoLocation;
-import com.loits.aml.dto.Address;
 import com.loits.aml.dto.Customer;
-import com.loits.aml.dto.OnboardingCustomer;
-import com.loits.aml.dto.RiskCustomer;
 import com.loits.aml.mt.TenantHolder;
 import com.loits.aml.repo.CalcStatusRepository;
 import com.loits.aml.repo.GeoLocationRepository;
 import com.loits.aml.repo.ModuleRepository;
 import com.loits.aml.services.*;
-import com.loits.fx.aml.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,9 +21,9 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -73,16 +64,16 @@ public class SegmentedRiskServiceImpl implements SegmentedRiskService {
   @Value("${aml.risk-calculation.segment-size}")
   int SEGMENT_SIZE;
 
-  @Autowired
+  @Override
   public CompletableFuture<?> calculateCustomerSegmentRisk(RiskCalcParams riskCalcParams,
-                                                            Long calId, String user, String tenent,
-                                                            int page,
-                                                            int size) {
+                                                           Long calId, String user, String tenent,
+                                                           int page,
+                                                           int size) {
     return CompletableFuture.runAsync(() -> {
 
       try {
         TenantHolder.setTenantId(tenent);
-        calculate(riskCalcParams,calId, user, tenent, page, size);
+        calculate(riskCalcParams, calId, user, tenent, page, size);
       } catch (Exception e) {
         e.printStackTrace();
       } finally {
@@ -113,11 +104,11 @@ public class SegmentedRiskServiceImpl implements SegmentedRiskService {
     logger.debug("Batchwise risk calculation process started with size " + size + " and page " +
             "number " + page + ".Tenent " + tenent);
 
-    calculate(riskCalcParams,-1l, user, tenent, page, size);
+    calculate(riskCalcParams, -1l, user, tenent, page, size);
     return true;
   }
 
-  private void calculate(RiskCalcParams riskCalcParams,Long calId, String user, String tenent,
+  private void calculate(RiskCalcParams riskCalcParams, Long calId, String user, String tenent,
                          int page,
                          int size) {
     HashMap<String, Object> meta = new HashMap<>();
