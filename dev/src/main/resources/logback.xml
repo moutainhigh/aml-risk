@@ -17,6 +17,10 @@
         <appender-ref ref="stdout"/>
     </logger>
 
+    <logger name="org.kie.server.client.balancer" level="debug" additivity="false">
+        <appender-ref ref="stdout"/>
+    </logger>
+
     <root level="INFO">
         <appender-ref ref="stdout"/>
     </root>

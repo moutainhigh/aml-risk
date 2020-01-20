@@ -32,6 +32,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
@@ -155,14 +156,29 @@ public class BaseResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	 * @return
 	 */
 	@ExceptionHandler(Exception.class)
-	public ResponseEntity<Object> handleAllExceptions(Exception ex, WebRequest request) {
+	protected ResponseEntity<FXDefaultException> handleAnyError(Exception ex, WebRequest request) {
 		ex.printStackTrace();
-		logger.error("General error handler");
-		FXDefaultException fxDefaultException = new FXDefaultException("1999", ex.getMessage(), "Opps!, something went wrong. Please try again", new Date(), BAD_REQUEST, false);
-		ex.setStackTrace(new StackTraceElement[0]);
-		fxDefaultException.setStackTrace(ex.getStackTrace());
-		return new ResponseEntity<Object>(fxDefaultException, fxDefaultException.getHttpStatus());
+
+		System.out.println("in BaseResponseEntityExceptionHandler.handleAnyError()");
+		FXDefaultException fxd = new FXDefaultException("1999", "Unhandled error:" + ex.getMessage(),
+				ex.getLocalizedMessage(), new Date());
+		fxd.setStackTrace(ex.getStackTrace());
+
+		return createError("9999", "UNHANDLED_ERROR", ex, HttpStatus.INTERNAL_SERVER_ERROR, "Unhandled Error.");
+		// return new ResponseEntity<FXDefaultException>(fxd, new HttpHeaders(),
+		// HttpStatus.INTERNAL_SERVER_ERROR);
 	}
+
+
+	private ResponseEntity<FXDefaultException> createError(String errorCode, String errorShortDescription,
+														   final Exception ex, final HttpStatus httpStatus, final String logRef) {
+		final String message = Optional.of(ex.getMessage()).orElse(ex.getClass().getSimpleName());
+		FXDefaultException fxd = new FXDefaultException(errorCode, errorShortDescription, message, new Date(),
+				httpStatus);
+		fxd.setStackTrace(ex.getStackTrace());
+		return new ResponseEntity<>(fxd, httpStatus);
+	}
+
 
 	/**
 	 * Error in Req body

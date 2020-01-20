@@ -7,6 +7,8 @@ import com.loits.aml.mt.TenantIdentifierResolver;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.dialect.MySQL5Dialect;
+import org.hibernate.dialect.Oracle12cDialect;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateProperties;
@@ -94,7 +96,11 @@ public class JpaConfig {
         properties.put(AvailableSettings.MULTI_TENANT, MultiTenancyStrategy.DATABASE);
         properties.put(AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER, multiTenantConnectionProvider);
         properties.put(AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER, currentTenantIdentifierResolver);
-        properties.put(AvailableSettings.DIALECT, "org.hibernate.dialect.Oracle12cDialect");
+
+        if (multiTenantProperties.getDataSources().get(0).getDriverClassName().equalsIgnoreCase("oracle.jdbc.driver.OracleDriver"))
+            properties.put(AvailableSettings.DIALECT, Oracle12cDialect.class.getName());
+        else
+            properties.put(AvailableSettings.DIALECT, MySQL5Dialect.class.getName());
 
         em.setJpaPropertyMap(properties);
 

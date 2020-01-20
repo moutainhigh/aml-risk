@@ -1,5 +1,6 @@
 package com.loits.aml.services;
 
+import com.loits.aml.commons.RiskCalcParams;
 import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.dto.Customer;
 import com.loits.fx.aml.OverallRisk;
@@ -18,6 +19,7 @@ public interface AMLRiskService {
   OverallRisk calculateRiskByCustomer(String user, String tenent, Long id)
           throws FXDefaultException;
 
-  boolean runRiskCronJob(Boolean calculateCustRisk, String user, String tenent,
+  boolean runRiskCronJob(RiskCalcParams riskCalcParams,String user,
+                         String tenent,
                          Customer customer) throws FXDefaultException;
 }
