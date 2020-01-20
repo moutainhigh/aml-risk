@@ -358,7 +358,6 @@
             </resource>
         </resources>
     </build>
-
     <profiles>
         <profile>
             <id>dev</id>
@@ -369,7 +368,7 @@
                     <name>env.CONF_ENV_NAME</name>
                     <value>dev</value>
                 </property>
-            </activation>api.build-version
+            </activation>
 
             <properties>
                 <!--application build properties-->
