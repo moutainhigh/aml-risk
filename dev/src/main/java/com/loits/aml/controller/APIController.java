@@ -34,7 +34,7 @@ public class APIController {
    */
   @GetMapping(path = "/{tenent}", produces = "application/json")
   public @ResponseBody
-  ResponseEntity<?> getChannels(@PathVariable String tenent,
+  ResponseEntity<?> getAPIStatus(@PathVariable String tenent,
                                 @RequestParam(value = "echo", required = false) String echo) throws FXDefaultException {
 
     if (echo !=null ) {

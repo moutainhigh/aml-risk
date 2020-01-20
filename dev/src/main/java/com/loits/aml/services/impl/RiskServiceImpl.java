@@ -62,6 +62,9 @@ public class RiskServiceImpl implements RiskService {
   CalcStatusRepository calcStatusRepository;
 
   @Autowired
+  SegmentedRiskService segmentedRiskService;
+
+  @Autowired
   HTTPService httpService;
 
   @Value("${loits.tp.size}")
@@ -73,28 +76,6 @@ public class RiskServiceImpl implements RiskService {
   @Value("${aml.risk-calculation.segment-size}")
   int SEGMENT_SIZE;
 
-  @Override
-  public Object calculateRiskForBatch(String user, String tenent, RiskCalcParams riskCalcParams) throws FXDefaultException {
-    if (riskCalcParams.getPageLimit().intValue() < 0 || riskCalcParams.getRecordLimit().intValue() < 0) {
-      throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("INVALID_INDEX"),
-              new Date(), HttpStatus.BAD_REQUEST, false);
-    }
-
-    int size = 0, page = 0;
-
-    if (riskCalcParams.getPageLimit().intValue() == -1) {
-      size = Integer.MAX_VALUE;
-    } else {
-      size = riskCalcParams.getRecordLimit().intValue();
-      page = riskCalcParams.getPageLimit().intValue();
-    }
-
-    logger.debug("Batchwise risk calculation process started with size " + size + " and page " +
-            "number " + page + ".Tenent " + tenent);
-
-    calculate(riskCalcParams,-1l, user, tenent, page, size);
-    return true;
-  }
 
   @Override
   public CompletableFuture<?> calculateRiskForCustomerBase(String user, String tenent,
@@ -171,7 +152,7 @@ public class RiskServiceImpl implements RiskService {
           }
 
           // send customer fetch -- tenant, page, size
-          futuresList.add(this.calculateCustomerSegmentRisk(riskCalcParams,
+          futuresList.add(this.segmentedRiskService.calculateCustomerSegmentRisk(riskCalcParams,
                   thisCalc.getId(), user, tenent, i,
                   pageSize));
         }
@@ -369,24 +350,6 @@ public class RiskServiceImpl implements RiskService {
     return kieService.getOverallRisk(overallRisk);
   }
 
-  private CompletableFuture<?> calculateCustomerSegmentRisk(RiskCalcParams riskCalcParams,
-                                                            Long calId, String user, String tenent,
-                                                            int page,
-                                                            int size) {
-    return CompletableFuture.runAsync(() -> {
-
-      try {
-        TenantHolder.setTenantId(tenent);
-        calculate(riskCalcParams,calId, user, tenent, page, size);
-      } catch (Exception e) {
-        e.printStackTrace();
-      } finally {
-        // clear tenant
-        TenantHolder.clear();
-      }
-
-    });
-  }
 
   private void calculate(RiskCalcParams riskCalcParams,Long calId, String user, String tenent,
                          int page,
