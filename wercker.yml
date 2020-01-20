@@ -1,5 +1,6 @@
 #box: openjdk:8-jdk
 box: maven:3.6.1-jdk-8
+no-response-timeout: 10
 
 #this is for building the code for dev2
 build-test:
@@ -349,30 +350,34 @@ deploy-to-oke-develop:
       name: Set kubeconfig variable
       code: export KUBECONFIG=$PWD/$OS_OBJECT_NAME
       
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       command: get nodes
       
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       name: aml-risk-deployment
       command: apply -f kubernetes/dev/deployment.yaml
       
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       name: rolling update aml-risk-deployment
   #    command: set image deployment/aml-risk aml-risk=fra.ocir.io/lolctech/fxapiuser/aml-risk:latest
   #    above real rolling update method is temporarily remove untill decide a deployment jar project versioning
       command: patch deployment aml-risk -n=fusionx-aml -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk", "env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
 
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       name: aml-risk-service
       command: apply -f kubernetes/dev/service.yaml
       
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       name: aml-risk-virtual-service
       command: apply -f kubernetes/dev/virtualService.yaml
 
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       name: aml-risk-horizontal-pod-autoscaler
       command: apply -f kubernetes/dev/horizontalPodAutoscaler.yaml      
+
+  - wercker/kubectl@3.14.0:
+      name: check deployment status
+      command: rollout status deployment/aml-risk -n fusionx-aml
 
   after-steps:
     - install-packages:
@@ -407,31 +412,35 @@ deploy-to-oke-test:
       name: Set kubeconfig variable
       code: export KUBECONFIG=$PWD/$OS_OBJECT_NAME
       
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       command: get nodes
       
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       name: aml-risk-deployment
       command: apply -f kubernetes/qa/deployment.yaml
       
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       name: rolling update aml-risk-deployment
   #    command: set image deployment/aml-risk aml-risk=fra.ocir.io/lolctech/fxapiuser/aml-risk:latest
   #    above real rolling update method is temporarily remove untill decide a deployment jar project versioning
       command: patch deployment aml-risk -n=fusionx-aml -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk", "env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
 
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       name: aml-risk-service
       command: apply -f kubernetes/qa/service.yaml
 
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       name: aml-risk-virtual-service
       command: apply -f kubernetes/qa/virtualService.yaml
 
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       name: aml-risk-horizontal-pod-autoscaler
       command: apply -f kubernetes/qa/horizontalPodAutoscaler.yaml         
-      
+
+  - wercker/kubectl@3.14.0:
+      name: check deployment status
+      command: rollout status deployment/aml-risk -n fusionx-aml
+
   after-steps:
     - install-packages:
         packages: ruby
@@ -465,31 +474,35 @@ deploy-to-oke-uat:
       name: Set kubeconfig variable
       code: export KUBECONFIG=$PWD/$OS_OBJECT_NAME
       
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       command: get nodes
       
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       name: aml-risk-deployment
       command: apply -f kubernetes/uat/deployment.yaml
       
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       name: rolling update aml-risk-deployment
   #    command: set image deployment/aml-risk aml-risk=fra.ocir.io/lolctech/fxapiuser/aml-risk:latest
   #    above real rolling update method is temporarily remove untill decide a deployment jar project versioning
       command: patch deployment aml-risk -n=fusionx-aml -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk", "env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
 
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       name: aml-risk-service
       command: apply -f kubernetes/uat/service.yaml
 
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       name: aml-risk-virtual-service
       command: apply -f kubernetes/uat/virtualService.yaml
 
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       name: aml-risk-horizontal-pod-autoscaler
       command: apply -f kubernetes/uat/horizontalPodAutoscaler.yaml        
-      
+
+  - wercker/kubectl@3.14.0:
+      name: check deployment status
+      command: rollout status deployment/aml-risk -n fusionx-aml
+
   after-steps:
     - install-packages:
         packages: ruby
@@ -523,31 +536,35 @@ deploy-to-oke-master:
       name: Set kubeconfig variable
       code: export KUBECONFIG=$PWD/$OS_OBJECT_NAME
       
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       command: get nodes
       
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       name: aml-risk-deployment
       command: apply -f kubernetes/prod/deployment.yaml
       
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       name: rolling update aml-risk-deployment
   #    command: set image deployment/aml-risk aml-risk=fra.ocir.io/lolctech/fxapiuser/aml-risk:latest
   #    above rreal rolling update method is temporarily remove untill decide a deployment jar project versioning
       command: patch deployment aml-risk -n=fusionx-aml -p '{"spec":{"template":{"spec":{"containers":[{"name":"aml-risk", "env":[{"name":"LAST_MANUAL_RESTART","value":"'$(date +%s)'"}]}]}}}}'
-
-  - wercker/kubectl@3.9.0:
+      
+  - wercker/kubectl@3.14.0:
       name: aml-risk-service
       command: apply -f kubernetes/prod/service.yaml
 
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       name: aml-risk-virtual-service
       command: apply -f kubernetes/prod/virtualService.yaml
 
-  - wercker/kubectl@3.9.0:
+  - wercker/kubectl@3.14.0:
       name: aml-risk-horizontal-pod-autoscaler
       command: apply -f kubernetes/prod/horizontalPodAutoscaler.yaml       
-      
+
+  - wercker/kubectl@3.14.0:
+      name: check deployment status
+      command: rollout status deployment/aml-risk -n fusionx-aml
+            
   after-steps:
     - install-packages:
         packages: ruby
