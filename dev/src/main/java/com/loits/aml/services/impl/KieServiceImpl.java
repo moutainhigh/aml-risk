@@ -12,6 +12,7 @@ import org.kie.api.KieServices;
 import org.kie.api.command.KieCommands;
 import org.kie.api.runtime.ExecutionResults;
 import org.kie.server.api.marshalling.MarshallingFormat;
+import org.kie.server.api.model.KieServiceResponse;
 import org.kie.server.api.model.ServiceResponse;
 import org.kie.server.client.KieServicesClient;
 import org.kie.server.client.KieServicesConfiguration;
@@ -51,18 +52,15 @@ public class KieServiceImpl implements KieService {
   @PostConstruct
   public void init() {
     // Connect to the RedHat Server
-//    if (ENABLE_PAM != null && ENABLE_PAM.equalsIgnoreCase("true")) {
-//      conf = KieServicesFactory.newRestConfiguration(redhatServerUrl, username, password, 60000);
-//      conf.setMarshallingFormat(FORMAT);
-//      kieServicesClient = KieServicesFactory.newKieServicesClient(conf);
-//    }
+    if (ENABLE_PAM != null && ENABLE_PAM.equalsIgnoreCase("true")) {
+      conf = KieServicesFactory.newRestConfiguration(redhatServerUrl, username, password, 60000);
+      conf.setMarshallingFormat(FORMAT);
+      kieServicesClient = KieServicesFactory.newKieServicesClient(conf);
+    }
   }
 
   @Override
   public OverallRisk getOverallRisk(OverallRisk overallRisk) throws FXDefaultException {
-    conf = KieServicesFactory.newRestConfiguration(redhatServerUrl, username, password, 60000);
-    conf.setMarshallingFormat(FORMAT);
-    kieServicesClient = KieServicesFactory.newKieServicesClient(conf);
 
     OverallRisk calculatedOverallRisk = null;
     //Kie API
@@ -87,7 +85,7 @@ public class KieServiceImpl implements KieService {
       ServiceResponse<ExecutionResults> response =
               rulesClient.executeCommandsWithResults(containerId, command);
 
-      if (response.getType().toString().equals("FAILURE")) {
+      if (!KieServiceResponse.ResponseType.SUCCESS.equals(response.getType())) {
         logger.debug("Overall Risk calculation failed from the rule engine for customer " + overallRisk.getCustomerCode() + " with message " + response.getMsg());
         return overallRisk;
       } else {
@@ -95,11 +93,11 @@ public class KieServiceImpl implements KieService {
         ArrayList obj = (ArrayList) response.getResult().getValue("OverallRisk");
         calculatedOverallRisk = (OverallRisk) obj.get(0);
       }
-    }catch (Exception e){
+    } catch (Exception e) {
       e.printStackTrace();
       logger.debug("Unable to get response from the rule engine");
       calculatedOverallRisk = overallRisk;
-    }finally {
+    } finally {
       kieServicesClient.close();
       conf.dispose();
       return calculatedOverallRisk;

@@ -443,11 +443,6 @@ public class RiskServiceImpl implements RiskService {
         // update calc status
         this.calcStatusService.saveCalcTask(thisTask, calId,
                 String.valueOf(Thread.currentThread().getId()),
-                CalcStatusCodes.CALC_COMPLETED, meta);
-
-        // update calc status
-        this.calcStatusService.saveCalcTask(thisTask, calId,
-                String.valueOf(Thread.currentThread().getId()),
                 CalcStatusCodes.CALC_UPDATED, meta);
 
         for (Customer customer : customerList) {
