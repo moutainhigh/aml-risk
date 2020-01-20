@@ -1,5 +1,6 @@
 package com.loits.aml.controller;
 
+import com.loits.aml.commons.RiskCalcParams;
 import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.dto.OnboardingCustomer;
 import com.loits.aml.services.AMLRiskService;
@@ -86,25 +87,26 @@ public class AmlRiskController {
   public ResponseEntity<?> calculateRiskBulk(@PathVariable(value = "tenent") String tenent,
                                              @RequestHeader(value = "user", defaultValue
                                                      = "sysUser") String user,
-                                             @RequestParam(value = "pages", required = false)  Integer pageLimit,
-                                             @RequestParam(value = "records", required = false)  Integer recordLimit
-  ) throws FXDefaultException {
+                                             @RequestParam RiskCalcParams riskCalcParams) throws FXDefaultException {
 
     logger.debug(String.format("Starting to calculate risk for the customer base. " +
-            "User : %s , Tenent : %s", user, tenent));
-    Resource resource = new Resource(riskService.calculateRiskForCustomerBase(user, tenent,pageLimit, recordLimit));
+            "User : %s , Tenent : %s, Params : %s", user, tenent, riskCalcParams.toString()));
+    Resource resource = new Resource(riskService.calculateRiskForCustomerBase(user, tenent,
+            riskCalcParams));
     return ResponseEntity.ok(resource);
   }
 
-  @GetMapping(path = "/{tenent}/calculate-batch", produces = "application/json")
+  @GetMapping(path = "/{tenent}/calculate-2", produces = "application/json")
   public ResponseEntity<?> calculateRiskBatch(@PathVariable(value = "tenent") String tenent,
-                                               @RequestHeader(value = "user", defaultValue =
-                                                       "sysUser") String user,
-                                              @RequestParam(value = "size", required = false) Integer size,
-                                              @RequestParam(value = "page", required = false) Integer page
+                                              @RequestHeader(value = "user", defaultValue =
+                                                      "sysUser") String user,
+                                              @RequestParam RiskCalcParams riskCalcParams
+  ) throws FXDefaultException {
+    logger.debug(String.format("Starting to calculate risk for the customer base in basic looping" +
+            " mode. User : %s , Tenent : %s, Params : %s", user, tenent,
+            riskCalcParams.toString()));
 
-                                              ) throws FXDefaultException {
-    Resource resource = new Resource(riskService.calculateRiskForBatch(user, tenent, size, page));
+    Resource resource = new Resource(riskService.calculateRiskForBatch(user, tenent,riskCalcParams));
     return ResponseEntity.ok(resource);
   }
 }
