@@ -34,9 +34,12 @@ public class APIController {
    */
   @GetMapping(path = "/{tenent}", produces = "application/json")
   public @ResponseBody
-  ResponseEntity<?> getChannels(@PathVariable String tenent) throws FXDefaultException {
+  ResponseEntity<?> getChannels(@PathVariable String tenent,
+                                @RequestParam(value = "echo", required = false) String echo) throws FXDefaultException {
 
-    logger.debug(String.format("Requested tenent : %s", tenent));
+    if (echo !=null ) {
+      logger.debug(String.format("Requested echo : %s", echo));
+    }
     return ResponseEntity.ok(new Resource<>(healthCheck.getStatus()));
   }
 }
