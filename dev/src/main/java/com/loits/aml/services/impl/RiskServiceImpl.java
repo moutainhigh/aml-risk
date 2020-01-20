@@ -350,5 +350,5 @@ public class RiskServiceImpl implements RiskService {
     return kieService.getOverallRisk(overallRisk);
   }
 
- 
+
 }
