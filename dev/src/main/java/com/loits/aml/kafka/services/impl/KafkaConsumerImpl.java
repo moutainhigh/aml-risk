@@ -127,6 +127,19 @@ public class KafkaConsumerImpl implements KafkaConsumer {
         logger.debug("Starting to create new customer from sync topic. Tenent : " + customer.getTenent());
 
         processCustomer(false, customer);
+
+        if(customerRepository.existsById(customer.getId())){
+            Customer existingCustomer = customerRepository.findById(customer.getId()).get();
+            existingCustomer.setName(customer.getName());
+            existingCustomer.setTenent(customer.getTenent());
+            existingCustomer.setCustomerRisk(customer.getCustomerRisk());
+            existingCustomer.setCustomerRiskScore(customer.getCustomerRiskScore());
+            existingCustomer.getCustomerIdentificationList().clear();
+            existingCustomer.getCustomerIdentificationList().addAll(customer.getCustomerIdentificationList());
+            existingCustomer.getModuleCustomers().clear();
+            existingCustomer.getModuleCustomers().addAll(customer.getModuleCustomers());
+            customer = existingCustomer;
+        }
         try {
             customerRepository.save(customer);
             logger.debug("Customer sync completed for customer id " + customer.getId());
@@ -143,6 +156,18 @@ public class KafkaConsumerImpl implements KafkaConsumer {
         logger.debug("Starting to update customer from sync topic. Tenent : " + customer.getTenent());
         processCustomer(true, customer);
 
+        if(customerRepository.existsById(customer.getId())){
+            Customer existingCustomer = customerRepository.findById(customer.getId()).get();
+            existingCustomer.setName(customer.getName());
+            existingCustomer.setTenent(customer.getTenent());
+            existingCustomer.setCustomerRisk(customer.getCustomerRisk());
+            existingCustomer.setCustomerRiskScore(customer.getCustomerRiskScore());
+            existingCustomer.getCustomerIdentificationList().clear();
+            existingCustomer.getCustomerIdentificationList().addAll(customer.getCustomerIdentificationList());
+            existingCustomer.getModuleCustomers().clear();
+            existingCustomer.getModuleCustomers().addAll(customer.getModuleCustomers());
+            customer = existingCustomer;
+        }
         try {
             customerRepository.save(customer);
             logger.debug("Customer sync completed for customer id " + customer.getId());
