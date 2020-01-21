@@ -9,15 +9,15 @@
         <appender-ref ref="stdout"/>
     </logger>
 
-    <logger name="com.loits.aml" level="debug" additivity="false">
+    <logger name="com.loits.aml" level="info" additivity="false">
         <appender-ref ref="stdout"/>
     </logger>
 
-    <logger name="org.apache.kafka" level="warn" additivity="false">
+    <logger name="org.apache.kafka" level="info" additivity="false">
         <appender-ref ref="stdout"/>
     </logger>
 
-    <logger name="org.kie.server.client.balancer" level="debug" additivity="false">
+    <logger name="org.kie.server.client.balancer" level="info" additivity="false">
         <appender-ref ref="stdout"/>
     </logger>
 
