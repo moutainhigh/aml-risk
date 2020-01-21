@@ -57,4 +57,13 @@ databaseChangeLog:
                 type: BIGINT
             tableName: aml_risk
 
-
+- changeSet:
+    id: 1
+    author: minolid@i360.lk
+    changes:
+      - addColumn:
+          columns:
+            - column:
+                name: risk_calc_attempt_date
+                type: datetime
+            tableName: aml_risk

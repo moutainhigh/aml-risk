@@ -407,13 +407,29 @@ public class AMLRiskServiceImpl implements AMLRiskService {
                     existingAmlRisk.getRiskRating().equalsIgnoreCase(overallRisk.getRiskRating())) {
                 logger.debug("Calculated AmlRisk equal to last calculated risk. Aborting AmlRisk save " +
                         "process...");
-                amlRisk = null;
+                amlRisk = existingAmlRisk;
+                Timestamp riskCalcOn = new Timestamp(new Date().getTime());
+
+                amlRisk.setRiskCalcAttemptDate(riskCalcOn);
+                try {
+                    amlRisk = amlRiskRepository.save(amlRisk);
+                    logger.debug("AmlRisk record saved to database successfully");
+
+                    //Publish record to Kafka
+                    kafkaProducer.publishToTopic("aml-risk-create", amlRisk);
+                    saveRiskCalculationTime(overallRisk.getCustomerCode(), riskCalcOn, tenent);
+                    //save risk calculation time in customer
+
+                } catch (Exception e) {
+                    logger.debug("AmlRisk record save failed");
+                }
             } else {
                 logger.debug("Calculated AmlRisk not equal to last calculated risk. Continuing AmlRisk " +
                         "save process...");
                 amlRisk = new AmlRisk();
                 Timestamp riskCalcOn = new Timestamp(new Date().getTime());
                 amlRisk.setCreatedOn(riskCalcOn);
+                amlRisk.setRiskCalcAttemptDate(riskCalcOn);
                 amlRisk.setCreatedBy(user);
                 amlRisk.setRiskRating(overallRisk.getRiskRating());
                 amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
@@ -473,6 +489,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
             amlRisk = new AmlRisk();
             Timestamp riskCalcOn = new Timestamp(new Date().getTime());
             amlRisk.setCreatedOn(riskCalcOn);
+            amlRisk.setRiskCalcAttemptDate(riskCalcOn);
             amlRisk.setCreatedBy(user);
             amlRisk.setRiskRating(overallRisk.getRiskRating());
             amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
