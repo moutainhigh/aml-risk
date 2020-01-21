@@ -407,15 +407,15 @@ public class AMLRiskServiceImpl implements AMLRiskService {
           overallRisk = kieService.getOverallRisk(overallRisk);
 
           //Save AMLRISK record
-          AmlRisk risk = saveRiskRecord(overallRisk, customerRisk.getId(), productRisk.getId(),
-                  channelRisk.getId(), tenent, user, customer.getVersion(), module);
+//          AmlRisk risk = saveRiskRecord(overallRisk, customerRisk.getId(), productRisk.getId(),
+//                  channelRisk.getId(), tenent, user, customer.getVersion(), module);
 
-          if (risk != null) {
-            logger.debug("New risk has been calculated for given customer");
             return true;
-          } else {
-            logger.debug("New risk has been calculated for given customer");
-          }
+//          if (risk != null) {
+//            logger.debug("New risk has been calculated for given customer");
+//          } else {
+//            logger.debug("New risk has been calculated for given customer");
+//          }
         } else {
           logger.debug("Failure in calculating risk for Customer with id " + customer.getId());
         }

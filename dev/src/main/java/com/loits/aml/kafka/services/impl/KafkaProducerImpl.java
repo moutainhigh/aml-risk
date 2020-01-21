@@ -35,7 +35,7 @@ public class KafkaProducerImpl implements KafkaProducer {
   public void publishToTopic(String topic, AmlRisk amlRisk) {
     logger.debug("Publishing data to topic aml-risk-create started. Tenent: " + amlRisk.getTenent());
     try {
-      kafkaTemplate.send(topic, amlRisk);
+//      kafkaTemplate.send(topic, amlRisk);
       logger.debug("Publishing to kafka  successful for aml-risk with id " + amlRisk.getId());
     } catch (Exception e) {
       logError(e, topic, amlRisk);
