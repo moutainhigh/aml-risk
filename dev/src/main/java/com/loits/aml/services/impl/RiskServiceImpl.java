@@ -108,6 +108,7 @@ public class RiskServiceImpl implements RiskService {
         // calculate customer risk in segments.
         // Max. allowed segments --PARALLEL_THREADS
         int noOfAsyncTasks = 1;
+        int skip = 0;
 
         if (totRecords > SEGMENT_SIZE) {
           noOfAsyncTasks = totRecords / SEGMENT_SIZE;
@@ -128,6 +129,11 @@ public class RiskServiceImpl implements RiskService {
           pageSize = riskCalcParams.getRecordLimit().intValue();
         }
 
+        if (riskCalcParams.getSkip().intValue() != -1) {
+          skip = riskCalcParams.getSkip().intValue();
+          logger.info("Skip pages overridden by query paramvalue: " + skip);
+        }
+
         logger.info(String.format("Task parameters. No of Async Tasks : %s, Page size : %s, " +
                 "Total Records : %s", noOfAsyncTasks, pageSize, totRecords));
 
@@ -138,7 +144,7 @@ public class RiskServiceImpl implements RiskService {
         meta.put("tpQueueSize", THREAD_POOL_QUEUE_SIZE);
         meta.put("calcParams", riskCalcParams.toString());
 
-        for (int i = 0; i < noOfAsyncTasks; i++) {
+        for (int i = skip; i < noOfAsyncTasks; i++) {
 
           // if last page, might need to make an adjustment
           if (!isDebugMode && (i == (noOfAsyncTasks - 1) &&
