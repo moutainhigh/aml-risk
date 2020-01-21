@@ -179,7 +179,6 @@ public class AMLProductRiskServiceImpl implements AMLProductRiskService {
       logger.debug("No CustomerProducts available to calculate Product Risk. Aborting...");
       productRisk.setCalculatedRisk(0.0);
     }
-    logger.debug("ProductRisk obj " + productRisk);
     return productRisk;
   }
 }

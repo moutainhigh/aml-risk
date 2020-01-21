@@ -87,7 +87,6 @@ public class AMLChannelRiskServiceImpl implements AMLChannelRiskService {
       logger.debug("No transactions available to calculate Channel Risk. Aborting...");
       channelRisk.setCalculatedRisk(0.0);
     }
-    logger.debug("ChannelRisk obj " + channelRisk);
     return channelRisk;
   }
 
