@@ -66,4 +66,4 @@ databaseChangeLog:
             - column:
                 name: risk_calc_attempt_date
                 type: datetime
-            tableName: aml_risk
+          tableName: aml_risk
