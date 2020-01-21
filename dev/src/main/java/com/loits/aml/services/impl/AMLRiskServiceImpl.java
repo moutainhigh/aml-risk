@@ -341,16 +341,13 @@ public class AMLRiskServiceImpl implements AMLRiskService {
             customerRisk.getCustomerType().setHighRisk(false);
             customerRisk.getOccupation().setHighRisk(false);
           }
-
         }
-
 
         List<com.loits.aml.dto.Transaction> transactionList = null;
         if (riskCalcParams.isCalcChannelRisk() || riskCalcParams.isCalcProductRisk()) {
           transactionList = getTransactions(customer.getId(),
                   tenent);
         }
-
 
         ChannelRisk channelRisk = null;
         if (riskCalcParams.isCalcChannelRisk()) {

@@ -64,7 +64,6 @@ public class KieServiceImpl implements KieService {
 
     OverallRisk calculatedOverallRisk = null;
     //Kie API
-    System.out.println("== Sending commands to the server ==");
     RuleServicesClient rulesClient = kieServicesClient.getServicesClient(RuleServicesClient.class);
     KieCommands commandsFactory = KieServices.Factory.get().getCommands();
     BatchExecutionCommandImpl command = new BatchExecutionCommandImpl();
