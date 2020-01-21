@@ -179,12 +179,12 @@ public class SegmentedRiskServiceImpl implements SegmentedRiskService {
             this.calcStatusService.saveCalcLog(thisTask, "Customer risk calculation failed",
                     e.getMessage(), "CustomerId", String.valueOf(customer.getId()), "Customer",
                     e);
-            logger.debug("Risk not calculated for customer id " + customer.getId());
+            logger.error("Risk not calculated for customer id " + customer.getId());
             errorCount += 1;
           }
         }
       } else {
-        logger.debug("Did not load any customers for risk calculation");
+        logger.warn("Did not load any customers for risk calculation");
         meta.put("fetched", 0);
       }
 
@@ -197,7 +197,7 @@ public class SegmentedRiskServiceImpl implements SegmentedRiskService {
               String.valueOf(Thread.currentThread().getId()),
               CalcStatusCodes.CALC_COMPLETED, meta);
 
-      logger.debug(String.format("Risk calculation for page : %s completed", page));
+      logger.info(String.format("Risk calculation for page : %s completed", page));
 
     } catch (Exception e) {
       logger.error("Risk Calculation for segment - process error");

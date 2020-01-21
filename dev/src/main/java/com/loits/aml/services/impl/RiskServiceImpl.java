@@ -80,7 +80,7 @@ public class RiskServiceImpl implements RiskService {
       try {
         TenantHolder.setTenantId(tenent);
         List<CompletableFuture<?>> futuresList = new ArrayList<>();
-        logger.debug("Customer base risk calculation process started");
+        logger.info("Customer base risk calculation process started");
         HashMap<String, Object> meta = new HashMap<>();
 
         // LOG Calculation task to DB.
@@ -123,12 +123,12 @@ public class RiskServiceImpl implements RiskService {
           // found page number overriding values
           noOfAsyncTasks = riskCalcParams.getPageLimit().intValue();
           isDebugMode = true;
-          logger.debug("No of pages is overridden by environment value : No of segments : " + noOfAsyncTasks);
+          logger.info("No of pages is overridden by environment value : No of segments : " + noOfAsyncTasks);
 
           pageSize = riskCalcParams.getRecordLimit().intValue();
         }
 
-        logger.debug(String.format("Task parameters. No of Async Tasks : %s, Page size : %s, " +
+        logger.info(String.format("Task parameters. No of Async Tasks : %s, Page size : %s, " +
                 "Total Records : %s", noOfAsyncTasks, pageSize, totRecords));
 
         meta.put("fetched", 1);
