@@ -1,7 +1,5 @@
 package com.loits.aml.services.impl;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loits.aml.commons.CalcStatusCodes;
 import com.loits.aml.commons.CalcTypes;
 import com.loits.aml.commons.RiskCalcParams;
@@ -10,10 +8,8 @@ import com.loits.aml.config.RestResponsePage;
 import com.loits.aml.config.Translator;
 import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.domain.CalcStatus;
-import com.loits.aml.domain.CalcTasks;
 import com.loits.aml.domain.GeoLocation;
 import com.loits.aml.dto.Address;
-import com.loits.aml.dto.Customer;
 import com.loits.aml.dto.OnboardingCustomer;
 import com.loits.aml.dto.RiskCustomer;
 import com.loits.aml.mt.TenantHolder;
@@ -140,6 +136,7 @@ public class RiskServiceImpl implements RiskService {
         meta.put("noOfSegments", noOfAsyncTasks); // index starts at 0
         meta.put("tpSize", THREAD_POOL_SIZE);
         meta.put("tpQueueSize", THREAD_POOL_QUEUE_SIZE);
+        meta.put("calcParams", riskCalcParams.toString());
 
         for (int i = 0; i < noOfAsyncTasks; i++) {
 
