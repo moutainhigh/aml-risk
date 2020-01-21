@@ -2,11 +2,13 @@ package com.loits.aml.services;
 
 import com.loits.aml.commons.RiskCalcParams;
 import com.loits.aml.core.FXDefaultException;
+import com.loits.aml.domain.AmlRisk;
 import com.loits.aml.dto.Customer;
 import com.loits.fx.aml.OverallRisk;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.sql.Timestamp;
 import java.util.Date;
 
 public interface AMLRiskService {
@@ -19,7 +21,10 @@ public interface AMLRiskService {
   OverallRisk calculateRiskByCustomer(String user, String tenent, Long id)
           throws FXDefaultException;
 
-  boolean runRiskCronJob(RiskCalcParams riskCalcParams,String user,
+  AmlRisk runRiskCronJob(RiskCalcParams riskCalcParams, String user,
                          String tenent,
                          Customer customer) throws FXDefaultException;
+
+  void saveRiskCalculationTime(Long customerId, Timestamp riskCalcOn,
+                               String tenent);
 }
