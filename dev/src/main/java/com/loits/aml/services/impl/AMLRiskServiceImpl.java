@@ -271,8 +271,16 @@ public class AMLRiskServiceImpl implements AMLRiskService {
         overallRisk = kieService.getOverallRisk(overallRisk);
 
         //Save to calculated AmlRisk record to overallrisk
-        saveRiskRecord(overallRisk, customerRisk.getId(), productRisk.getId(),
+        AmlRisk risk = getRiskRecordVerified(overallRisk, customerRisk.getId(), productRisk.getId(),
                 channelRisk.getId(), tenent, user, customer.getVersion(), module);
+
+        risk.setTenent(tenent);
+
+        risk = amlRiskRepository.save(risk);
+        logger.debug("AmlRisk record saved to database successfully");
+        kafkaProducer.publishToTopic("aml-risk-create", risk);
+        saveRiskCalculationTime(overallRisk.getCustomerCode(), risk.getRiskCalcAttemptDate(),
+                tenent);
 
         return overallRisk;
       } else {
@@ -282,7 +290,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
   }
 
   @Override
-  public boolean runRiskCronJob(RiskCalcParams riskCalcParams,
+  public AmlRisk runRiskCronJob(RiskCalcParams riskCalcParams,
                                 String user, String tenent,
                                 Customer customer) throws FXDefaultException {
 
@@ -403,21 +411,13 @@ public class AMLRiskServiceImpl implements AMLRiskService {
 
           overallRisk = kieService.getOverallRisk(overallRisk);
 
-          //Save AMLRISK record
-          AmlRisk risk = saveRiskRecord(overallRisk, customerRisk.getId(), productRisk.getId(),
+          return getRiskRecordVerified(overallRisk, customerRisk.getId(), productRisk.getId(),
                   channelRisk.getId(), tenent, user, customer.getVersion(), module);
-
-          if (risk != null) {
-            logger.debug("New risk has been calculated for given customer");
-            return true;
-          } else {
-            logger.debug("New risk has been calculated for given customer");
-          }
         } else {
           logger.debug("Failure in calculating risk for Customer with id " + customer.getId());
         }
       }
-      return false;
+      return null;
     } catch (Exception e) {
       logger.error("Risk Calculation failed");
       e.printStackTrace();
@@ -425,164 +425,123 @@ public class AMLRiskServiceImpl implements AMLRiskService {
     }
   }
 
-    AmlRisk saveRiskRecord(OverallRisk overallRisk, Long customerRiskId,
-                           Long productRiskId, Long channelRiskId, String tenent,
-                           String user, Long version, String module) throws FXDefaultException {
-        logger.debug("AmlRisk record save stared");
-        AmlRisk amlRisk;
+  AmlRisk getRiskRecordVerified(OverallRisk overallRisk, Long customerRiskId,
+                                Long productRiskId, Long channelRiskId, String tenent,
+                                String user, Long version, String module) throws FXDefaultException {
+    logger.debug("AmlRisk record save stared");
+    AmlRisk amlRisk;
 
-        if (amlRiskRepository.existsByCustomer(overallRisk.getCustomerCode())) {
-            AmlRisk existingAmlRisk =
-                    amlRiskRepository.findTopByCustomerOrderByCreatedOnDesc(overallRisk.getCustomerCode()).get();
 
-            if (existingAmlRisk.getRisk().equals(overallRisk.getCalculatedRisk()) &&
-                    existingAmlRisk.getRiskRating().equalsIgnoreCase(overallRisk.getRiskRating())) {
-                logger.debug("Calculated AmlRisk equal to last calculated risk. Aborting AmlRisk save " +
-                        "process...");
-                amlRisk = existingAmlRisk;
-                Timestamp riskCalcOn = new Timestamp(new Date().getTime());
+    if (amlRiskRepository.existsByCustomer(overallRisk.getCustomerCode())) {
+      AmlRisk existingAmlRisk =
+              amlRiskRepository.findTopByCustomerOrderByCreatedOnDesc(overallRisk.getCustomerCode()).get();
 
-                amlRisk.setTenent(tenent);
-                amlRisk.setRiskCalcAttemptDate(riskCalcOn);
-                try {
-                    amlRisk = amlRiskRepository.save(amlRisk);
-                    logger.debug("AmlRisk record saved to database successfully");
+      if (existingAmlRisk.getRisk().equals(overallRisk.getCalculatedRisk()) &&
+              existingAmlRisk.getRiskRating().equalsIgnoreCase(overallRisk.getRiskRating())) {
+        logger.debug("Calculated AmlRisk equal to last calculated risk. Aborting AmlRisk save " +
+                "process...");
+        amlRisk = existingAmlRisk;
+        Timestamp riskCalcOn = new Timestamp(new Date().getTime());
+        amlRisk.setRiskCalcAttemptDate(riskCalcOn);
 
-                    //Publish record to Kafka
-                    kafkaProducer.publishToTopic("aml-risk-create", amlRisk);
-                    saveRiskCalculationTime(overallRisk.getCustomerCode(), riskCalcOn, tenent);
-                    //save risk calculation time in customer
+      } else {
+        logger.debug("Calculated AmlRisk not equal to last calculated risk. Continuing AmlRisk " +
+                "save process...");
+        amlRisk = new AmlRisk();
+        Timestamp riskCalcOn = new Timestamp(new Date().getTime());
+        amlRisk.setCreatedOn(riskCalcOn);
+        amlRisk.setRiskCalcAttemptDate(riskCalcOn);
+        amlRisk.setCreatedBy(user);
+        amlRisk.setRiskRating(overallRisk.getRiskRating());
+        amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
+        amlRisk.setChannelRisk(overallRisk.getChannelRisk());
+        amlRisk.setProductRisk(overallRisk.getProductRisk());
+        amlRisk.setRisk(overallRisk.getCalculatedRisk());
+        amlRisk.setCustomerRiskId(customerRiskId);
+        amlRisk.setChannelRiskId(channelRiskId);
+        amlRisk.setProductRiskId(productRiskId);
+        amlRisk.setTenent(tenent);
+        amlRisk.setCustomer(overallRisk.getCustomerCode());
+        amlRisk.setRiskCalculationStatus(version);
+        amlRisk.setModule(module);
+        StringBuilder stringBuilder = new StringBuilder();
 
-                } catch (Exception e) {
-                    logger.debug("AmlRisk record save failed");
-                }
-            } else {
-                logger.debug("Calculated AmlRisk not equal to last calculated risk. Continuing AmlRisk " +
-                        "save process...");
-                amlRisk = new AmlRisk();
-                Timestamp riskCalcOn = new Timestamp(new Date().getTime());
-                amlRisk.setCreatedOn(riskCalcOn);
-                amlRisk.setRiskCalcAttemptDate(riskCalcOn);
-                amlRisk.setCreatedBy(user);
-                amlRisk.setRiskRating(overallRisk.getRiskRating());
-                amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
-                amlRisk.setChannelRisk(overallRisk.getChannelRisk());
-                amlRisk.setProductRisk(overallRisk.getProductRisk());
-                amlRisk.setRisk(overallRisk.getCalculatedRisk());
-                amlRisk.setCustomerRiskId(customerRiskId);
-                amlRisk.setChannelRiskId(channelRiskId);
-                amlRisk.setProductRiskId(productRiskId);
-                amlRisk.setTenent(tenent);
-                amlRisk.setCustomer(overallRisk.getCustomerCode());
-                amlRisk.setRiskCalculationStatus(version);
-                amlRisk.setModule(module);
-                StringBuilder stringBuilder = new StringBuilder();
-
-                if (overallRisk.getPepsEnabled()) {
-                    stringBuilder.append("A politically exposed person");
-                }
-                if (overallRisk.getHighRiskCustomerType()) {
-                    if (stringBuilder.length() != 0) {
-                        stringBuilder.append(" with");
-                    } else {
-                        stringBuilder.append("Customer has");
-                    }
-                    stringBuilder.append(" a high risk customer-type");
-                } else {
-
-                }
-                if (overallRisk.getHighRiskOccupation()) {
-                    if (stringBuilder.length() != 0) {
-                        stringBuilder.append(" and");
-                    } else {
-                        stringBuilder.append("Customer has");
-                    }
-                    stringBuilder.append(" a high risk occupation");
-                }
-
-                amlRisk.setRiskText(stringBuilder.toString());
-
-                //Temporary placeholder
-                amlRisk.setTenent(tenent);
-
-                try {
-                    amlRisk = amlRiskRepository.save(amlRisk);
-                    logger.debug("AmlRisk record saved to database successfully");
-
-                    //Publish record to Kafka
-                    kafkaProducer.publishToTopic("aml-risk-create", amlRisk);
-                    saveRiskCalculationTime(overallRisk.getCustomerCode(), riskCalcOn, tenent);
-                    //save risk calculation time in customer
-
-                } catch (Exception e) {
-                    logger.debug("AmlRisk record save failed");
-                }
-            }
-        } else {
-            amlRisk = new AmlRisk();
-            Timestamp riskCalcOn = new Timestamp(new Date().getTime());
-            amlRisk.setCreatedOn(riskCalcOn);
-            amlRisk.setRiskCalcAttemptDate(riskCalcOn);
-            amlRisk.setCreatedBy(user);
-            amlRisk.setRiskRating(overallRisk.getRiskRating());
-            amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
-            amlRisk.setChannelRisk(overallRisk.getChannelRisk());
-            amlRisk.setProductRisk(overallRisk.getProductRisk());
-            amlRisk.setRisk(overallRisk.getCalculatedRisk());
-            amlRisk.setCustomerRiskId(customerRiskId);
-            amlRisk.setChannelRiskId(channelRiskId);
-            amlRisk.setProductRiskId(productRiskId);
-            amlRisk.setTenent(tenent);
-            amlRisk.setCustomer(overallRisk.getCustomerCode());
-            amlRisk.setRiskCalculationStatus(version);
-            amlRisk.setModule(module);
-            StringBuilder stringBuilder = new StringBuilder();
-
-            if (overallRisk.getPepsEnabled()) {
-                stringBuilder.append("A politically exposed person");
-            }
-            if (overallRisk.getHighRiskCustomerType()) {
-                if (stringBuilder.length() != 0) {
-                    stringBuilder.append(" with");
-                } else {
-                    stringBuilder.append("Customer has");
-                }
-                stringBuilder.append(" a high risk customer-type");
-            } else {
-
-            }
-            if (overallRisk.getHighRiskOccupation()) {
-                if (stringBuilder.length() != 0) {
-                    stringBuilder.append(" and");
-                } else {
-                    stringBuilder.append("Customer has");
-                }
-                stringBuilder.append(" a high risk occupation");
-            }
-
-            amlRisk.setRiskText(stringBuilder.toString());
-
-            //Temporary placeholder
-            amlRisk.setTenent(tenent);
-
-            try {
-                amlRisk = amlRiskRepository.save(amlRisk);
-                logger.debug("AmlRisk record saved to database successfully");
-
-                //Publish record to Kafka
-                kafkaProducer.publishToTopic("aml-risk-create", amlRisk);
-                saveRiskCalculationTime(overallRisk.getCustomerCode(), riskCalcOn, tenent);
-                //save risk calculation time in customer
-
-            } catch (Exception e) {
-                logger.debug("AmlRisk record save failed");
-            }
+        if (overallRisk.getPepsEnabled()) {
+          stringBuilder.append("A politically exposed person");
         }
-        return amlRisk;
+        if (overallRisk.getHighRiskCustomerType()) {
+          if (stringBuilder.length() != 0) {
+            stringBuilder.append(" with");
+          } else {
+            stringBuilder.append("Customer has");
+          }
+          stringBuilder.append(" a high risk customer-type");
+        } else {
+
+        }
+        if (overallRisk.getHighRiskOccupation()) {
+          if (stringBuilder.length() != 0) {
+            stringBuilder.append(" and");
+          } else {
+            stringBuilder.append("Customer has");
+          }
+          stringBuilder.append(" a high risk occupation");
+        }
+
+        amlRisk.setRiskText(stringBuilder.toString());
+      }
+    } else {
+      amlRisk = new AmlRisk();
+      Timestamp riskCalcOn = new Timestamp(new Date().getTime());
+      amlRisk.setCreatedOn(riskCalcOn);
+      amlRisk.setRiskCalcAttemptDate(riskCalcOn);
+      amlRisk.setCreatedBy(user);
+      amlRisk.setRiskRating(overallRisk.getRiskRating());
+      amlRisk.setCustomerRisk(overallRisk.getCustomerRisk());
+      amlRisk.setChannelRisk(overallRisk.getChannelRisk());
+      amlRisk.setProductRisk(overallRisk.getProductRisk());
+      amlRisk.setRisk(overallRisk.getCalculatedRisk());
+      amlRisk.setCustomerRiskId(customerRiskId);
+      amlRisk.setChannelRiskId(channelRiskId);
+      amlRisk.setProductRiskId(productRiskId);
+      amlRisk.setTenent(tenent);
+      amlRisk.setCustomer(overallRisk.getCustomerCode());
+      amlRisk.setRiskCalculationStatus(version);
+      amlRisk.setModule(module);
+      StringBuilder stringBuilder = new StringBuilder();
+
+      if (overallRisk.getPepsEnabled()) {
+        stringBuilder.append("A politically exposed person");
+      }
+      if (overallRisk.getHighRiskCustomerType()) {
+        if (stringBuilder.length() != 0) {
+          stringBuilder.append(" with");
+        } else {
+          stringBuilder.append("Customer has");
+        }
+        stringBuilder.append(" a high risk customer-type");
+      } else {
+
+      }
+      if (overallRisk.getHighRiskOccupation()) {
+        if (stringBuilder.length() != 0) {
+          stringBuilder.append(" and");
+        } else {
+          stringBuilder.append("Customer has");
+        }
+        stringBuilder.append(" a high risk occupation");
+      }
+
+      amlRisk.setRiskText(stringBuilder.toString());
     }
 
-  void saveRiskCalculationTime(Long customerId, Timestamp riskCalcOn,
-                               String tenent) {
+    amlRisk.setTenent(tenent);
+    return amlRisk;
+  }
+
+  @Override
+  public void saveRiskCalculationTime(Long customerId, Timestamp riskCalcOn,
+                                      String tenent) {
 
     logger.debug("Saving risk calculatedOn time in customer and module customers for " + customerId + " with tenant " + tenent);
     TenantHolder.setTenantId(tenent);
