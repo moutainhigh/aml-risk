@@ -442,6 +442,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
                 amlRisk = existingAmlRisk;
                 Timestamp riskCalcOn = new Timestamp(new Date().getTime());
 
+                amlRisk.setTenent(tenent);
                 amlRisk.setRiskCalcAttemptDate(riskCalcOn);
                 try {
                     amlRisk = amlRiskRepository.save(amlRisk);
