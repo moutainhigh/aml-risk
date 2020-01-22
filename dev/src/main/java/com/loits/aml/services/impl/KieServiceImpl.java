@@ -135,6 +135,7 @@ public class KieServiceImpl implements KieService {
         return overallRiskList;
       } else {
         logger.debug("Overall Risk calculation Successful from the rule engine");
+        logger.debug(response.getResult().getValue("OverallRisk"));
         ArrayList obj = (ArrayList) response.getResult().getValue("OverallRisk");
         calculatedOverallRiskList = (ArrayList<OverallRisk>)obj;
         //calculatedOverallRisk = (OverallRisk) obj.get(0);
