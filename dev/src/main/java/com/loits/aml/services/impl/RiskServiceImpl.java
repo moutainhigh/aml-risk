@@ -72,7 +72,6 @@ public class RiskServiceImpl implements RiskService {
   @Value("${aml.risk-calculation.segment-size}")
   int SEGMENT_SIZE;
 
-
   @Override
   public CompletableFuture<?> calculateRiskForCustomerBase(String user, String tenent,
                                                            RiskCalcParams riskCalcParams) {

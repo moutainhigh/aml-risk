@@ -76,7 +76,6 @@ public class KieServiceImpl implements KieService {
     command.addCommand(new InsertObjectCommand(overallRisk));
     command.addCommand(fireAllRulesCommand);
     command.addCommand(commandsFactory.newGetObjects("OverallRisk"));
-
     try {
 
       logger.debug("Sending component risks to the rule engine to calculate Overall Risk");

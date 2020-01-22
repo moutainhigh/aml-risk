@@ -9,7 +9,7 @@
         <appender-ref ref="stdout"/>
     </logger>
 
-    <logger name="com.loits.aml" level="info" additivity="false">
+    <logger name="com.loits.aml" level="debug" additivity="false">
         <appender-ref ref="stdout"/>
     </logger>
 
