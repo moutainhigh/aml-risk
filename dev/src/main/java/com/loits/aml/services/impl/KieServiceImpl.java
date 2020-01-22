@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.Collection;
 
 @Service
 public class KieServiceImpl implements KieService {
@@ -85,7 +86,7 @@ public class KieServiceImpl implements KieService {
               rulesClient.executeCommandsWithResults(containerId, command);
 
       if (!KieServiceResponse.ResponseType.SUCCESS.equals(response.getType())) {
-        logger.debug("Overall Risk calculation failed from the rulRisk calculation for pagee engine for customer " + overallRisk.getCustomerCode() + " with message " + response.getMsg());
+        logger.debug("Overall Risk calculation failed from rule engine for customer " + overallRisk.getCustomerCode() + " with message " + response.getMsg());
         return overallRisk;
       } else {
         logger.debug("Overall Risk calculation Successful from the rule engine");
@@ -100,6 +101,52 @@ public class KieServiceImpl implements KieService {
       kieServicesClient.close();
       conf.dispose();
       return calculatedOverallRisk;
+    }
+  }
+
+  @Override
+  public ArrayList<OverallRisk> getOverallRisks(ArrayList<OverallRisk> overallRiskList) throws FXDefaultException {
+
+    ArrayList<OverallRisk> calculatedOverallRiskList = null;
+    //Kie API
+    RuleServicesClient  rulesClient = kieServicesClient.getServicesClient(RuleServicesClient.class);
+
+    KieCommands commandsFactory = KieServices.Factory.get().getCommands();
+    BatchExecutionCommandImpl command = new BatchExecutionCommandImpl();
+    command.setLookup("kie-session");
+
+    //Create Commands
+    FireAllRulesCommand fireAllRulesCommand = new FireAllRulesCommand();
+    //Insert channels to kiesession
+
+    command.addCommand(commandsFactory.newInsertElements(overallRiskList));
+    command.addCommand(fireAllRulesCommand);
+    command.addCommand(commandsFactory.newGetObjects("OverallRisk"));
+    try {
+
+      logger.debug("Sending component risks to the rule engine to calculate Overall Risk");
+      //Sending request to the rule engine to calculate overall risk
+      ServiceResponse<ExecutionResults> response =
+              rulesClient.executeCommandsWithResults(containerId, command);
+
+
+      if (!KieServiceResponse.ResponseType.SUCCESS.equals(response.getType())) {
+        logger.debug("Overall Risk calculation failed from rule engine with message " + response.getMsg());
+        return overallRiskList;
+      } else {
+        logger.debug("Overall Risk calculation Successful from the rule engine");
+        ArrayList obj = (ArrayList) response.getResult().getValue("OverallRisk");
+        calculatedOverallRiskList = (ArrayList<OverallRisk>)obj;
+        //calculatedOverallRisk = (OverallRisk) obj.get(0);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.debug("Unable to get response from the rule engine");
+      calculatedOverallRiskList = overallRiskList;
+    } finally {
+      kieServicesClient.close();
+      conf.dispose();
+      return calculatedOverallRiskList;
     }
   }
 }
