@@ -220,7 +220,14 @@ public class AMLRiskServiceImpl implements AMLRiskService {
               HttpStatus.BAD_REQUEST, false);
     }
 
-    String module = "lending";
+    String module=null;
+    if(customer.getCustomerModule()!=null){
+        module = customer.getCustomerModule().getModule();
+    }else{
+        throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"),
+                new Date(), HttpStatus.BAD_REQUEST, false);
+    }
+
     Module ruleModule = null;
     if (!moduleRepository.existsById(module)) {
       throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"),
@@ -312,7 +319,14 @@ public class AMLRiskServiceImpl implements AMLRiskService {
                                 String user, String tenent,
                                 Customer customer) throws FXDefaultException {
 
-    String module = "lending";//TODO customer.getCustomerModule().getModule();
+        String module=null;
+        if(customer.getCustomerModule()!=null){
+          module = customer.getCustomerModule().getModule();
+        }else{
+          throw new FXDefaultException("-1", "INVALID_ATTEMPT", Translator.toLocale("FK_MODULE"),
+                  new Date(), HttpStatus.BAD_REQUEST, false);
+        }
+
     Module ruleModule = null;
     try {
       if (!moduleRepository.existsById(module)) {
