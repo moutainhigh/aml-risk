@@ -30,7 +30,6 @@ public class KieServiceImpl implements KieService {
   private static KieServicesConfiguration conf;
   private static KieServicesClient kieServicesClient;
   private static final MarshallingFormat FORMAT = MarshallingFormat.JSON;
-  private static RuleServicesClient rulesClient;
 
   Logger logger = LogManager.getLogger(KieServiceImpl.class);
 
@@ -57,8 +56,6 @@ public class KieServiceImpl implements KieService {
       conf = KieServicesFactory.newRestConfiguration(redhatServerUrl, username, password, 7200000);
       conf.setMarshallingFormat(FORMAT);
       kieServicesClient = KieServicesFactory.newKieServicesClient(conf);
-      rulesClient = kieServicesClient.getServicesClient(RuleServicesClient.class);
-
     }
   }
 
@@ -67,6 +64,8 @@ public class KieServiceImpl implements KieService {
 
     OverallRisk calculatedOverallRisk = null;
     //Kie API
+    RuleServicesClient  rulesClient = kieServicesClient.getServicesClient(RuleServicesClient.class);
+
     KieCommands commandsFactory = KieServices.Factory.get().getCommands();
     BatchExecutionCommandImpl command = new BatchExecutionCommandImpl();
     command.setLookup("kie-session");
