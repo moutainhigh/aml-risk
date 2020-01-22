@@ -70,4 +70,8 @@ public class AmlRisk extends BaseEntity {
     @Column (name="RISK_CALCULATION_STATUS")
     private Long riskCalculationStatus;
 
+    @Basic
+    @Column(name = "RISK_CALC_ATTEMPT_DATE")
+    private Timestamp riskCalcAttemptDate;
+
 }
