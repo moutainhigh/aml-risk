@@ -24,10 +24,9 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import javax.annotation.PostConstruct;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -71,8 +70,21 @@ public class SegmentedRiskServiceImpl implements SegmentedRiskService {
   @Value("${loits.tp.queue.size}")
   int THREAD_POOL_QUEUE_SIZE;
 
+  @Value("${aml.risk-calculation.expiry.hours}")
+  int RISK_EXPIRY_PERID; // IN HOURS
+
   @Value("${aml.risk-calculation.segment-size}")
   int SEGMENT_SIZE;
+
+  @Value("${global.date.format}")
+  private String dateFormat;
+
+  SimpleDateFormat sdf;
+
+  @PostConstruct
+  public void init() {
+    this.sdf = new SimpleDateFormat(dateFormat);
+  }
 
   @Override
   public CompletableFuture<?> calculateCustomerSegmentRisk(RiskCalcParams riskCalcParams,
@@ -147,6 +159,14 @@ public class SegmentedRiskServiceImpl implements SegmentedRiskService {
       parameters.put("page", String.valueOf(page));
       parameters.put("sort", "id,asc");
       parameters.put("size", String.valueOf(size));
+
+      if (RISK_EXPIRY_PERID != 0) {
+        logger.debug("Risk calculation expiry date set");
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(new Date());
+        cal.add(Calendar.HOUR, -(RISK_EXPIRY_PERID));
+        parameters.put("lastRiskCalculatedDateBefore", sdf.format(cal.getTime()));
+      }
 
       try {
         logger.debug("Sending request to Customer API to get Customer");
