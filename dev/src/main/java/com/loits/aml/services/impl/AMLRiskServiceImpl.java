@@ -73,6 +73,11 @@ public class AMLRiskServiceImpl implements AMLRiskService {
   @Value("${global.date.format}")
   private String dateFormat;
 
+
+  @Value("${aml.risk-calculation.expiry.hours}")
+  int RISK_EXPIRY_PERID; // IN HOURS
+
+
   @Value("${aml.transaction.default.back-months}")
   private String DEFAULT_BACK_MONTHS_TRANSACTION;
 
@@ -192,10 +197,23 @@ public class AMLRiskServiceImpl implements AMLRiskService {
     HashMap<String, String> parameters = new HashMap<>();
     parameters.put("id", String.valueOf(id));
 
+    if (RISK_EXPIRY_PERID != 0) {
+      logger.debug("Risk calculation expiry date set");
+      Calendar cal = Calendar.getInstance();
+      cal.setTime(new Date());
+      cal.add(Calendar.HOUR, -(RISK_EXPIRY_PERID));
+      parameters.put("lastRiskCalculatedDateBefore", sdf.format(cal.getTime()));
+    }
+
     try {
       customerList = httpService.getDataFromPage("Customer", customerServiceUrl, parameters,
               new TypeReference<List<Customer>>() {
               });
+
+      if (customerList == null || customerList.isEmpty()) {
+        logger.debug("Customer details not found. Risk may have been calculated already" +
+                " within last (Hr) " + RISK_EXPIRY_PERID);
+      }
       customer = objectMapper.convertValue(customerList.get(0), Customer.class);
     } catch (Exception e) {
       throw new FXDefaultException("-1", "NO_DATA_FOUND", "No customers found", new Date(),
