@@ -475,7 +475,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
         amlRisk = existingAmlRisk;
         Timestamp riskCalcOn = new Timestamp(new Date().getTime());
         amlRisk.setRiskCalcAttemptDate(riskCalcOn);
-
+        amlRisk.setTenent(tenent);
       } else {
         logger.debug("Calculated AmlRisk not equal to last calculated risk. Continuing AmlRisk " +
                 "save process...");
