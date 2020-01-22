@@ -4,8 +4,10 @@ import com.loits.aml.commons.RiskCalcParams;
 import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.dto.OnboardingCustomer;
 import com.loits.aml.services.AMLRiskService;
+import com.loits.aml.services.KieService;
 import com.loits.aml.services.RiskService;
 import com.loits.aml.services.SegmentedRiskService;
+import com.loits.fx.aml.OverallRisk;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 
 /**
@@ -42,6 +45,9 @@ public class AmlRiskController {
 
   @Autowired
   SegmentedRiskService segmentedRiskService;
+
+  @Autowired
+  KieService kieService;
 
   /**
    * Overall Risk Calculation
@@ -111,6 +117,16 @@ public class AmlRiskController {
             riskCalcParams.toString()));
 
     Resource resource = new Resource(segmentedRiskService.calculateRiskForBatch(user, tenent,riskCalcParams));
+    return ResponseEntity.ok(resource);
+  }
+
+  @PostMapping(path = "/{tenent}/calculate-test", produces = "application/json")
+  public ResponseEntity<?> overallKie(@PathVariable(value = "tenent") String tenent,
+                                      @RequestBody ArrayList<OverallRisk> overallRisks
+
+                                      ) throws FXDefaultException {
+
+    Resource resource = new Resource(kieService.getOverallRisks(overallRisks));
     return ResponseEntity.ok(resource);
   }
 }
