@@ -165,7 +165,7 @@ public class SegmentedRiskServiceImpl implements SegmentedRiskService {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
         cal.add(Calendar.HOUR, -(RISK_EXPIRY_PERID));
-        parameters.put("lastRiskCalculatedDateBefore", sdf.format(cal.getTime()));
+        parameters.put("lastRiskCalculatedDateBefore", String.valueOf(cal.getTimeInMillis()));
       }
 
       try {
