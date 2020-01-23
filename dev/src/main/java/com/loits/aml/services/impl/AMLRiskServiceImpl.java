@@ -213,13 +213,14 @@ public class AMLRiskServiceImpl implements AMLRiskService {
     HashMap<String, String> parameters = new HashMap<>();
     parameters.put("id", String.valueOf(id));
 
-    if (RISK_EXPIRY_PERID != 0) {
-      logger.debug("Risk calculation expiry date set");
-      Calendar cal = Calendar.getInstance();
-      cal.setTime(new Date());
-      cal.add(Calendar.HOUR, -(RISK_EXPIRY_PERID));
-      parameters.put("lastRiskCalculatedDateBefore", String.valueOf(cal.getTimeInMillis()));
-    }
+    //Uncomment if required to not calculate before Expiry period
+//    if (RISK_EXPIRY_PERID != 0) {
+//      logger.debug("Risk calculation expiry date set");
+//      Calendar cal = Calendar.getInstance();
+//      cal.setTime(new Date());
+//      cal.add(Calendar.HOUR, -(RISK_EXPIRY_PERID));
+//      parameters.put("lastRiskCalculatedDateBefore", String.valueOf(cal.getTimeInMillis()));
+//    }
 
     try {
       customerList = httpService.getDataFromPage("Customer", customerServiceUrl, parameters,
