@@ -127,14 +127,30 @@ public class AMLRiskServiceImpl implements AMLRiskService {
       if (moduleCustomer != null) {
         customer = moduleCustomer.getCustomer();
         if (customer != null) {
+
+          //Calculate risk on demand
           CustomerRiskOutput customerRiskOutput = new CustomerRiskOutput();
-          customerRiskOutput.setCustomerCode(moduleCustomer.getModuleCustomerCode());
-          if (moduleCustomer.getModule() != null) {
-            customerRiskOutput.setModule(moduleCustomer.getModule().getCode());
+
+          try {
+            logger.debug("Calculating risk on-demand");
+            OverallRisk calculatedOverallRisk = calculateRiskByCustomer(user, tenent, customer.getId());
+            customerRiskOutput.setCustomerCode(moduleCustomer.getModuleCustomerCode());
+            if (moduleCustomer.getModule() != null) {
+              customerRiskOutput.setModule(moduleCustomer.getModule().getCode());
+            }
+            customerRiskOutput.setCalculatedRisk(calculatedOverallRisk.getCalculatedRisk());
+            customerRiskOutput.setRiskRating(calculatedOverallRisk.getRiskRating());
+            customerRiskOutputList.add(customerRiskOutput);
+          }catch(Exception e){
+            logger.debug("On-demand risk calculation failed. Getting risk from past data...");
+            customerRiskOutput.setCustomerCode(moduleCustomer.getModuleCustomerCode());
+            if (moduleCustomer.getModule() != null) {
+              customerRiskOutput.setModule(moduleCustomer.getModule().getCode());
+            }
+            customerRiskOutput.setCalculatedRisk(customer.getCustomerRiskScore());
+            customerRiskOutput.setRiskRating(customer.getCustomerRisk());
+            customerRiskOutputList.add(customerRiskOutput);
           }
-          customerRiskOutput.setCalculatedRisk(customer.getCustomerRiskScore());
-          customerRiskOutput.setRiskRating(customer.getCustomerRisk());
-          customerRiskOutputList.add(customerRiskOutput);
         }
       }
 
