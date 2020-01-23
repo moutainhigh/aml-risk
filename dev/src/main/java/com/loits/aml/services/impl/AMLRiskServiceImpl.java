@@ -127,14 +127,30 @@ public class AMLRiskServiceImpl implements AMLRiskService {
       if (moduleCustomer != null) {
         customer = moduleCustomer.getCustomer();
         if (customer != null) {
+
+          //Calculate risk on demand
           CustomerRiskOutput customerRiskOutput = new CustomerRiskOutput();
-          customerRiskOutput.setCustomerCode(moduleCustomer.getModuleCustomerCode());
-          if (moduleCustomer.getModule() != null) {
-            customerRiskOutput.setModule(moduleCustomer.getModule().getCode());
+
+          try {
+            logger.debug("Calculating risk on-demand");
+            OverallRisk calculatedOverallRisk = calculateRiskByCustomer(user, tenent, customer.getId());
+            customerRiskOutput.setCustomerCode(moduleCustomer.getModuleCustomerCode());
+            if (moduleCustomer.getModule() != null) {
+              customerRiskOutput.setModule(moduleCustomer.getModule().getCode());
+            }
+            customerRiskOutput.setCalculatedRisk(calculatedOverallRisk.getCalculatedRisk());
+            customerRiskOutput.setRiskRating(calculatedOverallRisk.getRiskRating());
+            customerRiskOutputList.add(customerRiskOutput);
+          }catch(Exception e){
+            logger.debug("On-demand risk calculation failed. Getting risk from past data...");
+            customerRiskOutput.setCustomerCode(moduleCustomer.getModuleCustomerCode());
+            if (moduleCustomer.getModule() != null) {
+              customerRiskOutput.setModule(moduleCustomer.getModule().getCode());
+            }
+            customerRiskOutput.setCalculatedRisk(customer.getCustomerRiskScore());
+            customerRiskOutput.setRiskRating(customer.getCustomerRisk());
+            customerRiskOutputList.add(customerRiskOutput);
           }
-          customerRiskOutput.setCalculatedRisk(customer.getCustomerRiskScore());
-          customerRiskOutput.setRiskRating(customer.getCustomerRisk());
-          customerRiskOutputList.add(customerRiskOutput);
         }
       }
 
@@ -197,13 +213,14 @@ public class AMLRiskServiceImpl implements AMLRiskService {
     HashMap<String, String> parameters = new HashMap<>();
     parameters.put("id", String.valueOf(id));
 
-    if (RISK_EXPIRY_PERID != 0) {
-      logger.debug("Risk calculation expiry date set");
-      Calendar cal = Calendar.getInstance();
-      cal.setTime(new Date());
-      cal.add(Calendar.HOUR, -(RISK_EXPIRY_PERID));
-      parameters.put("lastRiskCalculatedDateBefore", String.valueOf(cal.getTimeInMillis()));
-    }
+    //Uncomment if required to not calculate before Expiry period
+//    if (RISK_EXPIRY_PERID != 0) {
+//      logger.debug("Risk calculation expiry date set");
+//      Calendar cal = Calendar.getInstance();
+//      cal.setTime(new Date());
+//      cal.add(Calendar.HOUR, -(RISK_EXPIRY_PERID));
+//      parameters.put("lastRiskCalculatedDateBefore", String.valueOf(cal.getTimeInMillis()));
+//    }
 
     try {
       customerList = httpService.getDataFromPage("Customer", customerServiceUrl, parameters,
