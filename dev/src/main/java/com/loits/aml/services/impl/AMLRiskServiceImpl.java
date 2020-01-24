@@ -189,6 +189,13 @@ public class AMLRiskServiceImpl implements AMLRiskService {
       size = customerRiskOutputList.size();
 
     } else {
+        if (from == null && to == null) {
+            Date date = new GregorianCalendar(1970, Calendar.JANUARY, 1).getTime();
+            from = new Date();
+            to = new Date();
+            from.setTime(date.getTime());
+            to.setTime(new Date().getTime());
+        }
       if (moduleCustomerRepository.existsByModule(moduleObj)) {
         moduleCustomerList =
                 moduleCustomerRepository.findAllByModuleAndRiskCalculatedOnBetween(moduleObj,
