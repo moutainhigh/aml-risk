@@ -330,7 +330,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
           AmlRisk amlRisk = amlRiskRepository.findTopByCustomerOrderByCreatedOnDesc(customer.getId()).get();
 
           //If last risk calculation is before back days
-          if(amlRisk.getCreatedOn().before(cal.getTime()) || projection.equals("calculate")){
+          if(amlRisk.getRiskCalcAttemptDate().before(cal.getTime()) || projection.equals("calculate")){
             risk = amlRiskRepository.save(risk);
             logger.debug("AmlRisk record saved to database successfully");
             kafkaProducer.publishToTopic("aml-risk-create", risk);
