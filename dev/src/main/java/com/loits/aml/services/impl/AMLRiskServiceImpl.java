@@ -130,22 +130,16 @@ public class AMLRiskServiceImpl implements AMLRiskService {
       if (moduleCustomer != null) {
         customer = moduleCustomer.getCustomer();
         if (customer != null) {
+          Calendar cal = Calendar.getInstance();
+          cal.setTime(new Date());
+          cal.add(Calendar.DATE, Integer.parseInt(DEFAULT_BACK_DAYS_RISK_CALCULATION));
 
-          //Calculate risk on demand
           CustomerRiskOutput customerRiskOutput = new CustomerRiskOutput();
+          Date riskCalculatedDate = new Date(customer.getRiskCalculatedOn().getTime());
 
-          try {
-            logger.debug("Calculating risk on-demand");
-            OverallRisk calculatedOverallRisk = calculateRiskByCustomer(user, tenent, customer.getId(), "testProjection");
-            customerRiskOutput.setCustomerCode(moduleCustomer.getModuleCustomerCode());
-            if (moduleCustomer.getModule() != null) {
-              customerRiskOutput.setModule(moduleCustomer.getModule().getCode());
-            }
-            customerRiskOutput.setCalculatedRisk(calculatedOverallRisk.getCalculatedRisk());
-            customerRiskOutput.setRiskRating(calculatedOverallRisk.getRiskRating());
-            customerRiskOutputList.add(customerRiskOutput);
-          }catch(Exception e){
-            logger.debug("On-demand risk calculation failed. Getting risk from past data...");
+          if(riskCalculatedDate.after(cal.getTime())){
+            //If risk calculated within the last day, get saved risk
+            logger.debug("Risk calculated within the last 24h, returning saved risk...");
             customerRiskOutput.setCustomerCode(moduleCustomer.getModuleCustomerCode());
             if (moduleCustomer.getModule() != null) {
               customerRiskOutput.setModule(moduleCustomer.getModule().getCode());
@@ -153,6 +147,27 @@ public class AMLRiskServiceImpl implements AMLRiskService {
             customerRiskOutput.setCalculatedRisk(customer.getCustomerRiskScore());
             customerRiskOutput.setRiskRating(customer.getCustomerRisk());
             customerRiskOutputList.add(customerRiskOutput);
+          }else {
+            try {
+              logger.debug("Calculating risk on-demand");
+              OverallRisk calculatedOverallRisk = calculateRiskByCustomer(user, tenent, customer.getId(), "testProjection");
+              customerRiskOutput.setCustomerCode(moduleCustomer.getModuleCustomerCode());
+              if (moduleCustomer.getModule() != null) {
+                customerRiskOutput.setModule(moduleCustomer.getModule().getCode());
+              }
+              customerRiskOutput.setCalculatedRisk(calculatedOverallRisk.getCalculatedRisk());
+              customerRiskOutput.setRiskRating(calculatedOverallRisk.getRiskRating());
+              customerRiskOutputList.add(customerRiskOutput);
+            } catch (Exception e) {
+              logger.debug("On-demand risk calculation failed. Getting risk from past data...");
+              customerRiskOutput.setCustomerCode(moduleCustomer.getModuleCustomerCode());
+              if (moduleCustomer.getModule() != null) {
+                customerRiskOutput.setModule(moduleCustomer.getModule().getCode());
+              }
+              customerRiskOutput.setCalculatedRisk(customer.getCustomerRiskScore());
+              customerRiskOutput.setRiskRating(customer.getCustomerRisk());
+              customerRiskOutputList.add(customerRiskOutput);
+            }
           }
         }
       }
