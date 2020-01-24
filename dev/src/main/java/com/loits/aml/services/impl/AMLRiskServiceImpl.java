@@ -109,26 +109,31 @@ public class AMLRiskServiceImpl implements AMLRiskService {
       moduleObj = moduleRepository.findByCode(module).get();
     }
 
-
-    if(from == null && to == null && moduleCustomerRepository.existsByModuleAndModuleCustomerCodeAndRiskCalculatedOnIsNull(moduleObj, customerCode)){
-      moduleCustomer = moduleCustomerRepository.findByModuleAndModuleCustomerCodeAndRiskCalculatedOnIsNull(moduleObj, customerCode);
-    }else if(from == null && to == null){
-      Date date = new GregorianCalendar(1970, Calendar.JANUARY, 1).getTime();
-      from = new Date();
-      to = new Date();
-      from.setTime(date.getTime());
-      to.setTime(new Date().getTime());
-      if (customerCode != null && !customerCode.isEmpty()) {
+    //Get risk when customer code is given
+    if (customerCode != null && !customerCode.isEmpty()) {
+      //if from and to not given and module customer with risk calc on field null is available
+      if (from == null && to == null && moduleCustomerRepository.existsByModuleAndModuleCustomerCodeAndRiskCalculatedOnIsNull(moduleObj, customerCode)) {
+        moduleCustomer = moduleCustomerRepository.findByModuleAndModuleCustomerCodeAndRiskCalculatedOnIsNull(moduleObj, customerCode);
+        logger.debug("Module Customer found with risk calculated on null " + moduleCustomer);
+      } else {
+        //if from and to null, set date range from today backwards
+        if (from == null && to == null) {
+          Date date = new GregorianCalendar(1970, Calendar.JANUARY, 1).getTime();
+          from = new Date();
+          to = new Date();
+          from.setTime(date.getTime());
+          to.setTime(new Date().getTime());
+        }
+        //Find module customer for date range
         if (moduleCustomerRepository.existsByModuleAndModuleCustomerCodeAndRiskCalculatedOnBetween(moduleObj, customerCode, from, to)) {
-
           moduleCustomer =
                   moduleCustomerRepository.findOneByModuleAndModuleCustomerCodeAndRiskCalculatedOnBetween(moduleObj, customerCode, from, to);
         } else {
           throw new FXDefaultException("3003", "NO_DATA_FOUND", Translator.toLocale(
                   "CUSTOMER_NOT_FOUND"), new Date(), HttpStatus.BAD_REQUEST, false);
         }
-    }
 
+    }
     //Get risk of single customer
       com.loits.aml.domain.Customer customer = new com.loits.aml.domain.Customer();
       if (moduleCustomer != null) {
