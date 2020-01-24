@@ -78,7 +78,6 @@ public class AMLRiskServiceImpl implements AMLRiskService {
   @Value("${aml.risk-calculation.expiry.hours}")
   int RISK_EXPIRY_PERID; // IN HOURS
 
-
   @Value("${aml.transaction.default.back-months}")
   private String DEFAULT_BACK_MONTHS_TRANSACTION;
 
@@ -110,14 +109,16 @@ public class AMLRiskServiceImpl implements AMLRiskService {
       moduleObj = moduleRepository.findByCode(module).get();
     }
 
-    //Get risk when customer code is given
+    //Get risk when customer code is given - Single Customer
     if (customerCode != null && !customerCode.isEmpty()) {
-      //if from and to not given and module customer with risk calc on field null is available
+
+      //if duration of calculation not given and if customer has no risk calculated
       if (from == null && to == null && moduleCustomerRepository.existsByModuleAndModuleCustomerCodeAndRiskCalculatedOnIsNull(moduleObj, customerCode)) {
-        moduleCustomer = moduleCustomerRepository.findByModuleAndModuleCustomerCodeAndRiskCalculatedOnIsNull(moduleObj, customerCode);
+          //Assign module customer
+          moduleCustomer = moduleCustomerRepository.findByModuleAndModuleCustomerCodeAndRiskCalculatedOnIsNull(moduleObj, customerCode);
         logger.debug("Module Customer found with risk calculated on null " + moduleCustomer);
       } else {
-        //if from and to null, set date range from today backwards
+        //if duration of calculation not given, set date range from today backwards to 1970
         if (from == null && to == null) {
           Date date = new GregorianCalendar(1970, Calendar.JANUARY, 1).getTime();
           from = new Date();
@@ -125,34 +126,41 @@ public class AMLRiskServiceImpl implements AMLRiskService {
           from.setTime(date.getTime());
           to.setTime(new Date().getTime());
         }
-        //Find module customer for date range
+        //Find module customer for date range (Can be null if risk not calculated within this range)
         if (moduleCustomerRepository.existsByModuleAndModuleCustomerCodeAndRiskCalculatedOnBetween(moduleObj, customerCode, from, to)) {
           moduleCustomer =
                   moduleCustomerRepository.findOneByModuleAndModuleCustomerCodeAndRiskCalculatedOnBetween(moduleObj, customerCode, from, to);
         } else {
+            //Exception if customer risk not calculated between range or customer not available
           throw new FXDefaultException("3003", "NO_DATA_FOUND", Translator.toLocale(
                   "CUSTOMER_NOT_FOUND"), new Date(), HttpStatus.BAD_REQUEST, false);
         }
 
     }
-    //Get risk of single customer
+
+    //Obtain customer from module customer
       com.loits.aml.domain.Customer customer = new com.loits.aml.domain.Customer();
       if (moduleCustomer != null) {
         logger.debug("Module Customer available with code "+moduleCustomer.getModuleCustomerCode());
         customer = moduleCustomer.getCustomer();
         if (customer != null) {
           logger.debug("Customer available with id "+customer.getId());
+          //Config back dates for risk calculation
           Calendar cal = Calendar.getInstance();
           cal.setTime(new Date());
           cal.add(Calendar.DATE, Integer.parseInt(DEFAULT_BACK_DAYS_RISK_CALCULATION));
 
           Date riskCalculatedDate = null;
           CustomerRiskOutput customerRiskOutput = new CustomerRiskOutput();
+
+          //If customer has previous calculated risk get riskcalc date
           if(customer.getRiskCalculatedOn()!=null) {
             riskCalculatedDate = new Date(customer.getRiskCalculatedOn().getTime());
           }
+
+          //If riskCalculated previously and previous calculated risk within defined back days
           if(riskCalculatedDate!=null && riskCalculatedDate.after(cal.getTime())){
-            //If risk calculated within the last day, get saved risk
+            //get saved risk
             logger.debug("Risk calculated within the last 24h, returning saved risk...");
             customerRiskOutput.setCustomerCode(moduleCustomer.getModuleCustomerCode());
             if (moduleCustomer.getModule() != null) {
@@ -161,8 +169,10 @@ public class AMLRiskServiceImpl implements AMLRiskService {
             customerRiskOutput.setCalculatedRisk(customer.getCustomerRiskScore());
             customerRiskOutput.setRiskRating(customer.getCustomerRisk());
             customerRiskOutputList.add(customerRiskOutput);
+            //If risk not calculated previously or previous calculated risk before back days
           }else {
             try {
+                //Calculate risk on demand
               logger.debug("Calculating risk on-demand");
               OverallRisk calculatedOverallRisk = calculateRiskByCustomer(user, tenent, customer.getId(), "testProjection");
               customerRiskOutput.setCustomerCode(moduleCustomer.getModuleCustomerCode());
@@ -173,6 +183,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
               customerRiskOutput.setRiskRating(calculatedOverallRisk.getRiskRating());
               customerRiskOutputList.add(customerRiskOutput);
             } catch (Exception e) {
+                //If on deman calculation fails, get past risk
               logger.debug("On-demand risk calculation failed. Getting risk from past data...");
               customerRiskOutput.setCustomerCode(moduleCustomer.getModuleCustomerCode());
               if (moduleCustomer.getModule() != null) {
@@ -188,7 +199,9 @@ public class AMLRiskServiceImpl implements AMLRiskService {
 
       size = customerRiskOutputList.size();
 
+      //Get Risk when customer code not (Multiple customers of module)
     } else {
+        //If from and to is null set duration backwards from today
         if (from == null && to == null) {
             Date date = new GregorianCalendar(1970, Calendar.JANUARY, 1).getTime();
             from = new Date();
@@ -196,7 +209,9 @@ public class AMLRiskServiceImpl implements AMLRiskService {
             from.setTime(date.getTime());
             to.setTime(new Date().getTime());
         }
+        //If customers available for module
       if (moduleCustomerRepository.existsByModule(moduleObj)) {
+          //Get modulecustomers with risk calculated in given range
         moduleCustomerList =
                 moduleCustomerRepository.findAllByModuleAndRiskCalculatedOnBetween(moduleObj,
                         from, to, pageable);
@@ -204,6 +219,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
         size = moduleCustomerRepository.findCountByModuleAndRiskCalculatedOnBetween(moduleObj,
                 from, to);
 
+        //For each customer get saved risk
         for (com.loits.aml.domain.ModuleCustomer moduleCustomer1 : moduleCustomerList) {
           com.loits.aml.domain.Customer customer = null;
 
@@ -229,6 +245,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
     }
 
 
+    //Convert to page and return
     int start = (int) pageable.getOffset();
     int end = Math.min((start + pageable.getPageSize()), customerRiskOutputList.size());
 
