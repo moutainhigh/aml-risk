@@ -22,4 +22,6 @@ public interface AmlRiskRepository extends PagingAndSortingRepository<AmlRisk, L
 
     Optional<AmlRisk> findTopByCustomerOrderByCreatedOnDesc(Long id);
 
+
+
 }
