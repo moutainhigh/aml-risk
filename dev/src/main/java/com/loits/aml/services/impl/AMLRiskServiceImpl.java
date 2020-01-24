@@ -6,6 +6,7 @@ import com.loits.aml.commons.RiskCalcParams;
 import com.loits.aml.config.Translator;
 import com.loits.aml.core.FXDefaultException;
 import com.loits.aml.domain.AmlRisk;
+import com.loits.aml.domain.ModuleCustomer;
 import com.loits.aml.dto.Customer;
 import com.loits.aml.dto.CustomerRiskOutput;
 import com.loits.aml.kafka.services.KafkaProducer;
@@ -346,8 +347,15 @@ public class AMLRiskServiceImpl implements AMLRiskService {
         //Save to calculated AmlRisk record to overallrisk
         AmlRisk risk = getRiskRecordVerified(overallRisk, customerRisk.getId(), productRisk.getId(),
                 channelRisk.getId(), tenent, user, customer.getVersion(), module);
-
-        if(amlRiskRepository.existsByCustomer(customer.getId())){
+        if(!amlRiskRepository.existsByCustomer(customer.getId())){
+            risk.setTenent(tenent);
+            risk = amlRiskRepository.save(risk);
+            logger.debug("AmlRisk record saved to database successfully");
+            kafkaProducer.publishToTopic("aml-risk-create", risk);
+            saveRiskCalculationTime(overallRisk.getCustomerCode(), risk.getRiskCalcAttemptDate(),
+                    tenent);
+        }
+        else if(amlRiskRepository.existsByCustomer(customer.getId())){
           //Calculating back days before current time
           Calendar cal = Calendar.getInstance();
           cal.setTime(new Date());
@@ -642,6 +650,12 @@ public class AMLRiskServiceImpl implements AMLRiskService {
     if (customerRepository.existsById(customerId)) {
       com.loits.aml.domain.Customer customer = customerRepository.findById(customerId).get();
       customer.setRiskCalculatedOn(riskCalcOn);
+      if(customer.getModuleCustomers()!=null){
+          for (ModuleCustomer moduleCustomer:customer.getModuleCustomers()
+               ) {
+              moduleCustomer.setRiskCalculatedOn(riskCalcOn);
+          }
+      }
       try {
         customerRepository.save(customer);
         logger.debug("Saving risk calculatedOn time in customer with id " + customerId + " " +
