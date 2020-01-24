@@ -136,7 +136,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
 
           try {
             logger.debug("Calculating risk on-demand");
-            OverallRisk calculatedOverallRisk = calculateRiskByCustomer(user, tenent, customer.getId(), projection);
+            OverallRisk calculatedOverallRisk = calculateRiskByCustomer(user, tenent, customer.getId(), "testProjection");
             customerRiskOutput.setCustomerCode(moduleCustomer.getModuleCustomerCode());
             if (moduleCustomer.getModule() != null) {
               customerRiskOutput.setModule(moduleCustomer.getModule().getCode());
