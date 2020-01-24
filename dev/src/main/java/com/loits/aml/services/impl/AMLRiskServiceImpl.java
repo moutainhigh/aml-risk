@@ -81,6 +81,9 @@ public class AMLRiskServiceImpl implements AMLRiskService {
   @Value("${aml.transaction.default.back-months}")
   private String DEFAULT_BACK_MONTHS_TRANSACTION;
 
+  @Value("${aml.risk.default.back-days}")
+  private String DEFAULT_BACK_DAYS_RISK_CALCULATION;
+
   SimpleDateFormat sdf;
 
   @PostConstruct
@@ -133,7 +136,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
 
           try {
             logger.debug("Calculating risk on-demand");
-            OverallRisk calculatedOverallRisk = calculateRiskByCustomer(user, tenent, customer.getId());
+            OverallRisk calculatedOverallRisk = calculateRiskByCustomer(user, tenent, customer.getId(), "testProjection");
             customerRiskOutput.setCustomerCode(moduleCustomer.getModuleCustomerCode());
             if (moduleCustomer.getModule() != null) {
               customerRiskOutput.setModule(moduleCustomer.getModule().getCode());
@@ -202,7 +205,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
   }
 
 
-  public OverallRisk calculateRiskByCustomer(String user, String tenent, Long id) throws FXDefaultException {
+  public OverallRisk calculateRiskByCustomer(String user, String tenent, Long id, String projection) throws FXDefaultException {
 
     List<Customer> customerList = null;
     Customer customer = null;
@@ -316,13 +319,27 @@ public class AMLRiskServiceImpl implements AMLRiskService {
         AmlRisk risk = getRiskRecordVerified(overallRisk, customerRisk.getId(), productRisk.getId(),
                 channelRisk.getId(), tenent, user, customer.getVersion(), module);
 
-        risk.setTenent(tenent);
+        if(amlRiskRepository.existsByCustomer(customer.getId())){
+          //Calculating back days before current time
+          Calendar cal = Calendar.getInstance();
+          cal.setTime(new Date());
+          cal.add(Calendar.DATE, Integer.parseInt(DEFAULT_BACK_DAYS_RISK_CALCULATION));
 
-        risk = amlRiskRepository.save(risk);
-        logger.debug("AmlRisk record saved to database successfully");
-        kafkaProducer.publishToTopic("aml-risk-create", risk);
-        saveRiskCalculationTime(overallRisk.getCustomerCode(), risk.getRiskCalcAttemptDate(),
-                tenent);
+          risk.setTenent(tenent);
+
+          AmlRisk amlRisk = amlRiskRepository.findTopByCustomerOrderByCreatedOnDesc(customer.getId()).get();
+
+          //If last risk calculation is before back days
+          if(amlRisk.getRiskCalcAttemptDate().before(cal.getTime()) || projection.equals("calculate")){
+            risk = amlRiskRepository.save(risk);
+            logger.debug("AmlRisk record saved to database successfully");
+            kafkaProducer.publishToTopic("aml-risk-create", risk);
+            saveRiskCalculationTime(overallRisk.getCustomerCode(), risk.getRiskCalcAttemptDate(),
+                    tenent);
+          }else{
+            logger.debug("AmlRisk calculated within last 24h. Aborting save risk record...");
+          }
+        }
 
         return overallRisk;
       } else {
