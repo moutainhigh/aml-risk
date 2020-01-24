@@ -134,10 +134,12 @@ public class AMLRiskServiceImpl implements AMLRiskService {
           cal.setTime(new Date());
           cal.add(Calendar.DATE, Integer.parseInt(DEFAULT_BACK_DAYS_RISK_CALCULATION));
 
+          Date riskCalculatedDate = null;
           CustomerRiskOutput customerRiskOutput = new CustomerRiskOutput();
-          Date riskCalculatedDate = new Date(customer.getRiskCalculatedOn().getTime());
-
-          if(riskCalculatedDate.after(cal.getTime())){
+          if(customer.getRiskCalculatedOn()!=null) {
+            riskCalculatedDate = new Date(customer.getRiskCalculatedOn().getTime());
+          }
+          if(riskCalculatedDate!=null && riskCalculatedDate.after(cal.getTime())){
             //If risk calculated within the last day, get saved risk
             logger.debug("Risk calculated within the last 24h, returning saved risk...");
             customerRiskOutput.setCustomerCode(moduleCustomer.getModuleCustomerCode());
