@@ -128,8 +128,10 @@ public class AMLRiskServiceImpl implements AMLRiskService {
       }
       com.loits.aml.domain.Customer customer = new com.loits.aml.domain.Customer();
       if (moduleCustomer != null) {
+        logger.debug("Module Customer available with code "+moduleCustomer.getModuleCustomerCode());
         customer = moduleCustomer.getCustomer();
         if (customer != null) {
+          logger.debug("Customer available with id "+customer.getId());
           Calendar cal = Calendar.getInstance();
           cal.setTime(new Date());
           cal.add(Calendar.DATE, Integer.parseInt(DEFAULT_BACK_DAYS_RISK_CALCULATION));
