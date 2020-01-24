@@ -136,7 +136,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
 
           try {
             logger.debug("Calculating risk on-demand");
-            OverallRisk calculatedOverallRisk = calculateRiskByCustomer(user, tenent, customer.getId());
+            OverallRisk calculatedOverallRisk = calculateRiskByCustomer(user, tenent, customer.getId(), projection);
             customerRiskOutput.setCustomerCode(moduleCustomer.getModuleCustomerCode());
             if (moduleCustomer.getModule() != null) {
               customerRiskOutput.setModule(moduleCustomer.getModule().getCode());
@@ -205,7 +205,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
   }
 
 
-  public OverallRisk calculateRiskByCustomer(String user, String tenent, Long id) throws FXDefaultException {
+  public OverallRisk calculateRiskByCustomer(String user, String tenent, Long id, String projection) throws FXDefaultException {
 
     List<Customer> customerList = null;
     Customer customer = null;
@@ -330,7 +330,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
           AmlRisk amlRisk = amlRiskRepository.findTopByCustomerOrderByCreatedOnDesc(customer.getId()).get();
 
           //If last risk calculation is before back days
-          if(amlRisk.getCreatedOn().before(cal.getTime())){
+          if(amlRisk.getCreatedOn().before(cal.getTime()) || projection.equals("calculate")){
             risk = amlRiskRepository.save(risk);
             logger.debug("AmlRisk record saved to database successfully");
             kafkaProducer.publishToTopic("aml-risk-create", risk);

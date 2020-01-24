@@ -87,9 +87,11 @@ public class AmlRiskController {
   public ResponseEntity<?> calculateRiskSingle(@PathVariable(value = "tenent") String tenent,
                                                @PathVariable(value = "id") Long id,
                                                @RequestHeader(value = "user", defaultValue =
-                                                       "sysUser") String user
+                                                       "sysUser") String user,
+                                               @RequestParam(name = "projection",
+                                                       defaultValue = "defaultProjection") String projection
   ) throws FXDefaultException {
-    Resource resource = new Resource(amlRiskService.calculateRiskByCustomer(user, tenent, id));
+    Resource resource = new Resource(amlRiskService.calculateRiskByCustomer(user, tenent, id, projection));
     return ResponseEntity.ok(resource);
   }
 

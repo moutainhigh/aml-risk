@@ -18,7 +18,7 @@ public interface AMLRiskService {
                                    String tenent) throws FXDefaultException;
 
   //temporary for testing
-  OverallRisk calculateRiskByCustomer(String user, String tenent, Long id)
+  OverallRisk calculateRiskByCustomer(String user, String tenent, Long id, String projection)
           throws FXDefaultException;
 
   AmlRisk runRiskCronJob(RiskCalcParams riskCalcParams, String user,
