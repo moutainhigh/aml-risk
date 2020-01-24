@@ -21,7 +21,10 @@ public interface ModuleCustomerRepository extends PagingAndSortingRepository<Mod
 
   ModuleCustomer findOneByModuleAndModuleCustomerCodeAndRiskCalculatedOnBetween(Module module, String custCode, Date from, Date to);
 
+  boolean existsByModuleAndModuleCustomerCodeAndRiskCalculatedOnBetween(Module moduleObj, String customerCode, Date from, Date to);
 
+  boolean existsByModuleAndModuleCustomerCodeAndRiskCalculatedOnIsNull(Module moduleObj, String customerCode);
+  
   @Query("select m from ModuleCustomer m join fetch m.customer where m.id = :id")
   ModuleCustomer getModuleCustomerWithCustoemrPopulated(@Param("id") Long moduleId);
 
@@ -34,4 +37,5 @@ public interface ModuleCustomerRepository extends PagingAndSortingRepository<Mod
   @Query("SELECT COUNT(c) FROM ModuleCustomer c WHERE c.module=?1 AND c.riskCalculatedOn BETWEEN ?2 AND ?3")
   int findCountByModuleAndRiskCalculatedOnBetween(Module module, Date from, Date to);
 
+  ModuleCustomer findByModuleAndModuleCustomerCodeAndRiskCalculatedOnIsNull(Module moduleObj, String customerCode);
 }

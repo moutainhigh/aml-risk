@@ -68,6 +68,7 @@ public class AmlRiskController {
                            @RequestParam(value = "toDate", required = false) Date to,
                            @RequestHeader(value = "user", defaultValue = "sysUser") String user
   ) throws FXDefaultException {
+    logger.debug("Starting to retrieve available customer risks...");
     return amlRiskService.getAvailableCustomerRisk(customerCode, pageable, module, otherIdentity,
             from, to, user, tenent);
   }
