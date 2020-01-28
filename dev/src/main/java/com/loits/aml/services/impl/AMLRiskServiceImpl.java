@@ -16,6 +16,7 @@ import com.loits.aml.services.*;
 import com.loits.fx.aml.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -674,6 +675,8 @@ public class AMLRiskServiceImpl implements AMLRiskService {
     if (customerRepository.existsById(customerId)) {
       com.loits.aml.domain.Customer customer = customerRepository.findById(customerId).get();
       customer.setRiskCalculatedOn(riskCalcOn);
+      Hibernate.initialize(customer.getModuleCustomers());
+
       if(customer.getModuleCustomers()!=null){
           for (ModuleCustomer moduleCustomer:customer.getModuleCustomers()
                ) {
