@@ -123,14 +123,5 @@ public class AmlRiskController {
     return ResponseEntity.ok(resource);
   }
 
-  @PostMapping(path = "/{tenent}/calculate-test", produces = "application/json")
-  public ResponseEntity<?> overallKie(@PathVariable(value = "tenent") String tenent,
-                                      @RequestBody ArrayList<OverallRisk> overallRisks
-
-                                      ) throws FXDefaultException {
-
-    Resource resource = new Resource(kieService.getOverallRisks(overallRisks));
-    return ResponseEntity.ok(resource);
-  }
 }
 

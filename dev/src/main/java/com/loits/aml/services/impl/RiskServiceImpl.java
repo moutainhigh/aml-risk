@@ -344,10 +344,15 @@ public class RiskServiceImpl implements RiskService {
     }
 
     //Calculate overallrisk by sending request to rule-engine
-    OverallRisk overallRisk = new OverallRisk(riskCustomer.getId(), riskCustomer.getModule(),
-            customerRisk.getCalculatedRisk(), 0.0, 0.0, customerRisk.getPepsEnabled(),
-            customerRisk.getCustomerType().getHighRisk(),
-            customerRisk.getOccupation().getHighRisk());
+    OverallRisk overallRisk = new OverallRisk();
+    overallRisk.setCustomerCode(riskCustomer.getId());
+    overallRisk.setModule(riskCustomer.getModule());
+    overallRisk.setCustomerRisk(customerRisk.getCalculatedRisk());
+    overallRisk.setProductRisk(0.0);
+    overallRisk.setChannelRisk(0.0);
+    overallRisk.setPepsEnabled(customerRisk.getPepsEnabled());
+    overallRisk.setHighRiskCustomerType(customerRisk.getCustomerType().getHighRisk());
+    overallRisk.setHighRiskOccupation(customerRisk.getOccupation().getHighRisk());
 
     return kieService.getOverallRisk(overallRisk);
   }

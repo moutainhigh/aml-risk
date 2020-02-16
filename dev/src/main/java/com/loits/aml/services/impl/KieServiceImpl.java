@@ -11,6 +11,8 @@ import org.drools.core.command.runtime.rule.InsertObjectCommand;
 import org.kie.api.KieServices;
 import org.kie.api.command.KieCommands;
 import org.kie.api.runtime.ExecutionResults;
+import org.kie.api.runtime.KieContainer;
+import org.kie.api.runtime.StatelessKieSession;
 import org.kie.server.api.marshalling.MarshallingFormat;
 import org.kie.server.api.model.KieServiceResponse;
 import org.kie.server.api.model.ServiceResponse;
@@ -31,6 +33,9 @@ public class KieServiceImpl implements KieService {
   private static KieServicesConfiguration conf;
   private static KieServicesClient kieServicesClient;
   private static final MarshallingFormat FORMAT = MarshallingFormat.JSON;
+
+  private static KieContainer kieContainer;
+  private static KieServices kieServices;
 
   Logger logger = LogManager.getLogger(KieServiceImpl.class);
 
@@ -64,12 +69,10 @@ public class KieServiceImpl implements KieService {
   public OverallRisk getOverallRisk(OverallRisk overallRisk) throws FXDefaultException {
 
     OverallRisk calculatedOverallRisk = null;
-    //Kie API
-    RuleServicesClient  rulesClient = kieServicesClient.getServicesClient(RuleServicesClient.class);
+    StatelessKieSession kieSession = kieContainer.newStatelessKieSession("kie-session");
 
     KieCommands commandsFactory = KieServices.Factory.get().getCommands();
     BatchExecutionCommandImpl command = new BatchExecutionCommandImpl();
-    command.setLookup("kie-session");
 
     //Create Commands
     FireAllRulesCommand fireAllRulesCommand = new FireAllRulesCommand();
@@ -82,15 +85,15 @@ public class KieServiceImpl implements KieService {
 
       logger.debug("Sending component risks to the rule engine to calculate Overall Risk");
       //Sending request to the rule engine to calculate overall risk
-      ServiceResponse<ExecutionResults> response =
-              rulesClient.executeCommandsWithResults(containerId, command);
+      ExecutionResults response =
+              kieSession.execute(command);
 
-      if (!KieServiceResponse.ResponseType.SUCCESS.equals(response.getType())) {
-        logger.debug("Overall Risk calculation failed from rule engine for customer " + overallRisk.getCustomerCode() + " with message " + response.getMsg());
+      if (response == null) {
+        logger.debug("Overall Risk calculation failed from rule engine for customer " + overallRisk.getCustomerCode());
         return overallRisk;
       } else {
         logger.debug("Overall Risk calculation Successful from the rule engine");
-        ArrayList obj = (ArrayList) response.getResult().getValue("OverallRisk");
+        ArrayList obj = (ArrayList) response.getValue("OverallRisk");
         calculatedOverallRisk = (OverallRisk) obj.get(0);
       }
     } catch (Exception e) {
@@ -101,53 +104,6 @@ public class KieServiceImpl implements KieService {
       kieServicesClient.close();
       conf.dispose();
       return calculatedOverallRisk;
-    }
-  }
-
-  @Override
-  public ArrayList<OverallRisk> getOverallRisks(ArrayList<OverallRisk> overallRiskList) throws FXDefaultException {
-
-    ArrayList<OverallRisk> calculatedOverallRiskList = null;
-    //Kie API
-    RuleServicesClient  rulesClient = kieServicesClient.getServicesClient(RuleServicesClient.class);
-
-    KieCommands commandsFactory = KieServices.Factory.get().getCommands();
-    BatchExecutionCommandImpl command = new BatchExecutionCommandImpl();
-    command.setLookup("kie-session");
-
-    //Create Commands
-    FireAllRulesCommand fireAllRulesCommand = new FireAllRulesCommand();
-    //Insert channels to kiesession
-
-    command.addCommand(commandsFactory.newInsertElements(overallRiskList));
-    command.addCommand(fireAllRulesCommand);
-    command.addCommand(commandsFactory.newGetObjects("OverallRisk"));
-    try {
-
-      logger.debug("Sending component risks to the rule engine to calculate Overall Risk");
-      //Sending request to the rule engine to calculate overall risk
-      ServiceResponse<ExecutionResults> response =
-              rulesClient.executeCommandsWithResults(containerId, command);
-
-
-      if (!KieServiceResponse.ResponseType.SUCCESS.equals(response.getType())) {
-        logger.debug("Overall Risk calculation failed from rule engine with message " + response.getMsg());
-        return overallRiskList;
-      } else {
-        logger.debug("Overall Risk calculation Successful from the rule engine");
-        logger.debug(response.getResult().getValue("OverallRisk"));
-        ArrayList obj = (ArrayList) response.getResult().getValue("OverallRisk");
-        calculatedOverallRiskList = (ArrayList<OverallRisk>)obj;
-        //calculatedOverallRisk = (OverallRisk) obj.get(0);
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-      logger.debug("Unable to get response from the rule engine");
-      calculatedOverallRiskList = overallRiskList;
-    } finally {
-      kieServicesClient.close();
-      conf.dispose();
-      return calculatedOverallRiskList;
     }
   }
 }
