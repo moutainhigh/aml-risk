@@ -30,10 +30,6 @@ import java.util.Collection;
 @Service
 public class KieServiceImpl implements KieService {
 
-  private static KieServicesConfiguration conf;
-  private static KieServicesClient kieServicesClient;
-  private static final MarshallingFormat FORMAT = MarshallingFormat.JSON;
-
   private static KieContainer kieContainer;
   private static KieServices kieServices;
 
@@ -58,11 +54,8 @@ public class KieServiceImpl implements KieService {
   @PostConstruct
   public void init() {
     // Connect to the RedHat Server
-    if (ENABLE_PAM != null && ENABLE_PAM.equalsIgnoreCase("true")) {
-      conf = KieServicesFactory.newRestConfiguration(redhatServerUrl, username, password, 7200000);
-      conf.setMarshallingFormat(FORMAT);
-      kieServicesClient = KieServicesFactory.newKieServicesClient(conf);
-    }
+    kieServices = KieServices.get();
+    kieContainer = kieServices.getKieClasspathContainer();
   }
 
   @Override
@@ -101,8 +94,6 @@ public class KieServiceImpl implements KieService {
       logger.debug("Unable to get response from the rule engine");
       calculatedOverallRisk = overallRisk;
     } finally {
-      kieServicesClient.close();
-      conf.dispose();
       return calculatedOverallRisk;
     }
   }
