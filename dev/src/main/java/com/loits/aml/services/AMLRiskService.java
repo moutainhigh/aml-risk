@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.concurrent.CompletableFuture;
 
 public interface AMLRiskService {
 
@@ -27,4 +28,7 @@ public interface AMLRiskService {
 
   void saveRiskCalculationTime(Long customerId, Timestamp riskCalcOn,
                                String tenent);
+
+  CompletableFuture<OverallRisk> calcRiskForCustomer(Long customerId, String user, String tenent, String projection);
+
 }

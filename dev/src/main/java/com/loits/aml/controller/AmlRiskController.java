@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.Resources;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +23,8 @@ import javax.validation.Valid;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Managing Riskrelated operations
@@ -95,6 +98,19 @@ public class AmlRiskController {
     Resource resource = new Resource(amlRiskService.calculateRiskByCustomer(user, tenent, id, projection));
     return ResponseEntity.ok(resource);
   }
+
+
+  @PostMapping(path = "/{tenent}/calculate-many", produces = "application/json")
+  public ResponseEntity<?> calculateRiskSingle(@PathVariable(value = "tenent") String tenent,
+                                               @RequestHeader(value = "user", defaultValue =
+                                                       "sysUser") String user,
+                                               @RequestBody List<OverallRisk> customers
+  ) throws FXDefaultException, ExecutionException, InterruptedException {
+    Resources resource = new Resources(riskService.calculateForModuleCustomers(user, tenent, customers));
+    return ResponseEntity.ok(resource);
+  }
+
+
 
   @PostMapping(path = "/{tenent}/calculate", produces = "application/json")
   public ResponseEntity<?> calculateRiskBulk(@PathVariable(value = "tenent") String tenent,
