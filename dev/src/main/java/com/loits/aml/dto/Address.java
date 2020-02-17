@@ -1,7 +1,6 @@
 package com.loits.aml.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.loits.fx.aml.GeoLocation;
 import lombok.Data;
 
 import java.sql.Timestamp;
