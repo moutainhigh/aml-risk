@@ -459,6 +459,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
       String existingRiskRating = existingAmlRisk.getRiskRating()==null?"N/A":existingAmlRisk.getRiskRating();
       String currentRiskRating = overallRisk.getRiskRating()==null?"N/A":overallRisk.getRiskRating();
 
+      logger.debug("overallRisk "+overallRisk);
       if (existingAmlRisk.getRisk().equals(overallRisk.getCalculatedRisk()) &&
               existingRiskRating.equalsIgnoreCase(currentRiskRating)) {
         logger.debug("Calculated AmlRisk equal to last calculated risk. Aborting AmlRisk save " +
