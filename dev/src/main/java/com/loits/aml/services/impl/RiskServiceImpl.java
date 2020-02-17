@@ -1,5 +1,6 @@
 package com.loits.aml.services.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loits.aml.commons.CalcStatusCodes;
 import com.loits.aml.commons.CalcTypes;
 import com.loits.aml.commons.RiskCalcParams;
@@ -287,7 +288,9 @@ public class RiskServiceImpl implements RiskService {
                         }
                     } while (geoLocation != null);
 
-                    riskAddress1.setGeoLocation(ruleGeoLocation);
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    com.loits.aml.dto.GeoLocation geoLocation1 = objectMapper.convertValue(ruleGeoLocation, com.loits.aml.dto.GeoLocation.class);
+                    riskAddress1.setGeoLocation(geoLocation1);
                     riskAddresses.add(riskAddress1);
                 } else {
                     if (geoLocationRepository.existsByLocationName(address.getCountry())) {
@@ -308,7 +311,9 @@ public class RiskServiceImpl implements RiskService {
                             e.printStackTrace();
                         }
 
-                        riskAddress1.setGeoLocation(ruleGeoLocation);
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        com.loits.aml.dto.GeoLocation geoLocation1 = objectMapper.convertValue(ruleGeoLocation, com.loits.aml.dto.GeoLocation.class);
+                        riskAddress1.setGeoLocation(geoLocation1);
                         riskAddresses.add(riskAddress1);
                     }
                 }
