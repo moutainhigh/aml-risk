@@ -451,7 +451,6 @@ public class AMLRiskServiceImpl implements AMLRiskService {
     logger.debug("AmlRisk record save stared");
     AmlRisk amlRisk;
 
-
     if (amlRiskRepository.existsByCustomer(overallRisk.getCustomerCode())) {
       AmlRisk existingAmlRisk =
               amlRiskRepository.findTopByCustomerOrderByCreatedOnDesc(overallRisk.getCustomerCode()).get();
@@ -459,7 +458,9 @@ public class AMLRiskServiceImpl implements AMLRiskService {
       String existingRiskRating = existingAmlRisk.getRiskRating()==null?"N/A":existingAmlRisk.getRiskRating();
       String currentRiskRating = overallRisk.getRiskRating()==null?"N/A":overallRisk.getRiskRating();
 
-      logger.debug("overallRisk "+overallRisk);
+      logger.debug("Overall Risk :"+overallRisk.getCalculatedRisk());
+      logger.debug("Existing Risk :"+existingAmlRisk.getRisk());
+
       if (existingAmlRisk.getRisk().equals(overallRisk.getCalculatedRisk()) &&
               existingRiskRating.equalsIgnoreCase(currentRiskRating)) {
         logger.debug("Calculated AmlRisk equal to last calculated risk. Aborting AmlRisk save " +
