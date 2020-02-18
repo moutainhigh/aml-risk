@@ -30,71 +30,73 @@ import java.util.Collection;
 @Service
 public class KieServiceImpl implements KieService {
 
-  private static KieContainer kieContainer;
-  private static KieServices kieServices;
+    private static KieContainer kieContainer;
+    private static KieServices kieServices;
+    private StatelessKieSession kieSession;
 
-  Logger logger = LogManager.getLogger(KieServiceImpl.class);
+    Logger logger = LogManager.getLogger(KieServiceImpl.class);
 
-  @Value("${loits.aml.pam.url}")
-  private String redhatServerUrl;
+    @Value("${loits.aml.pam.url}")
+    private String redhatServerUrl;
 
-  @Value("${loits.aml.pam.username}")
-  private String username;
+    @Value("${loits.aml.pam.username}")
+    private String username;
 
-  @Value("${loits.aml.pam.password}")
-  private String password;
+    @Value("${loits.aml.pam.password}")
+    private String password;
 
-  @Value("${loits.aml.pam.container}")
-  private String containerId;
+    @Value("${loits.aml.pam.container}")
+    private String containerId;
 
-  @Value("${loits.aml.pam.enable}")
-  private String ENABLE_PAM;
+    @Value("${loits.aml.pam.enable}")
+    private String ENABLE_PAM;
 
 
-  @PostConstruct
-  public void init() {
-    // Connect to the RedHat Server
-    kieServices = KieServices.get();
-    kieContainer = kieServices.getKieClasspathContainer();
-  }
+    @PostConstruct
+    public void init() {
+        // Connect to the RedHat Server
+        kieServices = KieServices.get();
+        kieContainer = kieServices.getKieClasspathContainer();
+        kieSession = kieContainer.newStatelessKieSession("kie-session");
 
-  @Override
-  public OverallRisk getOverallRisk(OverallRisk overallRisk) throws FXDefaultException {
-
-    OverallRisk calculatedOverallRisk = null;
-    StatelessKieSession kieSession = kieContainer.newStatelessKieSession("kie-session");
-
-    KieCommands commandsFactory = KieServices.Factory.get().getCommands();
-    BatchExecutionCommandImpl command = new BatchExecutionCommandImpl();
-
-    //Create Commands
-    FireAllRulesCommand fireAllRulesCommand = new FireAllRulesCommand();
-    //Insert channels to kiesession
-
-    command.addCommand(new InsertObjectCommand(overallRisk));
-    command.addCommand(fireAllRulesCommand);
-    command.addCommand(commandsFactory.newGetObjects("OverallRisk"));
-    try {
-
-      logger.debug("Sending component risks to the rule engine to calculate Overall Risk");
-      //Sending request to the rule engine to calculate overall risk
-      ExecutionResults response =
-              kieSession.execute(command);
-
-      if (response == null) {
-        logger.debug("Overall Risk calculation failed from rule engine for customer " + overallRisk.getCustomerCode());
-        return overallRisk;
-      } else {
-        logger.debug("Overall Risk calculation Successful from the rule engine");
-        ArrayList obj = (ArrayList) response.getValue("OverallRisk");
-        calculatedOverallRisk = (OverallRisk) obj.get(0);
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-      logger.debug("Unable to get response from the rule engine");
-      calculatedOverallRisk = overallRisk;
-    } finally {
-      return calculatedOverallRisk;
     }
-  }
+
+    @Override
+    public OverallRisk getOverallRisk(OverallRisk overallRisk) throws FXDefaultException {
+
+        OverallRisk calculatedOverallRisk = null;
+
+        KieCommands commandsFactory = KieServices.Factory.get().getCommands();
+        BatchExecutionCommandImpl command = new BatchExecutionCommandImpl();
+
+        //Create Commands
+        FireAllRulesCommand fireAllRulesCommand = new FireAllRulesCommand();
+        //Insert channels to kiesession
+
+        command.addCommand(new InsertObjectCommand(overallRisk));
+        command.addCommand(fireAllRulesCommand);
+        command.addCommand(commandsFactory.newGetObjects("OverallRisk"));
+        try {
+
+            logger.debug("Sending component risks to the rule engine to calculate Overall Risk");
+            //Sending request to the rule engine to calculate overall risk
+            ExecutionResults response =
+                    kieSession.execute(command);
+
+            if (response == null) {
+                logger.debug("Overall Risk calculation failed from rule engine for customer " + overallRisk.getCustomerCode());
+                return overallRisk;
+            } else {
+                logger.debug("Overall Risk calculation Successful from the rule engine");
+                ArrayList obj = (ArrayList) response.getValue("OverallRisk");
+                calculatedOverallRisk = (OverallRisk) obj.get(0);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.debug("Unable to get response from the rule engine");
+            calculatedOverallRisk = overallRisk;
+        } finally {
+            return calculatedOverallRisk;
+        }
+    }
 }
