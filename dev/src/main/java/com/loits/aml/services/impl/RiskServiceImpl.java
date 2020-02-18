@@ -176,6 +176,7 @@ public class RiskServiceImpl implements RiskService {
                             try {
                                 TenantHolder.setTenantId(tenent);
                                 if (ex != null) {
+                                    ex.printStackTrace();
                                     logger.debug("All customer risk calculations processes error");
                                     this.calcStatusService.saveCalcStatus(tenent, thisCalc,
                                             String.valueOf(Thread.currentThread().getId()),
