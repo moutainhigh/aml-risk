@@ -288,9 +288,7 @@ public class RiskServiceImpl implements RiskService {
                         }
                     } while (geoLocation != null);
 
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    com.loits.aml.dto.GeoLocation geoLocation1 = objectMapper.convertValue(ruleGeoLocation, com.loits.aml.dto.GeoLocation.class);
-                    riskAddress1.setGeoLocation(geoLocation1);
+                    riskAddress1.setGeoLocation(ruleGeoLocation);
                     riskAddresses.add(riskAddress1);
                 } else {
                     if (geoLocationRepository.existsByLocationName(address.getCountry())) {
@@ -311,9 +309,7 @@ public class RiskServiceImpl implements RiskService {
                             e.printStackTrace();
                         }
 
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        com.loits.aml.dto.GeoLocation geoLocation1 = objectMapper.convertValue(ruleGeoLocation, com.loits.aml.dto.GeoLocation.class);
-                        riskAddress1.setGeoLocation(geoLocation1);
+                        riskAddress1.setGeoLocation(ruleGeoLocation);
                         riskAddresses.add(riskAddress1);
                     }
                 }
