@@ -127,6 +127,7 @@ public class KafkaConsumerImpl implements KafkaConsumer {
         logger.debug("Starting to create new customer from sync topic. Tenent : " + customer.getTenent());
 
         processCustomer(false, customer);
+
         try {
             customerRepository.save(customer);
             logger.debug("Customer sync completed for customer id " + customer.getId());
@@ -170,6 +171,7 @@ public class KafkaConsumerImpl implements KafkaConsumer {
 
     void processCustomer(boolean update, Customer customer) {
 
+        //Save risk calculated on time to new customer on update
         if(update){
             Customer existingCustomer = customerRepository.findById(customer.getId()).get();
             customer.setRiskCalculatedOn(existingCustomer.getRiskCalculatedOn());
@@ -179,7 +181,7 @@ public class KafkaConsumerImpl implements KafkaConsumer {
         if (customer.getModuleCustomers() != null) {
             customer.getModuleCustomers().forEach(moduleCustomer -> moduleCustomer.setCustomer(customer));
             if(update && customerRepository.existsById(customer.getId())) {
-                Customer existingCustomer = customerRepository.findById(customer.getId()).get(); //TODO remove
+                Customer existingCustomer = customerRepository.findById(customer.getId()).get();
                 customer.getModuleCustomers().forEach(moduleCustomer -> moduleCustomer.setRiskCalculatedOn(existingCustomer.getRiskCalculatedOn()));
             }
         }

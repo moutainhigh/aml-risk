@@ -3,25 +3,19 @@ package com.loits.aml.services.impl;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loits.aml.commons.CalcStatusCodes;
-import com.loits.aml.commons.CalcTypes;
 import com.loits.aml.commons.RiskCalcParams;
-import com.loits.aml.config.NullAwareBeanUtilsBean;
-import com.loits.aml.config.RestResponsePage;
 import com.loits.aml.config.Translator;
 import com.loits.aml.core.FXDefaultException;
-import com.loits.aml.domain.CalcStatus;
+import com.loits.aml.domain.AmlRisk;
 import com.loits.aml.domain.CalcTasks;
-import com.loits.aml.domain.GeoLocation;
-import com.loits.aml.dto.Address;
 import com.loits.aml.dto.Customer;
-import com.loits.aml.dto.OnboardingCustomer;
-import com.loits.aml.dto.RiskCustomer;
+import com.loits.aml.kafka.services.KafkaProducer;
 import com.loits.aml.mt.TenantHolder;
+import com.loits.aml.repo.AmlRiskRepository;
 import com.loits.aml.repo.CalcStatusRepository;
 import com.loits.aml.repo.GeoLocationRepository;
 import com.loits.aml.repo.ModuleRepository;
 import com.loits.aml.services.*;
-import com.loits.fx.aml.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +24,8 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
+import javax.annotation.PostConstruct;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -42,6 +36,9 @@ public class SegmentedRiskServiceImpl implements SegmentedRiskService {
 
   @Autowired
   Environment env;
+
+  @Autowired
+  KafkaProducer kafkaProducer;
 
   @Autowired
   AMLRiskService amlRiskService;
@@ -64,25 +61,41 @@ public class SegmentedRiskServiceImpl implements SegmentedRiskService {
   @Autowired
   HTTPService httpService;
 
+  @Autowired
+  AmlRiskRepository amlRiskRepository;
+
   @Value("${loits.tp.size}")
   int THREAD_POOL_SIZE;
 
   @Value("${loits.tp.queue.size}")
   int THREAD_POOL_QUEUE_SIZE;
 
+  @Value("${aml.risk-calculation.expiry.hours}")
+  int RISK_EXPIRY_PERID; // IN HOURS
+
   @Value("${aml.risk-calculation.segment-size}")
   int SEGMENT_SIZE;
 
-  @Autowired
+  @Value("${global.date.format}")
+  private String dateFormat;
+
+  SimpleDateFormat sdf;
+
+  @PostConstruct
+  public void init() {
+    this.sdf = new SimpleDateFormat(dateFormat);
+  }
+
+  @Override
   public CompletableFuture<?> calculateCustomerSegmentRisk(RiskCalcParams riskCalcParams,
-                                                            Long calId, String user, String tenent,
-                                                            int page,
-                                                            int size) {
+                                                           Long calId, String user, String tenent,
+                                                           int page,
+                                                           int size) {
     return CompletableFuture.runAsync(() -> {
 
       try {
         TenantHolder.setTenantId(tenent);
-        calculate(riskCalcParams,calId, user, tenent, page, size);
+        calculate(riskCalcParams, calId, user, tenent, page, size);
       } catch (Exception e) {
         e.printStackTrace();
       } finally {
@@ -113,14 +126,15 @@ public class SegmentedRiskServiceImpl implements SegmentedRiskService {
     logger.debug("Batchwise risk calculation process started with size " + size + " and page " +
             "number " + page + ".Tenent " + tenent);
 
-    calculate(riskCalcParams,-1l, user, tenent, page, size);
+    calculate(riskCalcParams, -1l, user, tenent, page, size);
     return true;
   }
 
-  private void calculate(RiskCalcParams riskCalcParams,Long calId, String user, String tenent,
+  private void calculate(RiskCalcParams riskCalcParams, Long calId, String user, String tenent,
                          int page,
                          int size) {
     HashMap<String, Object> meta = new HashMap<>();
+    List<AmlRisk> customerSetmentRisks = new ArrayList<>();
 
     meta.put("page", page);
     meta.put("size", size);
@@ -137,7 +151,7 @@ public class SegmentedRiskServiceImpl implements SegmentedRiskService {
       List<Customer> customerList = null;
       //Customer customer = null;
       ObjectMapper objectMapper = new ObjectMapper();
-      int errorCount = 0, successCount = 0, updatedCount = 0;
+      int errorCount = 0, successCount = 0;
 
       //Request parameters to Customer Service
       String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
@@ -145,6 +159,14 @@ public class SegmentedRiskServiceImpl implements SegmentedRiskService {
       parameters.put("page", String.valueOf(page));
       parameters.put("sort", "id,asc");
       parameters.put("size", String.valueOf(size));
+
+      if (RISK_EXPIRY_PERID != 0) {
+        logger.debug("Risk calculation expiry date set");
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(new Date());
+        cal.add(Calendar.HOUR, -(RISK_EXPIRY_PERID));
+        parameters.put("lastRiskCalculatedDateBefore", String.valueOf(cal.getTimeInMillis()));
+      }
 
       try {
         logger.debug("Sending request to Customer API to get Customer");
@@ -177,8 +199,9 @@ public class SegmentedRiskServiceImpl implements SegmentedRiskService {
         for (Customer customer : customerList) {
 
           try {
-            if (amlRiskService.runRiskCronJob(riskCalcParams, user, tenent, customer)) {
-              updatedCount += 1;
+            AmlRisk rsk = amlRiskService.runRiskCronJob(riskCalcParams, user, tenent, customer);
+            if (rsk != null) {
+              customerSetmentRisks.add(rsk);
             }
             logger.debug("Risk calculated for customer with id " + customer.getId());
             //customer.setRiskCalculationStatus(customer.getVersion());
@@ -188,17 +211,29 @@ public class SegmentedRiskServiceImpl implements SegmentedRiskService {
             this.calcStatusService.saveCalcLog(thisTask, "Customer risk calculation failed",
                     e.getMessage(), "CustomerId", String.valueOf(customer.getId()), "Customer",
                     e);
-            logger.debug("Risk not calculated for customer id " + customer.getId());
+            logger.error("Risk not calculated for customer id " + customer.getId());
             errorCount += 1;
           }
         }
       } else {
-        logger.debug("Did not load any customers for risk calculation");
+        logger.warn("Did not load any customers for risk calculation");
         meta.put("fetched", 0);
       }
 
+      // save customer risk status
+      if (!customerSetmentRisks.isEmpty()) {
+        Iterable it = amlRiskRepository.saveAll(customerSetmentRisks);
+        logger.debug("AmlRisk record saved to database successfully");
+
+        customerSetmentRisks.forEach(cr -> {
+          kafkaProducer.publishToTopic("aml-risk-create", cr);
+          amlRiskService.saveRiskCalculationTime(cr.getCustomer(), cr.getRiskCalcAttemptDate(),
+                  tenent);
+        });
+      }
+
       meta.put("processed", successCount);
-      meta.put("updated", updatedCount);
+      meta.put("updated", customerSetmentRisks.size());
       meta.put("errorCount", errorCount);
 
       // update calc status
@@ -206,9 +241,10 @@ public class SegmentedRiskServiceImpl implements SegmentedRiskService {
               String.valueOf(Thread.currentThread().getId()),
               CalcStatusCodes.CALC_COMPLETED, meta);
 
-      logger.debug(String.format("Risk calculation for page : %s completed", page));
+      logger.info(String.format("Risk calculation for page : %s completed", page));
 
-    } catch (Exception e) {
+    } catch (
+            Exception e) {
       logger.error("Risk Calculation for segment - process error");
 
       // update calc status

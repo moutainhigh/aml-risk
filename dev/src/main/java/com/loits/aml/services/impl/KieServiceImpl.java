@@ -11,6 +11,8 @@ import org.drools.core.command.runtime.rule.InsertObjectCommand;
 import org.kie.api.KieServices;
 import org.kie.api.command.KieCommands;
 import org.kie.api.runtime.ExecutionResults;
+import org.kie.api.runtime.KieContainer;
+import org.kie.api.runtime.StatelessKieSession;
 import org.kie.server.api.marshalling.MarshallingFormat;
 import org.kie.server.api.model.KieServiceResponse;
 import org.kie.server.api.model.ServiceResponse;
@@ -23,84 +25,78 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.Collection;
 
 @Service
 public class KieServiceImpl implements KieService {
 
-  private static KieServicesConfiguration conf;
-  private static KieServicesClient kieServicesClient;
-  private static final MarshallingFormat FORMAT = MarshallingFormat.JSON;
+    private static KieContainer kieContainer;
+    private static KieServices kieServices;
+    private StatelessKieSession kieSession;
 
-  Logger logger = LogManager.getLogger(KieServiceImpl.class);
+    Logger logger = LogManager.getLogger(KieServiceImpl.class);
 
-  @Value("${loits.aml.pam.url}")
-  private String redhatServerUrl;
+    @Value("${loits.aml.pam.url}")
+    private String redhatServerUrl;
 
-  @Value("${loits.aml.pam.username}")
-  private String username;
+    @Value("${loits.aml.pam.username}")
+    private String username;
 
-  @Value("${loits.aml.pam.password}")
-  private String password;
+    @Value("${loits.aml.pam.password}")
+    private String password;
 
-  @Value("${loits.aml.pam.container}")
-  private String containerId;
+    @Value("${loits.aml.pam.container}")
+    private String containerId;
 
-  @Value("${loits.aml.pam.enable}")
-  private String ENABLE_PAM;
+    @Value("${loits.aml.pam.enable}")
+    private String ENABLE_PAM;
 
 
-  @PostConstruct
-  public void init() {
-    // Connect to the RedHat Server
-    if (ENABLE_PAM != null && ENABLE_PAM.equalsIgnoreCase("true")) {
-      conf = KieServicesFactory.newRestConfiguration(redhatServerUrl, username, password, 60000);
-      conf.setMarshallingFormat(FORMAT);
-      kieServicesClient = KieServicesFactory.newKieServicesClient(conf);
+    @PostConstruct
+    public void init() {
+        // Connect to the RedHat Server
+        kieServices = KieServices.get();
+        kieContainer = kieServices.getKieClasspathContainer();
+        kieSession = kieContainer.newStatelessKieSession("kie-session");
+
     }
-  }
 
-  @Override
-  public OverallRisk getOverallRisk(OverallRisk overallRisk) throws FXDefaultException {
+    @Override
+    public OverallRisk getOverallRisk(OverallRisk overallRisk) throws FXDefaultException {
 
-    OverallRisk calculatedOverallRisk = null;
-    //Kie API
-    System.out.println("== Sending commands to the server ==");
-    RuleServicesClient rulesClient = kieServicesClient.getServicesClient(RuleServicesClient.class);
-    KieCommands commandsFactory = KieServices.Factory.get().getCommands();
-    BatchExecutionCommandImpl command = new BatchExecutionCommandImpl();
-    command.setLookup("kie-session");
+        OverallRisk calculatedOverallRisk = null;
 
-    //Create Commands
-    FireAllRulesCommand fireAllRulesCommand = new FireAllRulesCommand();
-    //Insert channels to kiesession
+        KieCommands commandsFactory = KieServices.Factory.get().getCommands();
+        BatchExecutionCommandImpl command = new BatchExecutionCommandImpl();
 
-    command.addCommand(new InsertObjectCommand(overallRisk));
-    command.addCommand(fireAllRulesCommand);
-    command.addCommand(commandsFactory.newGetObjects("OverallRisk"));
+        //Create Commands
+        FireAllRulesCommand fireAllRulesCommand = new FireAllRulesCommand();
+        //Insert channels to kiesession
 
-    try {
+        command.addCommand(new InsertObjectCommand(overallRisk));
+        command.addCommand(fireAllRulesCommand);
+        command.addCommand(commandsFactory.newGetObjects("OverallRisk"));
+        try {
 
-      logger.debug("Sending component risks to the rule engine to calculate Overall Risk");
-      //Sending request to the rule engine to calculate overall risk
-      ServiceResponse<ExecutionResults> response =
-              rulesClient.executeCommandsWithResults(containerId, command);
+            logger.debug("Sending component risks to the rule engine to calculate Overall Risk");
+            //Sending request to the rule engine to calculate overall risk
+            ExecutionResults response =
+                    kieSession.execute(command);
 
-      if (!KieServiceResponse.ResponseType.SUCCESS.equals(response.getType())) {
-        logger.debug("Overall Risk calculation failed from the rule engine for customer " + overallRisk.getCustomerCode() + " with message " + response.getMsg());
-        return overallRisk;
-      } else {
-        logger.debug("Overall Risk calculation Successful from the rule engine");
-        ArrayList obj = (ArrayList) response.getResult().getValue("OverallRisk");
-        calculatedOverallRisk = (OverallRisk) obj.get(0);
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-      logger.debug("Unable to get response from the rule engine");
-      calculatedOverallRisk = overallRisk;
-    } finally {
-      kieServicesClient.close();
-      conf.dispose();
-      return calculatedOverallRisk;
+            if (response == null) {
+                logger.debug("Overall Risk calculation failed from rule engine for customer " + overallRisk.getCustomerCode());
+                return overallRisk;
+            } else {
+                logger.debug("Overall Risk calculation Successful from the rule engine");
+                ArrayList obj = (ArrayList) response.getValue("OverallRisk");
+                calculatedOverallRisk = (OverallRisk) obj.get(0);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.debug("Unable to get response from the rule engine");
+            calculatedOverallRisk = overallRisk;
+        } finally {
+            return calculatedOverallRisk;
+        }
     }
-  }
 }
