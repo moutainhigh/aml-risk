@@ -761,7 +761,8 @@ public class AMLRiskServiceImpl implements AMLRiskService {
                       amlRiskRepository.findTopByCustomerOrderByCreatedOnDesc(customer.getId()).get();
 
               //If last risk calculation is before back days
-              if (amlRisk.getRiskCalcAttemptDate().before(cal.getTime()) || projection.equals(
+              if ((amlRisk.getRiskCalcAttemptDate() != null && amlRisk.getRiskCalcAttemptDate().before(cal.getTime()))
+                      || projection.equals(
                       "calculate")) {
                 risk = amlRiskRepository.save(risk);
                 logger.debug("AmlRisk record saved to database successfully");
