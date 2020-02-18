@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 @Service
 public class RiskServiceImpl implements RiskService {
@@ -350,6 +352,51 @@ public class RiskServiceImpl implements RiskService {
             customerRisk.getOccupation().getHighRisk());
 
     return kieService.getOverallRisk(overallRisk);
+  }
+
+
+  @Override
+  public List<OverallRisk> calculateForModuleCustomers(String user, String tenent, List<OverallRisk> customers) throws FXDefaultException, ExecutionException, InterruptedException {
+
+    final CompletableFuture<List<OverallRisk>> result = new CompletableFuture<>();
+    List<CompletableFuture<OverallRisk>> futuresList = new ArrayList<>();
+
+    customers.forEach(c -> {
+      futuresList.add(amlRiskService.calcRiskForCustomer(c.getCustomerCode(), user, tenent, ""));
+    });
+
+    CompletableFuture<Void> allFutures = CompletableFuture.allOf(
+            futuresList.toArray(new CompletableFuture[futuresList.size()]));
+
+    CompletableFuture<List<OverallRisk>> allCompletableFuture = allFutures.thenApply(future ->
+            futuresList.stream()
+                    .map(completableFuture -> completableFuture.join())
+                    .collect(Collectors.toList())
+    );
+
+    allCompletableFuture.whenComplete((data, ex) -> {
+      try {
+        if (ex != null) {
+          logger.debug("CRP calculation for LVCR error");
+          result.completeExceptionally(ex);
+        } else {
+          result.complete(data);
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+        result.completeExceptionally(e);
+      }
+    });
+
+    logger.debug("Customer risk calculated");
+    try {
+      return result.join();
+    } catch (Exception e) {
+      e.printStackTrace();
+      // throw async error
+      throw new FXDefaultException("-1", "ERR", "Risk Calculation Error. Please see system log for details",
+              new Date(), HttpStatus.BAD_REQUEST, false);
+    }
   }
 
 
