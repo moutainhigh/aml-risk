@@ -22,6 +22,8 @@ import javax.validation.Valid;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Managing Riskrelated operations
@@ -95,6 +97,17 @@ public class AmlRiskController {
     Resource resource = new Resource(amlRiskService.calculateRiskByCustomer(user, tenent, id, projection));
     return ResponseEntity.ok(resource);
   }
+
+
+  @PostMapping(path = "/{tenent}/calculate-many", produces = "application/json")
+  public ResponseEntity<?> calculateRiskSingle(@PathVariable(value = "tenent") String tenent,
+                                               @RequestHeader(value = "user", defaultValue =
+                                                       "sysUser") String user,
+                                               @RequestBody List<OverallRisk> customers
+  ) throws FXDefaultException, ExecutionException, InterruptedException {
+    return ResponseEntity.ok(riskService.calculateForModuleCustomers(user, tenent, customers));
+  }
+
 
   @PostMapping(path = "/{tenent}/calculate", produces = "application/json")
   public ResponseEntity<?> calculateRiskBulk(@PathVariable(value = "tenent") String tenent,
