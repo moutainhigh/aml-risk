@@ -81,70 +81,92 @@ public class RiskServiceImpl implements RiskService {
         return CompletableFuture.runAsync(() -> {
             try {
                 TenantHolder.setTenantId(tenent);
+
+                if (riskCalcParams.getOperation().equals("initiate")){
+                    /*
+                            Risk calculation initiazion process shall be run once
+                     */
+                    logger.debug("Risk calculation initiated...");
+
+
+                    HashMap<String, Object> meta = new HashMap<>();
+
+                    // LOG Calculation task to DB.
+                    CalcStatus thisCalc = this.calcStatusService.saveCalcStatus(tenent, new CalcStatus(),
+                            String.valueOf(Thread.currentThread().getId()),
+                            CalcStatusCodes.CALC_INITIATED,
+                            CalcTypes.CUST_RISK_CALC, meta);
+
+                    // fetch a single customer page to determine no of customer records.
+                    //Request parameters to Customer Service
+                    String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
+                    HashMap<String, String> parameters = new HashMap<>();
+                    parameters.put("size", "1");
+                    parameters.put("projection", "");
+
+                    //Send request to Customer Service
+                    RestResponsePage customerResultPage =
+                            httpService.sendServiceRequest(customerServiceUrl, parameters,
+                                    null, "Customer");
+
+                    int totRecords = customerResultPage.getTotalPages(); //Total pages = Total Customers
+                    int pageSize = 0;
+                    boolean isDebugMode = false;
+
+                    // calculate customer risk in segments.
+                    // Max. allowed segments --PARALLEL_THREADS
+                    int noOfAsyncTasks = 1;
+                    int skip = 0;
+
+                    if (totRecords > SEGMENT_SIZE) {
+                        noOfAsyncTasks = totRecords / SEGMENT_SIZE;
+                        pageSize = SEGMENT_SIZE;
+                    } else pageSize = totRecords;
+
+
+                    // override no of pages if set in environment.
+                    // this is purely for testing purposes.
+                    // set the respective enviroment variable to -1 to disable
+                    // this behaviour.
+                    if (riskCalcParams.getPageLimit().intValue() != -1) {
+                        // found page number overriding values
+                        noOfAsyncTasks = riskCalcParams.getPageLimit().intValue();
+                        isDebugMode = true;
+                        logger.info("No of pages is overridden by environment value : No of segments : " + noOfAsyncTasks);
+
+                        pageSize = riskCalcParams.getRecordLimit().intValue();
+                    }
+
+                    if (riskCalcParams.getSkip().intValue() != -1) {
+                        skip = riskCalcParams.getSkip().intValue();
+                        logger.info("Skip pages overridden by query paramvalue: " + skip);
+                    }
+
+                    logger.info(String.format("Task parameters. No of Async Tasks : %s, Page size : %s, " +
+                            "Total Records : %s", noOfAsyncTasks, pageSize, totRecords));
+
+                    meta.put("fetched", 1);
+                    meta.put("totalCustomers", totRecords);
+                    meta.put("noOfSegments", noOfAsyncTasks); // index starts at 0
+                    meta.put("tpSize", THREAD_POOL_SIZE);
+                    meta.put("tpQueueSize", THREAD_POOL_QUEUE_SIZE);
+                    meta.put("calcParams", riskCalcParams.toString());
+
+
+                }else {
+                    /*
+                            Risk calculation for a segment
+                     */
+                    logger.debug("Risk calculation segment process triggered");
+                }
+
+
+
+
+
                 List<CompletableFuture<?>> futuresList = new ArrayList<>();
                 logger.info("Customer base risk calculation process started");
-                HashMap<String, Object> meta = new HashMap<>();
 
-                // LOG Calculation task to DB.
-                CalcStatus thisCalc = this.calcStatusService.saveCalcStatus(tenent, new CalcStatus(),
-                        String.valueOf(Thread.currentThread().getId()),
-                        CalcStatusCodes.CALC_INITIATED,
-                        CalcTypes.CUST_RISK_CALC, meta);
-
-                // fetch a single customer page to determine no of customer records.
-                //Request parameters to Customer Service
-                String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
-                HashMap<String, String> parameters = new HashMap<>();
-                parameters.put("size", "1");
-                parameters.put("projection", "");
-
-                //Send request to Customer Service
-                RestResponsePage customerResultPage =
-                        httpService.sendServiceRequest(customerServiceUrl, parameters,
-                                null, "Customer");
-
-                int totRecords = customerResultPage.getTotalPages(); //Total pages = Total Customers
-                int pageSize = 0;
-                boolean isDebugMode = false;
-
-                // calculate customer risk in segments.
-                // Max. allowed segments --PARALLEL_THREADS
-                int noOfAsyncTasks = 1;
-                int skip = 0;
-
-                if (totRecords > SEGMENT_SIZE) {
-                    noOfAsyncTasks = totRecords / SEGMENT_SIZE;
-                    pageSize = SEGMENT_SIZE;
-                } else pageSize = totRecords;
-
-
-                // override no of pages if set in environment.
-                // this is purely for testing purposes.
-                // set the respective enviroment variable to -1 to disable
-                // this behaviour.
-                if (riskCalcParams.getPageLimit().intValue() != -1) {
-                    // found page number overriding values
-                    noOfAsyncTasks = riskCalcParams.getPageLimit().intValue();
-                    isDebugMode = true;
-                    logger.info("No of pages is overridden by environment value : No of segments : " + noOfAsyncTasks);
-
-                    pageSize = riskCalcParams.getRecordLimit().intValue();
-                }
-
-                if (riskCalcParams.getSkip().intValue() != -1) {
-                    skip = riskCalcParams.getSkip().intValue();
-                    logger.info("Skip pages overridden by query paramvalue: " + skip);
-                }
-
-                logger.info(String.format("Task parameters. No of Async Tasks : %s, Page size : %s, " +
-                        "Total Records : %s", noOfAsyncTasks, pageSize, totRecords));
-
-                meta.put("fetched", 1);
-                meta.put("totalCustomers", totRecords);
-                meta.put("noOfSegments", noOfAsyncTasks); // index starts at 0
-                meta.put("tpSize", THREAD_POOL_SIZE);
-                meta.put("tpQueueSize", THREAD_POOL_QUEUE_SIZE);
-                meta.put("calcParams", riskCalcParams.toString());
 
                 for (int i = skip; i < noOfAsyncTasks; i++) {
 

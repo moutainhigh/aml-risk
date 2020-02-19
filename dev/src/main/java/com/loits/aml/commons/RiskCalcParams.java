@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class RiskCalcParams {
 
+  private String operation = null;
   private boolean calcCategoryRisk = true;
   private boolean calcChannelRisk= true;
   private boolean calcProductRisk = true;
