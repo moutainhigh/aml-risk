@@ -5,6 +5,7 @@ import com.loits.aml.config.RestResponsePage;
 import com.loits.aml.core.FXDefaultException;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,7 @@ public interface HTTPService {
   public <T, classType, binderType> T sendData(String key, String url,
                                                Map<String, String> queryParam, HashMap<String,
           String> headers, Class classType, Object object) throws FXDefaultException, IOException
-          , ClassNotFoundException;
+          , ClassNotFoundException, URISyntaxException;
 
 //  HttpResponse sendEmail(String key, String url, Map<String,
 //          String> queryParam, Object requestEntity) throws FXDefaultException,
