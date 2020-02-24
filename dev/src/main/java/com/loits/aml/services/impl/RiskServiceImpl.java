@@ -152,6 +152,7 @@ public class RiskServiceImpl implements RiskService {
 
         meta.put("page", page);
         meta.put("size" , size);
+        meta.put("segmentSize" , SEGMENT_SIZE);
 
         // LOG Calculation task to DB.
         CalcStatus thisCalc = this.calcStatusService.saveCalcStatus(tenent, new CalcStatus(),
@@ -161,6 +162,7 @@ public class RiskServiceImpl implements RiskService {
 
         thisCalc.setCalcGroup(calcGroup);
 
+
         int noOfAsyncTasks = 1;
         int skip = 0, pageSize = 0;
 
@@ -169,6 +171,26 @@ public class RiskServiceImpl implements RiskService {
             pageSize = SEGMENT_SIZE;
         } else pageSize = size;
 
+
+        // override no of pages if set in environment.
+        // this is purely for debugging purposes.
+        // set the respective enviroment variable to -1 to disable
+        // this behaviour.
+        if (riskCalcParams.getPageLimit() !=null && riskCalcParams.getPageLimit().intValue() != -1) {
+            int forcePageLimit = riskCalcParams.getPageLimit().intValue();
+            // found page number overriding values
+            noOfAsyncTasks = page == 0 ? forcePageLimit : ((forcePageLimit * page) + forcePageLimit );
+            logger.debug(String.format("%s - No of pages is overridden by request value - No of segments : %s",
+                    tenent, noOfAsyncTasks));
+            pageSize = riskCalcParams.getRecordLimit().intValue();
+        }
+
+        // override user skip value for segment
+        if (riskCalcParams.getSkip() !=null && riskCalcParams.getSkip().intValue() != -1) {
+            skip = skip + riskCalcParams.getSkip().intValue();
+            logger.debug(String.format("%s - Skip pages overridden by query paramvalue : %s",
+                    tenent, skip));
+        }
 
 
         // need force overriding to handle parallel requests
@@ -181,31 +203,13 @@ public class RiskServiceImpl implements RiskService {
         skip = noOfAsyncTasks * page;
         // if first page, no skip values
         // if other page, need to take skip values in to account
-        noOfAsyncTasks = page == 0 ? noOfAsyncTasks : (noOfAsyncTasks * page + noOfAsyncTasks);
+        noOfAsyncTasks = page == 0 ? noOfAsyncTasks : ((noOfAsyncTasks * page) + noOfAsyncTasks);
 
         logger.debug(String.format("%s - Risk calculation service segment process params - " +
                 "   No of Async Tasks : %s, Skip : %s, Page size : %s", tenent, noOfAsyncTasks, skip, pageSize));
 
 
-        // override no of pages if set in environment.
-        // this is purely for debugging purposes.
-        // set the respective enviroment variable to -1 to disable
-        // this behaviour.
-        if (riskCalcParams.getPageLimit() !=null && riskCalcParams.getPageLimit().intValue() != -1) {
-            int forcePageLimit = riskCalcParams.getPageLimit().intValue();
-            // found page number overriding values
-            noOfAsyncTasks = page == 0 ? forcePageLimit : (forcePageLimit * page + forcePageLimit );
-            logger.debug(String.format("%s - No of pages is overridden by request value - No of segments : %s",
-                    tenent, noOfAsyncTasks));
-            pageSize = riskCalcParams.getRecordLimit().intValue();
-        }
 
-        // override user skip value for segment
-        if (riskCalcParams.getSkip() !=null && riskCalcParams.getSkip().intValue() != -1) {
-            skip = skip + riskCalcParams.getSkip().intValue();
-            logger.debug(String.format("%s - Skip pages overridden by query paramvalue : %s",
-                    tenent, skip));
-        }
 
         if (offset != null) {
             // handle last page data set. Add additional page to task list
