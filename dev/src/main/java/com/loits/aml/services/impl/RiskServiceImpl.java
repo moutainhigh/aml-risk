@@ -171,12 +171,11 @@ public class RiskServiceImpl implements RiskService {
         // set the respective enviroment variable to -1 to disable
         // this behaviour.
         if (riskCalcParams.getPageLimit() !=null && riskCalcParams.getPageLimit().intValue() != -1) {
-            int forcePageLimit = riskCalcParams.getPageLimit().intValue();
             // found page number overriding values
-            noOfAsyncTasks = page == 0 ? forcePageLimit : ((forcePageLimit * page) + forcePageLimit );
-            logger.debug(String.format("%s - No of pages is overridden by request value - No of segments : %s",
-                    tenent, noOfAsyncTasks));
+            noOfAsyncTasks = riskCalcParams.getPageLimit().intValue();
             pageSize = riskCalcParams.getRecordLimit().intValue();
+            logger.debug(String.format("%s - Override Params - No of segments : %s, Page size : %s",
+                    tenent, noOfAsyncTasks, pageSize));
         }else{
 
             // derive default value
