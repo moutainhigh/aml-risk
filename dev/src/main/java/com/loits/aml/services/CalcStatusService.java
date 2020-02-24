@@ -13,6 +13,8 @@ import java.util.HashMap;
 
 public interface CalcStatusService {
 
+  CalcStatus getLastCalculation(String type);
+
   CalcStatus saveCalcStatus(String tenent, CalcStatus calcStatus, String jobId,
                             String currentStatus, String type, HashMap<String, Object> meta);
 

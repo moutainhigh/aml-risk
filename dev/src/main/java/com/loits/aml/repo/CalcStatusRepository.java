@@ -10,5 +10,7 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 public interface CalcStatusRepository extends PagingAndSortingRepository<CalcStatus, Long>,
         QuerydslPredicateExecutor<CalcStatus> {
 
+    CalcStatus findFirstByType(String type, Sort sort);
+
 
 }

@@ -285,6 +285,8 @@ public class RiskServiceImpl implements RiskService {
         List<CompletableFuture<?>> futuresList = new ArrayList<>();
         String calcGroup = randomStringGenerator.generate(12);
 
+        CalcStatus lastCalc = this.calcStatusService.getLastCalculation(CalcTypes.CUST_RISK_CALC);
+
         // LOG Calculation task to DB.
         CalcStatus thisCalc = this.calcStatusService.saveCalcStatus(tenent, new CalcStatus(),
                 String.valueOf(Thread.currentThread().getId()),
@@ -294,9 +296,12 @@ public class RiskServiceImpl implements RiskService {
         thisCalc.setCalcGroup(calcGroup);
 
         // make sure there aren't any multiple requests logged durig
-        // given interval.
-        long secs = (new Date().getTime() - thisCalc.getMDate().getTime()) / 1000;
-        int hours = (int) (secs / 3600);
+        // given interval
+        int  hours = 0;
+        if (lastCalc!=null) {
+            long secs = (new Date().getTime() - lastCalc.getMDate().getTime()) / 1000;
+            hours = (int) (secs / 3600);
+        }
 
         meta.put("groupId", calcGroup);
         meta.put("projection", projection);
@@ -305,7 +310,7 @@ public class RiskServiceImpl implements RiskService {
         logger.debug(String.format("%s - Risk calculation last process run in : %s", tenent, hours));
 
         // Make sure not a multiple request
-        if (hours >= DEFAULT_RISK_CALC_SKIP_HOURS || projection.equalsIgnoreCase("-f")) {
+        if (hours >= DEFAULT_RISK_CALC_SKIP_HOURS || projection.equalsIgnoreCase("initiate --f")) {
 
             // fetch a single customer page to determine no of customer records.
             //Request parameters to Customer Service
