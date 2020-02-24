@@ -63,17 +63,16 @@ databaseChangeLog:
         - addColumn:
             columns:
               - column:
-                  name: calcGroup
+                  name: group
                   type: VARCHAR(100)
             tableName: calc_status
-
 
   - changeSet:
       id: 3
       author: lahirub@i360.lk
       changes:
         - dropColumn:
-            columnName: calcGroup
+            columnName: group
             tableName: calc_status
 
   - changeSet:
