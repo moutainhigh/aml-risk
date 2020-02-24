@@ -151,7 +151,6 @@ public class RiskServiceImpl implements RiskService {
         int startPage = 0;
 
         meta.put("page", page);
-        meta.put("offset", offset);
         meta.put("size" , size);
 
         // LOG Calculation task to DB.
@@ -352,13 +351,13 @@ public class RiskServiceImpl implements RiskService {
 
             // calculate page size
             if (totRecords > 1) {
-                pageSize = totRecords / PARALLEL_SERVICE_SIZE;
+                pageSize = totRecords / parallelTasks;
             } else pageSize = 1;
 
             meta.put("fetched", 1);
             meta.put("totalCustomers", totRecords);
             meta.put("parallelTasks", parallelTasks); // index starts at 0
-            meta.put("calcParams", riskCalcParams.toString());
+
 
             logger.debug(String.format(
                     "%s - Risk calculation service segment params -  Parallel Tasks : %s, Page size: %s",
@@ -369,7 +368,7 @@ public class RiskServiceImpl implements RiskService {
                 parameters = new HashMap<>();
 
                 // if last page, might need to make an adjustment
-                if (i == (pageSize - 1) &&
+                if (i == (parallelTasks - 1) &&
                         totRecords > PARALLEL_SERVICE_SIZE) {
                     int orphanRecordCount = totRecords % PARALLEL_SERVICE_SIZE;
                     parameters.put("offset", String.valueOf(orphanRecordCount));
