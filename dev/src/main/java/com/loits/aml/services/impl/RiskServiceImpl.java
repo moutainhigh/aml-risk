@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -434,7 +435,7 @@ public class RiskServiceImpl implements RiskService {
     @Override
     public Object calcOnboardingRisk(OnboardingCustomer onboardingCustomer, String user,
                                      String tenent) throws FXDefaultException, IOException,
-            ClassNotFoundException {
+            ClassNotFoundException, URISyntaxException {
 
         //Check if a module exists by sent module code
         if (!moduleRepository.existsByCode(onboardingCustomer.getModule())) {
