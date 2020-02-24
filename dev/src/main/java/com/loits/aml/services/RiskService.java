@@ -14,7 +14,7 @@ import java.util.concurrent.ExecutionException;
 public interface RiskService {
 
   @Async
-  CompletableFuture<?> calculateRiskForCustomerBase(String user, String tenent, RiskCalcParams riskCalcParams);
+  CompletableFuture<?> calculateRiskForCustomerBase(String projection, String user, String tenent, RiskCalcParams riskCalcParams);
 
   Object calcOnboardingRisk(OnboardingCustomer customer, String user, String tenent)
           throws FXDefaultException, IOException, ClassNotFoundException;

@@ -10,8 +10,13 @@ public class RiskCalcParams {
   private boolean calcChannelRisk= true;
   private boolean calcProductRisk = true;
   private Integer pageLimit;
+  private Integer parallelCount;
   private Integer skip;
   private Integer recordLimit;
+  private Integer size;
+  private Integer page;
+  private Integer offset;
+  private String calcGroup;
 
   public RiskCalcParams() {
   }
@@ -19,12 +24,18 @@ public class RiskCalcParams {
   @Override
   public String toString() {
     return "RiskCalcParams{" +
-            "calcCategoryRisk=" + calcCategoryRisk +
+            "operation='" + operation + '\'' +
+            ", calcCategoryRisk=" + calcCategoryRisk +
             ", calcChannelRisk=" + calcChannelRisk +
             ", calcProductRisk=" + calcProductRisk +
+            ", pageLimit=" + pageLimit +
+            ", parallelCount=" + parallelCount +
             ", skip=" + skip +
-            ", pageLimit=" + pageLimit.intValue() +
-            ", recordLimit=" + recordLimit.intValue() +
+            ", recordLimit=" + recordLimit +
+            ", size=" + size +
+            ", page=" + page +
+            ", offset=" + offset +
+            ", calcGroup='" + calcGroup + '\'' +
             '}';
   }
 }

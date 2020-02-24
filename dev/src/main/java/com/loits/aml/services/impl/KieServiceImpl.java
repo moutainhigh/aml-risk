@@ -51,7 +51,6 @@ public class KieServiceImpl implements KieService {
     @Value("${loits.aml.pam.enable}")
     private String ENABLE_PAM;
 
-
     @PostConstruct
     public void init() {
         // Connect to the RedHat Server

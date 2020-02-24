@@ -44,6 +44,9 @@ public class CalcStatus extends BaseEntity implements Serializable {
   @JoinColumn(name = "MODULE")
   private String module;
 
+  @JoinColumn(name = "GROUP")
+  private String group;
+
   @JoinColumn(name = "TOTAL_RECORDS")
   private int totalRecords;
 

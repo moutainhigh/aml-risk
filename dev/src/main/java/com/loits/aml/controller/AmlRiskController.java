@@ -116,11 +116,13 @@ public class AmlRiskController {
   public ResponseEntity<?> calculateRiskBulk(@PathVariable(value = "tenent") String tenent,
                                              @RequestHeader(value = "user", defaultValue
                                                      = "sysUser") String user,
+                                             @RequestParam(name = "projection",
+                                                     defaultValue = "not-applicable") String projection,
                                               RiskCalcParams riskCalcParams) throws FXDefaultException {
 
     logger.debug(String.format("Starting to calculate risk for the customer base. " +
             "User : %s , Tenent : %s, Params : %s", user, tenent, riskCalcParams.toString()));
-    Resource resource = new Resource(riskService.calculateRiskForCustomerBase(user, tenent,
+    Resource resource = new Resource(riskService.calculateRiskForCustomerBase(projection,user, tenent,
             riskCalcParams));
     return ResponseEntity.ok(resource);
   }
