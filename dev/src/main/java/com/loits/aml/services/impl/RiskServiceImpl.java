@@ -104,7 +104,7 @@ public class RiskServiceImpl implements RiskService {
             try {
                 TenantHolder.setTenantId(tenent);
 
-                if (projection.equals("initiate")) {
+                if (projection.equals("initiate") || projection.equals("initiate --f")) {
                     this.initiateRiskCalculation(projection, user, tenent, riskCalcParams);
                 } else if (projection.equals("calculate")) {
                     this.calculateRiskForServiceSegment(projection, user, tenent, riskCalcParams);
@@ -148,7 +148,6 @@ public class RiskServiceImpl implements RiskService {
         Integer size = riskCalcParams.getSize();
         String calcGroup = riskCalcParams.getCalcGroup();
         int startPage = 0;
-
 
         // LOG Calculation task to DB.
         CalcStatus thisCalc = this.calcStatusService.saveCalcStatus(tenent, new CalcStatus(),
