@@ -11,7 +11,6 @@ public class RiskCalcParams {
   private boolean calcProductRisk = true;
   private Integer pageLimit;
   private Integer parallelCount;
-  private Integer skip;
   private Integer recordLimit;
   private Integer size;
   private Integer page;
@@ -30,7 +29,6 @@ public class RiskCalcParams {
             ", calcProductRisk=" + calcProductRisk +
             ", pageLimit=" + pageLimit +
             ", parallelCount=" + parallelCount +
-            ", skip=" + skip +
             ", recordLimit=" + recordLimit +
             ", size=" + size +
             ", page=" + page +

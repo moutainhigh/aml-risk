@@ -163,13 +163,7 @@ public class RiskServiceImpl implements RiskService {
         thisCalc.setCalcGroup(calcGroup);
 
 
-        int noOfAsyncTasks = 1;
-        int skip = 0, pageSize = 0;
-
-        if (size > SEGMENT_SIZE) {
-            noOfAsyncTasks = size / SEGMENT_SIZE;
-            pageSize = SEGMENT_SIZE;
-        } else pageSize = size;
+        int noOfAsyncTasks, skip = 0, pageSize = 0;
 
 
         // override no of pages if set in environment.
@@ -183,15 +177,20 @@ public class RiskServiceImpl implements RiskService {
             logger.debug(String.format("%s - No of pages is overridden by request value - No of segments : %s",
                     tenent, noOfAsyncTasks));
             pageSize = riskCalcParams.getRecordLimit().intValue();
+        }else{
+
+            // derive default value
+            if (size > SEGMENT_SIZE) {
+                noOfAsyncTasks = size / SEGMENT_SIZE;
+                pageSize = SEGMENT_SIZE;
+            } else {
+                pageSize = size;
+                noOfAsyncTasks = 1;
+            }
         }
 
-        // override user skip value for segment
-        if (riskCalcParams.getSkip() !=null && riskCalcParams.getSkip().intValue() != -1) {
-            skip = skip + riskCalcParams.getSkip().intValue();
-            logger.debug(String.format("%s - Skip pages overridden by query paramvalue : %s",
-                    tenent, skip));
-        }
-
+        // adjustment segment pages based on the service page
+        noOfAsyncTasks = page == 0 ? noOfAsyncTasks : ((noOfAsyncTasks * page) + noOfAsyncTasks);
 
         // need force overriding to handle parallel requests
         // Example 1
@@ -201,14 +200,10 @@ public class RiskServiceImpl implements RiskService {
         // iii. If '1' is received as the page, we need to ignore first 3000 records in this
         //      risk segment.
         skip = noOfAsyncTasks * page;
-        // if first page, no skip values
-        // if other page, need to take skip values in to account
-        noOfAsyncTasks = page == 0 ? noOfAsyncTasks : ((noOfAsyncTasks * page) + noOfAsyncTasks);
+
 
         logger.debug(String.format("%s - Risk calculation service segment process params - " +
                 "   No of Async Tasks : %s, Skip : %s, Page size : %s", tenent, noOfAsyncTasks, skip, pageSize));
-
-
 
 
         if (offset != null) {
@@ -343,7 +338,7 @@ public class RiskServiceImpl implements RiskService {
 
             int totRecords = customerResultPage.getTotalPages(); //Total pages = Total Customers
             int parallelTasks = 1;
-            int pageSize = 0;
+            int pageSize = 0, offset = 0;
 
             logger.debug(String.format("%s - Risk calculation estimation data loaded. Total Records : %s",
                     tenent, totRecords));
@@ -356,6 +351,7 @@ public class RiskServiceImpl implements RiskService {
             // calculate page size
             if (totRecords > 1) {
                 pageSize = totRecords / parallelTasks;
+                offset = totRecords % parallelTasks;
             } else pageSize = 1;
 
             meta.put("fetched", 1);
@@ -373,10 +369,9 @@ public class RiskServiceImpl implements RiskService {
 
                 // if last page, might need to make an adjustment
                 if (i == (parallelTasks - 1) &&
-                        totRecords > PARALLEL_SERVICE_SIZE) {
-                    int orphanRecordCount = totRecords % PARALLEL_SERVICE_SIZE;
-                    parameters.put("offset", String.valueOf(orphanRecordCount));
-                    meta.put("offset", String.valueOf(orphanRecordCount));
+                        totRecords > PARALLEL_SERVICE_SIZE  && offset > 0 ) {
+                    parameters.put("offset", String.valueOf(offset));
+                    meta.put("offset", String.valueOf(offset));
                 }
 
                 // make a risk calculation request
@@ -385,7 +380,6 @@ public class RiskServiceImpl implements RiskService {
                 parameters.put("page", String.valueOf(i));
                 parameters.put("calcGroup", calcGroup);
                 parameters.put("pageLimit", riskCalcParams.getPageLimit().toString());
-                parameters.put("skip", riskCalcParams.getSkip().toString());
                 parameters.put("recordLimit", riskCalcParams.getRecordLimit().toString());
                 parameters.put("calcCategoryRisk", String.valueOf(riskCalcParams.isCalcCategoryRisk()));
                 parameters.put("calcProductRisk", String.valueOf(riskCalcParams.isCalcProductRisk()));
