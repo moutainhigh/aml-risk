@@ -150,6 +150,10 @@ public class RiskServiceImpl implements RiskService {
         String calcGroup = riskCalcParams.getCalcGroup();
         int startPage = 0;
 
+        meta.put("page", page);
+        meta.put("offset", offset);
+        meta.put("size" , size);
+
         // LOG Calculation task to DB.
         CalcStatus thisCalc = this.calcStatusService.saveCalcStatus(tenent, new CalcStatus(),
                 String.valueOf(Thread.currentThread().getId()),
@@ -209,6 +213,11 @@ public class RiskServiceImpl implements RiskService {
             noOfAsyncTasks += 1;
             logger.debug(String.format("%s - service segment risk calculation. Last page included", tenent));
         }
+
+        meta.put("skip" , skip);
+        meta.put("noOfAsyncTasks" , noOfAsyncTasks);
+        meta.put("pageSize" , pageSize);
+        meta.put("offset" , offset);
 
         for (int i = skip; i < noOfAsyncTasks; i++) {
             // send customer fetch -- tenant, page, size
