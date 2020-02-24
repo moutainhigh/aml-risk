@@ -1,6 +1,5 @@
 package com.loits.aml.services.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loits.aml.commons.CalcStatusCodes;
 import com.loits.aml.commons.CalcTypes;
 import com.loits.aml.commons.RiskCalcParams;
@@ -157,7 +156,7 @@ public class RiskServiceImpl implements RiskService {
                 CalcStatusCodes.CALC_INITIATED,
                 CalcTypes.CUST_RISK_CALC, meta);
 
-        thisCalc.setGroup(calcGroup);
+        thisCalc.setCalcGroup(calcGroup);
 
         int noOfAsyncTasks = 1;
         int skip = 0, pageSize = 0;
@@ -292,7 +291,7 @@ public class RiskServiceImpl implements RiskService {
                 CalcStatusCodes.CALC_INITIATED,
                 CalcTypes.CUST_RISK_CALC, meta);
 
-        thisCalc.setGroup(calcGroup);
+        thisCalc.setCalcGroup(calcGroup);
 
         // make sure there aren't any multiple requests logged durig
         // given interval.
