@@ -109,7 +109,7 @@ public class RiskServiceImpl implements RiskService {
                     this.initiateRiskCalculation(projection, user, tenent, riskCalcParams);
                 } else if (projection.equals("calculate")) {
                     this.calculateRiskForServiceSegment(projection, user, tenent, riskCalcParams);
-                }else {
+                } else {
                     throw new FXDefaultException("-1", "INVALID_ATTEMPT", "Not a supported risk calculation projection",
                             new Date(), HttpStatus.BAD_REQUEST, false);
                 }
@@ -151,8 +151,8 @@ public class RiskServiceImpl implements RiskService {
         int startPage = 0;
 
         meta.put("page", page);
-        meta.put("size" , size);
-        meta.put("segmentSize" , SEGMENT_SIZE);
+        meta.put("size", size);
+        meta.put("segmentSize", SEGMENT_SIZE);
 
         // LOG Calculation task to DB.
         CalcStatus thisCalc = this.calcStatusService.saveCalcStatus(tenent, new CalcStatus(),
@@ -170,13 +170,13 @@ public class RiskServiceImpl implements RiskService {
         // this is purely for debugging purposes.
         // set the respective enviroment variable to -1 to disable
         // this behaviour.
-        if (riskCalcParams.getPageLimit() !=null && riskCalcParams.getPageLimit().intValue() != -1) {
+        if (riskCalcParams.getPageLimit() != null && riskCalcParams.getPageLimit().intValue() != -1) {
             // found page number overriding values
             noOfAsyncTasks = riskCalcParams.getPageLimit().intValue();
             pageSize = riskCalcParams.getRecordLimit().intValue();
             logger.debug(String.format("%s - Override Params - No of segments : %s, Page size : %s",
                     tenent, noOfAsyncTasks, pageSize));
-        }else{
+        } else {
 
             // derive default value
             if (size > SEGMENT_SIZE) {
@@ -210,15 +210,15 @@ public class RiskServiceImpl implements RiskService {
             logger.debug(String.format("%s - service segment risk calculation. Last page included", tenent));
         }
 
-        meta.put("skip" , skip);
-        meta.put("noOfAsyncTasks" , noOfAsyncTasks);
-        meta.put("pageSize" , pageSize);
-        meta.put("offset" , offset);
+        meta.put("skip", skip);
+        meta.put("noOfAsyncTasks", noOfAsyncTasks);
+        meta.put("pageSize", pageSize);
+        meta.put("offset", offset);
 
         for (int i = skip; i < noOfAsyncTasks; i++) {
             // send customer fetch -- tenant, page, size
             futuresList.add(this.segmentedRiskService.calculateCustomerSegmentRisk(riskCalcParams,
-                    thisCalc.getId(), user, tenent, i,    pageSize));
+                    thisCalc.getId(), user, tenent, i, pageSize));
         }
 
         CompletableFuture.allOf(
@@ -306,8 +306,8 @@ public class RiskServiceImpl implements RiskService {
 
         // make sure there aren't any multiple requests logged durig
         // given interval
-        int  hours = 0;
-        if (lastCalc!=null) {
+        int hours = 0;
+        if (lastCalc != null) {
             long secs = (new Date().getTime() - lastCalc.getMDate().getTime()) / 1000;
             hours = (int) (secs / 3600);
         }
@@ -341,7 +341,7 @@ public class RiskServiceImpl implements RiskService {
                     tenent, totRecords));
 
 
-            if (riskCalcParams.getParallelCount() !=null && riskCalcParams.getParallelCount() != -1) {
+            if (riskCalcParams.getParallelCount() != null && riskCalcParams.getParallelCount() != -1) {
                 parallelTasks = riskCalcParams.getParallelCount();
             } else parallelTasks = PARALLEL_SERVICE_SIZE;
 
@@ -366,7 +366,7 @@ public class RiskServiceImpl implements RiskService {
 
                 // if last page, might need to make an adjustment
                 if (i == (parallelTasks - 1) &&
-                        totRecords > PARALLEL_SERVICE_SIZE  && offset > 0 ) {
+                        totRecords > PARALLEL_SERVICE_SIZE && offset > 0) {
                     parameters.put("offset", String.valueOf(offset));
                     meta.put("offset", String.valueOf(offset));
                 }
@@ -376,14 +376,16 @@ public class RiskServiceImpl implements RiskService {
                 parameters.put("size", String.valueOf(pageSize));
                 parameters.put("page", String.valueOf(i));
                 parameters.put("calcGroup", calcGroup);
-                parameters.put("pageLimit", riskCalcParams.getPageLimit().toString());
-                parameters.put("recordLimit", riskCalcParams.getRecordLimit().toString());
+                if (riskCalcParams.getPageLimit() != null)
+                    parameters.put("pageLimit", riskCalcParams.getPageLimit().toString());
+                if (riskCalcParams.getRecordLimit() != null)
+                    parameters.put("recordLimit", riskCalcParams.getRecordLimit().toString());
                 parameters.put("calcCategoryRisk", String.valueOf(riskCalcParams.isCalcCategoryRisk()));
                 parameters.put("calcProductRisk", String.valueOf(riskCalcParams.isCalcProductRisk()));
                 parameters.put("calcChannelRisk", String.valueOf(riskCalcParams.isCalcChannelRisk()));
 
                 // send risk calculation request
-                futuresList.add(this.initRiskCalcRequest(parameters, tenent ));
+                futuresList.add(this.initRiskCalcRequest(parameters, tenent));
             }
 
             // LOG Calculation task to DB.
@@ -430,7 +432,7 @@ public class RiskServiceImpl implements RiskService {
         }
     }
 
-    CompletableFuture<?> initRiskCalcRequest(HashMap<String, String> parameters,  String tenent ) {
+    CompletableFuture<?> initRiskCalcRequest(HashMap<String, String> parameters, String tenent) {
         return CompletableFuture.runAsync(() -> {
             HashMap<String, String> headers = new HashMap<>();
             try {
