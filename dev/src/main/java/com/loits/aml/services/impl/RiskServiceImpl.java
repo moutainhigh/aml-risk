@@ -188,9 +188,6 @@ public class RiskServiceImpl implements RiskService {
             }
         }
 
-        // adjustment segment pages based on the service page
-        noOfAsyncTasks = page == 0 ? noOfAsyncTasks : ((noOfAsyncTasks * page) + noOfAsyncTasks);
-
         // need force overriding to handle parallel requests
         // Example 1
         // i.   There are 6000 records in the database and we are running
@@ -199,6 +196,10 @@ public class RiskServiceImpl implements RiskService {
         // iii. If '1' is received as the page, we need to ignore first 3000 records in this
         //      risk segment.
         skip = noOfAsyncTasks * page;
+
+        // adjustment segment pages based on the service page
+        noOfAsyncTasks = page == 0 ? noOfAsyncTasks : (noOfAsyncTasks * page) + noOfAsyncTasks);
+
 
 
         logger.debug(String.format("%s - Risk calculation service segment process params - " +
@@ -219,8 +220,7 @@ public class RiskServiceImpl implements RiskService {
         for (int i = skip; i < noOfAsyncTasks; i++) {
             // send customer fetch -- tenant, page, size
             futuresList.add(this.segmentedRiskService.calculateCustomerSegmentRisk(riskCalcParams,
-                    thisCalc.getId(), user, tenent, i,
-                    pageSize));
+                    thisCalc.getId(), user, tenent, i,    pageSize));
         }
 
         CompletableFuture.allOf(
