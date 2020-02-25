@@ -341,7 +341,7 @@ public class RiskServiceImpl implements RiskService {
                     tenent, totRecords));
 
 
-            if (riskCalcParams.getParallelCount() != -1) {
+            if (riskCalcParams.getParallelCount() !=null && riskCalcParams.getParallelCount() != -1) {
                 parallelTasks = riskCalcParams.getParallelCount();
             } else parallelTasks = PARALLEL_SERVICE_SIZE;
 
