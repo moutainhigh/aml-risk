@@ -96,3 +96,4 @@ export CONF_DB_IP_PORT=130.61.46.215:3306 &&
 
 ## Run below command to build
 mvn clean package -Denv.CONF_ENV_NAME=dev
+T
