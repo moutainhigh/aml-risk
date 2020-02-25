@@ -198,9 +198,7 @@ public class RiskServiceImpl implements RiskService {
         skip = noOfAsyncTasks * page;
 
         // adjustment segment pages based on the service page
-        noOfAsyncTasks = page == 0 ? noOfAsyncTasks : (noOfAsyncTasks * page) + noOfAsyncTasks);
-
-
+        noOfAsyncTasks = page == 0 ? noOfAsyncTasks : ((noOfAsyncTasks * page) + noOfAsyncTasks);
 
         logger.debug(String.format("%s - Risk calculation service segment process params - " +
                 "   No of Async Tasks : %s, Skip : %s, Page size : %s", tenent, noOfAsyncTasks, skip, pageSize));
