@@ -5,12 +5,17 @@ import lombok.Data;
 @Data
 public class RiskCalcParams {
 
+  private String operation = null;
   private boolean calcCategoryRisk = true;
   private boolean calcChannelRisk= true;
   private boolean calcProductRisk = true;
   private Integer pageLimit;
-  private Integer skip;
+  private Integer parallelCount;
   private Integer recordLimit;
+  private Integer size;
+  private Integer page;
+  private Integer offset;
+  private String calcGroup;
 
   public RiskCalcParams() {
   }
@@ -18,12 +23,17 @@ public class RiskCalcParams {
   @Override
   public String toString() {
     return "RiskCalcParams{" +
-            "calcCategoryRisk=" + calcCategoryRisk +
+            "operation='" + operation + '\'' +
+            ", calcCategoryRisk=" + calcCategoryRisk +
             ", calcChannelRisk=" + calcChannelRisk +
             ", calcProductRisk=" + calcProductRisk +
-            ", skip=" + skip +
-            ", pageLimit=" + pageLimit.intValue() +
-            ", recordLimit=" + recordLimit.intValue() +
+            ", pageLimit=" + pageLimit +
+            ", parallelCount=" + parallelCount +
+            ", recordLimit=" + recordLimit +
+            ", size=" + size +
+            ", page=" + page +
+            ", offset=" + offset +
+            ", calcGroup='" + calcGroup + '\'' +
             '}';
   }
 }

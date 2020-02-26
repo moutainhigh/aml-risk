@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -80,6 +81,8 @@ public class AMLChannelRiskServiceImpl implements AMLChannelRiskService {
       } catch (IOException e) {
         e.printStackTrace();
       } catch (ClassNotFoundException e) {
+        e.printStackTrace();
+      } catch (URISyntaxException e) {
         e.printStackTrace();
       }
 

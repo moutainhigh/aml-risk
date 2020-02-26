@@ -106,14 +106,19 @@ public class HttpServiceImpl implements HTTPService {
   public <T, classType, binderType> T sendData(String key, String url,
                                                Map<String, String> queryParam, HashMap<String,
           String> headers, Class classType, Object object) throws FXDefaultException, IOException
-          , ClassNotFoundException {
+          , ClassNotFoundException, URISyntaxException {
     HttpResponse httpResponse;
     ObjectMapper objectMapper = new ObjectMapper();
     objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
     String jsonString;
     Object responseEntity = null;
+    URIBuilder builder  = new URIBuilder(url);
 
-    httpResponse = sendPostRequest(url, key, headers, object);
+    if (queryParam != null && !queryParam.isEmpty())
+      queryParam.entrySet().forEach(x -> builder.addParameter(x.getKey(), x.getValue()));
+
+
+    httpResponse = sendPostRequest(builder.build().toString(), key, headers, object);
 
     try {
       jsonString = EntityUtils.toString(httpResponse.getEntity());
