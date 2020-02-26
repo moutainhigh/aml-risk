@@ -9,7 +9,7 @@ import org.hibernate.annotations.NotFound;
 @Data
 public class OverallRisk {
     private Long customerCode;
-    private com.loits.aml.domain.Module module;
+    private com.loits.fx.aml.Module module;
     private Double customerRisk;
     private Double productRisk;
     private Double channelRisk;
