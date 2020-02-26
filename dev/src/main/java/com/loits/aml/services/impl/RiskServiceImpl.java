@@ -451,7 +451,7 @@ public class RiskServiceImpl implements RiskService {
     @Override
     public Object calcOnboardingRisk(OnboardingCustomer onboardingCustomer, String user,
                                      String tenent) throws FXDefaultException, IOException,
-            ClassNotFoundException, URISyntaxException {
+            ClassNotFoundException, URISyntaxException, InvocationTargetException, IllegalAccessException {
 
         //Check if a module exists by sent module code
         if (!moduleRepository.existsByCode(onboardingCustomer.getModule())) {
@@ -598,7 +598,11 @@ public class RiskServiceImpl implements RiskService {
         overallRisk.setHighRiskCustomerType(customerRisk.getCustomerType().getHighRisk());
         overallRisk.setHighRiskOccupation(customerRisk.getOccupation().getHighRisk());
 
-        return kieService.getOverallRisk(overallRisk);
+        com.loits.aml.dto.OverallRisk oRisk = new com.loits.aml.dto.OverallRisk();
+        NullAwareBeanUtilsBean utilsBean = new NullAwareBeanUtilsBean();
+        utilsBean.copyProperties(oRisk, kieService.getOverallRisk(overallRisk));
+
+        return oRisk;
     }
 
 

@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -83,7 +84,7 @@ public class AmlRiskController {
                                                      @RequestBody @Valid OnboardingCustomer customer,
                                                      @RequestHeader(value = "user", defaultValue
                                                              = "sysUser") String user
-  ) throws FXDefaultException, IOException, ClassNotFoundException, URISyntaxException {
+  ) throws FXDefaultException, IOException, ClassNotFoundException, URISyntaxException, InvocationTargetException, IllegalAccessException {
     Resource resource = new Resource(riskService.calcOnboardingRisk(customer, user, tenent));
     return ResponseEntity.ok(resource);
   }
