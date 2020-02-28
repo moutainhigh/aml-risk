@@ -108,8 +108,7 @@ public class AmlRiskController {
                                                        "sysUser") String user,
                                                @RequestBody List<OverallRisk> customers
   ) throws FXDefaultException, ExecutionException, InterruptedException {
-    Resources resource = new Resources(riskService.calculateForModuleCustomers(user, tenent, customers));
-    return ResponseEntity.ok(resource);
+    return ResponseEntity.ok(riskService.calculateForModuleCustomers(user, tenent, customers));
   }
 
 
