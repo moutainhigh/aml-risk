@@ -265,7 +265,6 @@ public class AMLRiskServiceImpl implements AMLRiskService {
   @Override
   public OverallRisk calculateRiskByCustomer(String user, String tenent, Long id,
                                              String projection) throws FXDefaultException {
-
     final CompletableFuture<OverallRisk> result = new CompletableFuture<>();
 
     this.calcRiskForCustomer(id, user, tenent, projection).whenComplete((overallRisk, ex) -> {
@@ -296,6 +295,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
       throw new FXDefaultException("-1", "ERR", "Risk Calculation Error. Please see system log for details",
               new Date(), HttpStatus.BAD_REQUEST, false);
     }
+
   }
 
   @Override
@@ -624,9 +624,6 @@ public class AMLRiskServiceImpl implements AMLRiskService {
   }
 
 
-
-
-
   /**
    * Calculate risk of a given customer. This method calculates it asynchronously and invoking method should handle errors.
    *
@@ -742,15 +739,11 @@ public class AMLRiskServiceImpl implements AMLRiskService {
               customerRisk.setOccupation(occupation);
             }
 
-            OverallRisk overallRisk = new OverallRisk();
-            overallRisk.setCustomerCode(customer.getId());
-            overallRisk.setModule(ruleModule);
-            overallRisk.setCustomerRisk(customerRisk.getCalculatedRisk());
-            overallRisk.setProductRisk(productRisk.getCalculatedRisk());
-            overallRisk.setChannelRisk(channelRisk.getCalculatedRisk());
-            overallRisk.setPepsEnabled(customerRisk.getPepsEnabled());
-            overallRisk.setHighRiskCustomerType(customerRisk.getCustomerType().getHighRisk());
-            overallRisk.setHighRiskOccupation(customerRisk.getOccupation().getHighRisk());
+            OverallRisk overallRisk = new OverallRisk(customer.getId(), ruleModule,
+                    customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(),
+                    channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(),
+                    customerRisk.getCustomerType().getHighRisk(),
+                    customerRisk.getOccupation().getHighRisk());
             overallRisk = kieService.getOverallRisk(overallRisk);
 
             //Save to calculated AmlRisk record to overallrisk
@@ -775,7 +768,8 @@ public class AMLRiskServiceImpl implements AMLRiskService {
                       amlRiskRepository.findTopByCustomerOrderByCreatedOnDesc(customer.getId()).get();
 
               //If last risk calculation is before back days
-              if (amlRisk.getRiskCalcAttemptDate().before(cal.getTime()) || projection.equals(
+              if ((amlRisk.getRiskCalcAttemptDate() != null && amlRisk.getRiskCalcAttemptDate().before(cal.getTime()))
+                      || projection.equals(
                       "calculate")) {
                 risk = amlRiskRepository.save(risk);
                 logger.debug("AmlRisk record saved to database successfully");
@@ -793,6 +787,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
           }
         }
 
+
       } catch (
               Exception e) {
         throw new CompletionException(e);
@@ -801,6 +796,5 @@ public class AMLRiskServiceImpl implements AMLRiskService {
       }
     });
   }
-
 
 }

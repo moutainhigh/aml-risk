@@ -21,4 +21,7 @@ public interface RiskService {
 
   List<OverallRisk> calculateForModuleCustomers(String user, String tenent, List<OverallRisk> customers)
           throws FXDefaultException, ExecutionException, InterruptedException;
+
+
+
 }
