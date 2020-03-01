@@ -267,8 +267,6 @@ public class AMLRiskServiceImpl implements AMLRiskService {
                                              String projection) throws FXDefaultException {
     final CompletableFuture<OverallRisk> result = new CompletableFuture<>();
 
-    final CompletableFuture<OverallRisk> result = new CompletableFuture<>();
-
     this.calcRiskForCustomer(id, user, tenent, projection).whenComplete((overallRisk, ex) -> {
       try {
         TenantHolder.setTenantId(tenent);
