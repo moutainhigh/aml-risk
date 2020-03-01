@@ -10,6 +10,4 @@ public interface KieService {
 
     OverallRisk getOverallRisk(OverallRisk overallRisk) throws FXDefaultException;
 
-    ArrayList<OverallRisk> getOverallRisks(ArrayList<OverallRisk> overallRisk) throws FXDefaultException;
-
 }

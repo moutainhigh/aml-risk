@@ -15,6 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -52,6 +53,13 @@ public class CalcStatusServiceImpl implements CalcStatusService {
   @PostConstruct
   public void init() {
     this.sdf = new SimpleDateFormat(dateFormat);
+  }
+
+  @Override
+  public CalcStatus getLastCalculation(String type) {
+
+    Sort sort = Sort.by("id").descending(); // data sorting strategy
+    return this.calcStatusRepository.findFirstByType(type, sort);
   }
 
   @Override

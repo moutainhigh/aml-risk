@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -173,6 +174,8 @@ public class AMLProductRiskServiceImpl implements AMLProductRiskService {
       } catch (IOException e) {
         e.printStackTrace();
       } catch (ClassNotFoundException e) {
+        e.printStackTrace();
+      } catch (URISyntaxException e) {
         e.printStackTrace();
       }
     } else {
