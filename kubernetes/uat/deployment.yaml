@@ -43,7 +43,10 @@ spec:
         - configMapRef:
             name: fusionx-config
         - secretRef:
-            name: fusionx-secret          
+            name: fusionx-secret      
+        env:
+          - name: JAVA_OPTS
+            value: "-XX:+UseCompressedOops -Xms4096m -Xmx12288m"           
         ports:
           - name: http
             protocol: TCP

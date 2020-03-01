@@ -1,6 +1,5 @@
 package com.loits.aml.services.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loits.aml.commons.CalcStatusCodes;
 import com.loits.aml.commons.CalcTypes;
 import com.loits.aml.commons.RiskCalcParams;
@@ -19,6 +18,8 @@ import com.loits.aml.repo.GeoLocationRepository;
 import com.loits.aml.repo.ModuleRepository;
 import com.loits.aml.services.*;
 import com.loits.fx.aml.*;
+import org.apache.commons.text.CharacterPredicates;
+import org.apache.commons.text.RandomStringGenerator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +28,10 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -49,6 +52,9 @@ public class RiskServiceImpl implements RiskService {
     CalcStatusService calcStatusService;
 
     @Autowired
+    CalcStatusRepository calcStatusRepository;
+
+    @Autowired
     KieService kieService;
 
     @Autowired
@@ -56,9 +62,6 @@ public class RiskServiceImpl implements RiskService {
 
     @Autowired
     GeoLocationRepository geoLocationRepository;
-
-    @Autowired
-    CalcStatusRepository calcStatusRepository;
 
     @Autowired
     SegmentedRiskService segmentedRiskService;
@@ -72,132 +75,44 @@ public class RiskServiceImpl implements RiskService {
     @Value("${loits.tp.queue.size}")
     int THREAD_POOL_QUEUE_SIZE;
 
+    @Value("${aml.api.risk-calculate}")
+    String AML_RISK_CALC_URL;
+
     @Value("${aml.risk-calculation.segment-size}")
     int SEGMENT_SIZE;
 
+    @Value("${aml.risk-calculation.parallel-count}")
+    int PARALLEL_SERVICE_SIZE;
+
+    @Value("${default.risk-calc.sync.skip-interval}")
+    private int DEFAULT_RISK_CALC_SKIP_HOURS;
+
+    RandomStringGenerator randomStringGenerator;
+
+    @PostConstruct
+    public void init() {
+        randomStringGenerator =
+                new RandomStringGenerator.Builder()
+                        .withinRange('0', 'z')
+                        .filteredBy(CharacterPredicates.LETTERS, CharacterPredicates.DIGITS)
+                        .build();
+    }
+
     @Override
-    public CompletableFuture<?> calculateRiskForCustomerBase(String user, String tenent,
+    public CompletableFuture<?> calculateRiskForCustomerBase(String projection, String user, String tenent,
                                                              RiskCalcParams riskCalcParams) {
         return CompletableFuture.runAsync(() -> {
             try {
                 TenantHolder.setTenantId(tenent);
-                List<CompletableFuture<?>> futuresList = new ArrayList<>();
-                logger.info("Customer base risk calculation process started");
-                HashMap<String, Object> meta = new HashMap<>();
 
-                // LOG Calculation task to DB.
-                CalcStatus thisCalc = this.calcStatusService.saveCalcStatus(tenent, new CalcStatus(),
-                        String.valueOf(Thread.currentThread().getId()),
-                        CalcStatusCodes.CALC_INITIATED,
-                        CalcTypes.CUST_RISK_CALC, meta);
-
-                // fetch a single customer page to determine no of customer records.
-                //Request parameters to Customer Service
-                String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
-                HashMap<String, String> parameters = new HashMap<>();
-                parameters.put("size", "1");
-                parameters.put("projection", "");
-
-                //Send request to Customer Service
-                RestResponsePage customerResultPage =
-                        httpService.sendServiceRequest(customerServiceUrl, parameters,
-                                null, "Customer");
-
-                int totRecords = customerResultPage.getTotalPages(); //Total pages = Total Customers
-                int pageSize = 0;
-                boolean isDebugMode = false;
-
-                // calculate customer risk in segments.
-                // Max. allowed segments --PARALLEL_THREADS
-                int noOfAsyncTasks = 1;
-                int skip = 0;
-
-                if (totRecords > SEGMENT_SIZE) {
-                    noOfAsyncTasks = totRecords / SEGMENT_SIZE;
-                    pageSize = SEGMENT_SIZE;
-                } else pageSize = totRecords;
-
-
-                // override no of pages if set in environment.
-                // this is purely for testing purposes.
-                // set the respective enviroment variable to -1 to disable
-                // this behaviour.
-                if (riskCalcParams.getPageLimit().intValue() != -1) {
-                    // found page number overriding values
-                    noOfAsyncTasks = riskCalcParams.getPageLimit().intValue();
-                    isDebugMode = true;
-                    logger.info("No of pages is overridden by environment value : No of segments : " + noOfAsyncTasks);
-
-                    pageSize = riskCalcParams.getRecordLimit().intValue();
+                if (projection.equals("initiate") || projection.equals("initiate --f")) {
+                    this.initiateRiskCalculation(projection, user, tenent, riskCalcParams);
+                } else if (projection.equals("calculate")) {
+                    this.calculateRiskForServiceSegment(projection, user, tenent, riskCalcParams);
+                } else {
+                    throw new FXDefaultException("-1", "INVALID_ATTEMPT", "Not a supported risk calculation projection",
+                            new Date(), HttpStatus.BAD_REQUEST, false);
                 }
-
-                if (riskCalcParams.getSkip().intValue() != -1) {
-                    skip = riskCalcParams.getSkip().intValue();
-                    logger.info("Skip pages overridden by query paramvalue: " + skip);
-                }
-
-                logger.info(String.format("Task parameters. No of Async Tasks : %s, Page size : %s, " +
-                        "Total Records : %s", noOfAsyncTasks, pageSize, totRecords));
-
-                meta.put("fetched", 1);
-                meta.put("totalCustomers", totRecords);
-                meta.put("noOfSegments", noOfAsyncTasks); // index starts at 0
-                meta.put("tpSize", THREAD_POOL_SIZE);
-                meta.put("tpQueueSize", THREAD_POOL_QUEUE_SIZE);
-                meta.put("calcParams", riskCalcParams.toString());
-
-                for (int i = skip; i < noOfAsyncTasks; i++) {
-
-                    // if last page, might need to make an adjustment
-                    if (!isDebugMode && (i == (noOfAsyncTasks - 1) &&
-                            totRecords > SEGMENT_SIZE)) {
-                        int orphanRecordCount = totRecords % SEGMENT_SIZE;
-                        pageSize = orphanRecordCount;
-                        meta.put("finalPageSize", pageSize);
-                    }
-
-                    // send customer fetch -- tenant, page, size
-                    futuresList.add(this.segmentedRiskService.calculateCustomerSegmentRisk(riskCalcParams,
-                            thisCalc.getId(), user, tenent, i,
-                            pageSize));
-                }
-
-                meta.put("asyncTaskCount", futuresList.size());
-
-                // LOG Calculation task to DB.
-                this.calcStatusService.saveCalcStatus(tenent, thisCalc,
-                        String.valueOf(Thread.currentThread().getId()),
-                        CalcStatusCodes.CALC_UPDATED,
-                        CalcTypes.CUST_RISK_CALC, meta);
-
-                CompletableFuture.allOf(
-                        futuresList.toArray(new CompletableFuture[futuresList.size()]))
-                        .whenComplete((result, ex) -> {
-                            try {
-                                TenantHolder.setTenantId(tenent);
-                                if (ex != null) {
-                                    ex.printStackTrace();
-                                    logger.debug("All customer risk calculations processes error");
-                                    this.calcStatusService.saveCalcStatus(tenent, thisCalc,
-                                            String.valueOf(Thread.currentThread().getId()),
-                                            CalcStatusCodes.CALC_ERROR,
-                                            CalcTypes.CUST_RISK_CALC, meta);
-                                } else {
-                                    logger.debug("All customer risk calculations processes completed");
-                                    this.calcStatusService.saveCalcStatus(tenent, thisCalc,
-                                            String.valueOf(Thread.currentThread().getId()),
-                                            CalcStatusCodes.CALC_COMPLETED,
-                                            CalcTypes.CUST_RISK_CALC, meta);
-                                }
-                            } catch (Exception e) {
-                                logger.error("Risk calcualtion task completion logging error");
-                                e.printStackTrace();
-                            } finally {
-                                // clear tenant
-                                TenantHolder.clear();
-                            }
-                        });
-
             } catch (Exception e) {
                 logger.error("Customer Risk Calculation process error");
                 e.printStackTrace();
@@ -208,10 +123,335 @@ public class RiskServiceImpl implements RiskService {
         });
     }
 
+
+    /**
+     * Calculating risk for a given customer segment is done here.
+     * <p>
+     * E.g.
+     * <p>
+     * When risk calculation service is called with page=2, size=1000 risk calculation, this method
+     * will take the 2nd 1000 block and process the same with internal segmentation logic.
+     *
+     * @param projection
+     * @param user
+     * @param tenent
+     * @param riskCalcParams
+     */
+    private void calculateRiskForServiceSegment(String projection, String user, String tenent,
+                                                RiskCalcParams riskCalcParams) {
+        logger.debug(String.format("%s - Risk calculation service segment process started", tenent));
+
+        HashMap<String, Object> meta = new HashMap<>();
+        List<CompletableFuture<?>> futuresList = new ArrayList<>();
+
+        Integer page = riskCalcParams.getPage();
+        Integer offset = riskCalcParams.getOffset();
+        Integer size = riskCalcParams.getSize();
+        String calcGroup = riskCalcParams.getCalcGroup();
+        int startPage = 0;
+
+        meta.put("page", page);
+        meta.put("size", size);
+        meta.put("segmentSize", SEGMENT_SIZE);
+
+        // LOG Calculation task to DB.
+        CalcStatus thisCalc = this.calcStatusService.saveCalcStatus(tenent, new CalcStatus(),
+                String.valueOf(Thread.currentThread().getId()),
+                CalcStatusCodes.CALC_INITIATED,
+                CalcTypes.CUST_RISK_CALC, meta);
+
+        thisCalc.setCalcGroup(calcGroup);
+
+
+        int noOfAsyncTasks, skip = 0, pageSize = 0;
+
+
+        // override no of pages if set in environment.
+        // this is purely for debugging purposes.
+        // set the respective enviroment variable to -1 to disable
+        // this behaviour.
+        if (riskCalcParams.getPageLimit() != null && riskCalcParams.getPageLimit().intValue() != -1) {
+            // found page number overriding values
+            noOfAsyncTasks = riskCalcParams.getPageLimit().intValue();
+            pageSize = riskCalcParams.getRecordLimit().intValue();
+            logger.debug(String.format("%s - Override Params - No of segments : %s, Page size : %s",
+                    tenent, noOfAsyncTasks, pageSize));
+        } else {
+
+            // derive default value
+            if (size > SEGMENT_SIZE) {
+                noOfAsyncTasks = size / SEGMENT_SIZE;
+                pageSize = SEGMENT_SIZE;
+            } else {
+                pageSize = size;
+                noOfAsyncTasks = 1;
+            }
+        }
+
+        // need force overriding to handle parallel requests
+        // Example 1
+        // i.   There are 6000 records in the database and we are running
+        //      2 parallel service calls  -> 6000 / 2. Let's assume segment size is 1000.
+        // ii.  This segment will receive page size of 3000 with either page 0 or 1.
+        // iii. If '1' is received as the page, we need to ignore first 3000 records in this
+        //      risk segment.
+        skip = noOfAsyncTasks * page;
+
+        // adjustment segment pages based on the service page
+        noOfAsyncTasks = page == 0 ? noOfAsyncTasks : ((noOfAsyncTasks * page) + noOfAsyncTasks);
+
+        logger.debug(String.format("%s - Risk calculation service segment process params - " +
+                "   No of Async Tasks : %s, Skip : %s, Page size : %s", tenent, noOfAsyncTasks, skip, pageSize));
+
+
+        if (offset != null) {
+            // handle last page data set. Add additional page to task list
+            noOfAsyncTasks += 1;
+            logger.debug(String.format("%s - service segment risk calculation. Last page included", tenent));
+        }
+
+        meta.put("skip", skip);
+        meta.put("noOfAsyncTasks", noOfAsyncTasks);
+        meta.put("pageSize", pageSize);
+        meta.put("offset", offset);
+
+        for (int i = skip; i < noOfAsyncTasks; i++) {
+            // send customer fetch -- tenant, page, size
+            futuresList.add(this.segmentedRiskService.calculateCustomerSegmentRisk(riskCalcParams,
+                    thisCalc.getId(), user, tenent, i, pageSize));
+        }
+
+        CompletableFuture.allOf(
+                futuresList.toArray(new CompletableFuture[futuresList.size()]))
+                .whenComplete((result, ex) -> {
+                    try {
+                        TenantHolder.setTenantId(tenent);
+                        logger.debug(String.format(
+                                "%s - Risk calculation service segmented finished. Page - %s, Size - %s",
+                                tenent, page, size));
+                        if (ex != null) {
+                            ex.printStackTrace();
+                            logger.error(String.format(
+                                    "%s - Risk calculation service segmented error. Page - %s, Size - %s, Error - %s",
+                                    tenent, page, size, ex.getMessage()));
+                            this.calcStatusService.saveCalcStatus(tenent, thisCalc,
+                                    String.valueOf(Thread.currentThread().getId()),
+                                    CalcStatusCodes.CALC_ERROR,
+                                    CalcTypes.CUST_RISK_CALC, meta);
+                        } else {
+                            logger.error(String.format(
+                                    "%s - Risk calculation service segmented completed. Page - %s, Size - %s",
+                                    tenent, page, size));
+                            this.calcStatusService.saveCalcStatus(tenent, thisCalc,
+                                    String.valueOf(Thread.currentThread().getId()),
+                                    CalcStatusCodes.CALC_COMPLETED,
+                                    CalcTypes.CUST_RISK_CALC, meta);
+                        }
+                    } catch (Exception e) {
+                        logger.error("Risk calcualtion task completion logging error");
+                        e.printStackTrace();
+                    } finally {
+                        // clear tenant
+                        TenantHolder.clear();
+                    }
+                });
+    }
+
+
+    /**
+     * When invoked this will initiate the risk calculation. Could be run in two modes. i. Debugging mode and ii. General
+     * <p>
+     * E.g. Debugging Mode
+     * <p>
+     * When run in debugging mode, it's designed to run in 1 parallel task. Accepted parameters are
+     * <p>
+     * parallelCount = 1
+     * pageLimit  = 10  (No of pages to be considered for risk calculation)
+     * skip = 2 (No of pages to skip for risk calculation)
+     * recordLimit = 1000 (No of records per  page)
+     * <p>
+     * <p>
+     * E.g. General Mode
+     * <p>
+     * When run in general mode, this method will check the total record count, allocated parallel task count  and initiate
+     * segmented risk calculation by invoking self method (via REST call) to populate segmented risk calculation across
+     * multiple services.
+     *
+     * @param projection
+     * @param user
+     * @param tenent
+     * @param riskCalcParams
+     * @throws Exception
+     */
+    private void initiateRiskCalculation(String projection, String user, String tenent,
+                                         RiskCalcParams riskCalcParams) throws Exception {
+        /*
+            Risk calculation initialization process shall be run once
+        */
+        HashMap<String, Object> meta = new HashMap<>();
+
+        logger.debug(String.format("%s - Risk calculation process started", tenent));
+        List<CompletableFuture<?>> futuresList = new ArrayList<>();
+        String calcGroup = randomStringGenerator.generate(12);
+
+        CalcStatus lastCalc = this.calcStatusService.getLastCalculation(CalcTypes.CUST_RISK_CALC);
+
+        // LOG Calculation task to DB.
+        CalcStatus thisCalc = this.calcStatusService.saveCalcStatus(tenent, new CalcStatus(),
+                String.valueOf(Thread.currentThread().getId()),
+                CalcStatusCodes.CALC_INITIATED,
+                CalcTypes.CUST_RISK_CALC, meta);
+
+        thisCalc.setCalcGroup(calcGroup);
+
+        // make sure there aren't any multiple requests logged durig
+        // given interval
+        int hours = 0;
+        if (lastCalc != null) {
+            long secs = (new Date().getTime() - lastCalc.getMDate().getTime()) / 1000;
+            hours = (int) (secs / 3600);
+        }
+
+        meta.put("groupId", calcGroup);
+        meta.put("projection", projection);
+        meta.put("lastCheckedHr", String.valueOf(hours));
+
+        logger.debug(String.format("%s - Risk calculation last process run in : %s", tenent, hours));
+
+        // Make sure not a multiple request
+        if (hours >= DEFAULT_RISK_CALC_SKIP_HOURS || projection.equalsIgnoreCase("initiate --f")) {
+
+            // fetch a single customer page to determine no of customer records.
+            //Request parameters to Customer Service
+            String customerServiceUrl = String.format(env.getProperty("aml.api.customer"), tenent);
+            HashMap<String, String> parameters = new HashMap<>();
+            parameters.put("size", "1");
+            parameters.put("projection", "");
+
+            //Send request to Customer Service
+            RestResponsePage customerResultPage =
+                    httpService.sendServiceRequest(customerServiceUrl, parameters,
+                            null, "Customer");
+
+            int totRecords = customerResultPage.getTotalPages(); //Total pages = Total Customers
+            int parallelTasks = 1;
+            int pageSize = 0, offset = 0;
+
+            logger.debug(String.format("%s - Risk calculation estimation data loaded. Total Records : %s",
+                    tenent, totRecords));
+
+
+            if (riskCalcParams.getParallelCount() != null && riskCalcParams.getParallelCount() != -1) {
+                parallelTasks = riskCalcParams.getParallelCount();
+            } else parallelTasks = PARALLEL_SERVICE_SIZE;
+
+            // calculate page size
+            if (totRecords > 1) {
+                pageSize = totRecords / parallelTasks;
+                offset = totRecords % parallelTasks;
+            } else pageSize = 1;
+
+            meta.put("fetched", 1);
+            meta.put("totalCustomers", totRecords);
+            meta.put("parallelTasks", parallelTasks); // index starts at 0
+
+
+            logger.debug(String.format(
+                    "%s - Risk calculation service segment params -  Parallel Tasks : %s, Page size: %s",
+                    tenent, parallelTasks, pageSize));
+
+            for (int i = 0; i < parallelTasks; i++) {
+
+                parameters = new HashMap<>();
+
+                // if last page, might need to make an adjustment
+                if (i == (parallelTasks - 1) &&
+                        totRecords > PARALLEL_SERVICE_SIZE && offset > 0) {
+                    parameters.put("offset", String.valueOf(offset));
+                    meta.put("offset", String.valueOf(offset));
+                }
+
+                // make a risk calculation request
+                parameters.put("projection", "calculate");
+                parameters.put("size", String.valueOf(pageSize));
+                parameters.put("page", String.valueOf(i));
+                parameters.put("calcGroup", calcGroup);
+                if (riskCalcParams.getPageLimit() != null)
+                    parameters.put("pageLimit", riskCalcParams.getPageLimit().toString());
+                if (riskCalcParams.getRecordLimit() != null)
+                    parameters.put("recordLimit", riskCalcParams.getRecordLimit().toString());
+                parameters.put("calcCategoryRisk", String.valueOf(riskCalcParams.isCalcCategoryRisk()));
+                parameters.put("calcProductRisk", String.valueOf(riskCalcParams.isCalcProductRisk()));
+                parameters.put("calcChannelRisk", String.valueOf(riskCalcParams.isCalcChannelRisk()));
+
+                // send risk calculation request
+                futuresList.add(this.initRiskCalcRequest(parameters, tenent));
+            }
+
+            // LOG Calculation task to DB.
+            this.calcStatusService.saveCalcStatus(tenent, thisCalc,
+                    String.valueOf(Thread.currentThread().getId()),
+                    CalcStatusCodes.CALC_UPDATED,
+                    CalcTypes.CUST_RISK_CALC, meta);
+
+            CompletableFuture.allOf(
+                    futuresList.toArray(new CompletableFuture[futuresList.size()]))
+                    .whenComplete((result, ex) -> {
+                        try {
+                            TenantHolder.setTenantId(tenent);
+                            logger.debug(String.format(
+                                    "%s - Risk calculation service segmented requests issued.", tenent));
+
+                            if (ex != null) {
+                                ex.printStackTrace();
+                                logger.error(String.format(
+                                        "%s - Risk calculation service segmented init error : %s", tenent, ex.getMessage()));
+                                this.calcStatusService.saveCalcStatus(tenent, thisCalc,
+                                        String.valueOf(Thread.currentThread().getId()),
+                                        CalcStatusCodes.CALC_ERROR,
+                                        CalcTypes.CUST_RISK_CALC, meta);
+                            } else {
+                                logger.error(String.format(
+                                        "%s - Risk calculation service segmented init completed", tenent));
+                                this.calcStatusService.saveCalcStatus(tenent, thisCalc,
+                                        String.valueOf(Thread.currentThread().getId()),
+                                        CalcStatusCodes.CALC_COMPLETED,
+                                        CalcTypes.CUST_RISK_CALC, meta);
+                            }
+                        } catch (Exception e) {
+                            logger.error("Risk calculation task completion logging error");
+                            e.printStackTrace();
+                        } finally {
+                            // clear tenant
+                            TenantHolder.clear();
+                        }
+                    });
+        } else {
+            logger.debug(String.format("%s - Duplicate request during given time interval", tenent));
+            throw new Exception("Duplicate request during given time interval");
+        }
+    }
+
+    CompletableFuture<?> initRiskCalcRequest(HashMap<String, String> parameters, String tenent) {
+        return CompletableFuture.runAsync(() -> {
+            HashMap<String, String> headers = new HashMap<>();
+            try {
+                httpService.sendData("Customer-risk",
+                        String.format(AML_RISK_CALC_URL, tenent),
+                        parameters, headers, Object.class, null);
+                logger.debug(String.format("%s - Risk calculation HTTP request initiated", tenent));
+            } catch (Exception e) {
+                logger.error(String.format("%s - Risk calculation HTTP request initialization error", tenent));
+                e.printStackTrace();
+            }
+        });
+    }
+
+
     @Override
     public Object calcOnboardingRisk(OnboardingCustomer onboardingCustomer, String user,
                                      String tenent) throws FXDefaultException, IOException,
-            ClassNotFoundException {
+            ClassNotFoundException, URISyntaxException, InvocationTargetException, IllegalAccessException {
 
         //Check if a module exists by sent module code
         if (!moduleRepository.existsByCode(onboardingCustomer.getModule())) {
@@ -358,7 +598,11 @@ public class RiskServiceImpl implements RiskService {
         overallRisk.setHighRiskCustomerType(customerRisk.getCustomerType().getHighRisk());
         overallRisk.setHighRiskOccupation(customerRisk.getOccupation().getHighRisk());
 
-        return kieService.getOverallRisk(overallRisk);
+        com.loits.aml.dto.OverallRisk oRisk = new com.loits.aml.dto.OverallRisk();
+        NullAwareBeanUtilsBean utilsBean = new NullAwareBeanUtilsBean();
+        utilsBean.copyProperties(oRisk, kieService.getOverallRisk(overallRisk));
+
+        return oRisk;
     }
 
 

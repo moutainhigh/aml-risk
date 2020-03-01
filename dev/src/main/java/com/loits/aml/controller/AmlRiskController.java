@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -82,7 +84,7 @@ public class AmlRiskController {
                                                      @RequestBody @Valid OnboardingCustomer customer,
                                                      @RequestHeader(value = "user", defaultValue
                                                              = "sysUser") String user
-  ) throws FXDefaultException, IOException, ClassNotFoundException {
+  ) throws FXDefaultException, IOException, ClassNotFoundException, URISyntaxException, InvocationTargetException, IllegalAccessException {
     Resource resource = new Resource(riskService.calcOnboardingRisk(customer, user, tenent));
     return ResponseEntity.ok(resource);
   }
@@ -106,8 +108,7 @@ public class AmlRiskController {
                                                        "sysUser") String user,
                                                @RequestBody List<OverallRisk> customers
   ) throws FXDefaultException, ExecutionException, InterruptedException {
-    Resources resource = new Resources(riskService.calculateForModuleCustomers(user, tenent, customers));
-    return ResponseEntity.ok(resource);
+    return ResponseEntity.ok(riskService.calculateForModuleCustomers(user, tenent, customers));
   }
 
 
@@ -116,11 +117,13 @@ public class AmlRiskController {
   public ResponseEntity<?> calculateRiskBulk(@PathVariable(value = "tenent") String tenent,
                                              @RequestHeader(value = "user", defaultValue
                                                      = "sysUser") String user,
+                                             @RequestParam(name = "projection",
+                                                     defaultValue = "not-applicable") String projection,
                                               RiskCalcParams riskCalcParams) throws FXDefaultException {
 
     logger.debug(String.format("Starting to calculate risk for the customer base. " +
             "User : %s , Tenent : %s, Params : %s", user, tenent, riskCalcParams.toString()));
-    Resource resource = new Resource(riskService.calculateRiskForCustomerBase(user, tenent,
+    Resource resource = new Resource(riskService.calculateRiskForCustomerBase(projection,user, tenent,
             riskCalcParams));
     return ResponseEntity.ok(resource);
   }

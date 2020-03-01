@@ -265,7 +265,6 @@ public class AMLRiskServiceImpl implements AMLRiskService {
   @Override
   public OverallRisk calculateRiskByCustomer(String user, String tenent, Long id,
                                              String projection) throws FXDefaultException {
-
     final CompletableFuture<OverallRisk> result = new CompletableFuture<>();
 
     this.calcRiskForCustomer(id, user, tenent, projection).whenComplete((overallRisk, ex) -> {
@@ -296,6 +295,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
       throw new FXDefaultException("-1", "ERR", "Risk Calculation Error. Please see system log for details",
               new Date(), HttpStatus.BAD_REQUEST, false);
     }
+
   }
 
   @Override
@@ -775,7 +775,8 @@ public class AMLRiskServiceImpl implements AMLRiskService {
                       amlRiskRepository.findTopByCustomerOrderByCreatedOnDesc(customer.getId()).get();
 
               //If last risk calculation is before back days
-              if (amlRisk.getRiskCalcAttemptDate().before(cal.getTime()) || projection.equals(
+              if ((amlRisk.getRiskCalcAttemptDate() != null  && amlRisk.getRiskCalcAttemptDate().before(cal.getTime()) )
+                      || projection.equals(
                       "calculate")) {
                 risk = amlRiskRepository.save(risk);
                 logger.debug("AmlRisk record saved to database successfully");

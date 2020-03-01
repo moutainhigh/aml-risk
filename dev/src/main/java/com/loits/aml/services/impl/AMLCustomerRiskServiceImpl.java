@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -133,6 +134,8 @@ public class AMLCustomerRiskServiceImpl implements AMLCustomerRiskService {
     } catch (IOException e) {
       e.printStackTrace();
     } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    } catch (URISyntaxException e) {
       e.printStackTrace();
     }
 
