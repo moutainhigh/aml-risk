@@ -360,6 +360,10 @@ public class AMLRiskServiceImpl implements AMLRiskService {
             if (amlRisk.getRiskText().contains("occupation")) {
               customerRisk.getOccupation().setHighRisk(true);
             }
+
+            if (amlRisk.getRiskText().contains("industry")) {
+              customerRisk.getIndustry().setHighRisk(true);
+            }
           } else {
             customerRisk.setPepsEnabled(false);
             customerRisk.getCustomerType().setHighRisk(false);
@@ -418,6 +422,11 @@ public class AMLRiskServiceImpl implements AMLRiskService {
             occupation.setHighRisk(false);
             customerRisk.setOccupation(occupation);
           }
+          if (customerRisk.getIndustry() == null) {
+            Industry industry = new Industry();
+            industry.setHighRisk(false);
+            customerRisk.setIndustry(industry);
+          }
 
           OverallRisk overallRisk = new OverallRisk();
           overallRisk.setCustomerCode(customer.getId());
@@ -428,6 +437,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
           overallRisk.setPepsEnabled(customerRisk.getPepsEnabled());
           overallRisk.setHighRiskCustomerType(customerRisk.getCustomerType().getHighRisk());
           overallRisk.setHighRiskOccupation(customerRisk.getOccupation().getHighRisk());
+          overallRisk.setHighRiskIndustry(customerRisk.getIndustry().getHighRisk());
 
           overallRisk = kieService.getOverallRisk(overallRisk);
 
@@ -513,6 +523,15 @@ public class AMLRiskServiceImpl implements AMLRiskService {
           stringBuilder.append(" a high risk occupation");
         }
 
+        if (overallRisk.getHighRiskIndustry()) {
+          if (stringBuilder.length() != 0) {
+            stringBuilder.append(" and");
+          } else {
+            stringBuilder.append("Customer has");
+          }
+          stringBuilder.append(" a high risk industry");
+        }
+
         amlRisk.setRiskText(stringBuilder.toString());
       }
     } else {
@@ -556,6 +575,15 @@ public class AMLRiskServiceImpl implements AMLRiskService {
         }
         stringBuilder.append(" a high risk occupation");
       }
+
+      if (overallRisk.getHighRiskIndustry()) {
+          if (stringBuilder.length() != 0) {
+            stringBuilder.append(" and");
+          } else {
+            stringBuilder.append("Customer has");
+          }
+          stringBuilder.append(" a high risk industry");
+        }
 
       amlRisk.setRiskText(stringBuilder.toString());
     }
@@ -741,6 +769,11 @@ public class AMLRiskServiceImpl implements AMLRiskService {
               occupation.setHighRisk(false);
               customerRisk.setOccupation(occupation);
             }
+            if (customerRisk.getIndustry() == null) {
+              Industry industry = new Industry();
+              industry.setHighRisk(false);
+              customerRisk.setIndustry(industry);
+            }
 
             OverallRisk overallRisk = new OverallRisk();
             overallRisk.setCustomerCode(customer.getId());
@@ -751,6 +784,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
             overallRisk.setPepsEnabled(customerRisk.getPepsEnabled());
             overallRisk.setHighRiskCustomerType(customerRisk.getCustomerType().getHighRisk());
             overallRisk.setHighRiskOccupation(customerRisk.getOccupation().getHighRisk());
+            overallRisk.setHighRiskIndustry(customerRisk.getIndustry().getHighRisk());
             overallRisk = kieService.getOverallRisk(overallRisk);
 
             //Save to calculated AmlRisk record to overallrisk
