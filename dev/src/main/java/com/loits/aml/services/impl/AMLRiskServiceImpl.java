@@ -624,6 +624,9 @@ public class AMLRiskServiceImpl implements AMLRiskService {
   }
 
 
+
+
+
   /**
    * Calculate risk of a given customer. This method calculates it asynchronously and invoking method should handle errors.
    *
@@ -739,11 +742,15 @@ public class AMLRiskServiceImpl implements AMLRiskService {
               customerRisk.setOccupation(occupation);
             }
 
-            OverallRisk overallRisk = new OverallRisk(customer.getId(), ruleModule,
-                    customerRisk.getCalculatedRisk(), productRisk.getCalculatedRisk(),
-                    channelRisk.getCalculatedRisk(), customerRisk.getPepsEnabled(),
-                    customerRisk.getCustomerType().getHighRisk(),
-                    customerRisk.getOccupation().getHighRisk());
+            OverallRisk overallRisk = new OverallRisk();
+            overallRisk.setCustomerCode(customer.getId());
+            overallRisk.setModule(ruleModule);
+            overallRisk.setCustomerRisk(customerRisk.getCalculatedRisk());
+            overallRisk.setProductRisk(productRisk.getCalculatedRisk());
+            overallRisk.setChannelRisk(channelRisk.getCalculatedRisk());
+            overallRisk.setPepsEnabled(customerRisk.getPepsEnabled());
+            overallRisk.setHighRiskCustomerType(customerRisk.getCustomerType().getHighRisk());
+            overallRisk.setHighRiskOccupation(customerRisk.getOccupation().getHighRisk());
             overallRisk = kieService.getOverallRisk(overallRisk);
 
             //Save to calculated AmlRisk record to overallrisk
@@ -768,7 +775,7 @@ public class AMLRiskServiceImpl implements AMLRiskService {
                       amlRiskRepository.findTopByCustomerOrderByCreatedOnDesc(customer.getId()).get();
 
               //If last risk calculation is before back days
-              if ((amlRisk.getRiskCalcAttemptDate() != null && amlRisk.getRiskCalcAttemptDate().before(cal.getTime()))
+              if ((amlRisk.getRiskCalcAttemptDate() != null  && amlRisk.getRiskCalcAttemptDate().before(cal.getTime()) )
                       || projection.equals(
                       "calculate")) {
                 risk = amlRiskRepository.save(risk);
@@ -787,7 +794,6 @@ public class AMLRiskServiceImpl implements AMLRiskService {
           }
         }
 
-
       } catch (
               Exception e) {
         throw new CompletionException(e);
@@ -796,5 +802,6 @@ public class AMLRiskServiceImpl implements AMLRiskService {
       }
     });
   }
+
 
 }
