@@ -42,50 +42,7 @@ build-test:
           cd /pipeline/source/dev
           mvn package
 
-    # run sonarqube scans on the codebase
-    - script:
-        name: Execute sonarqube analyze process
-        code: |
-          date
-          cd /pipeline/source/dev
-          mvn sonar:sonar -Dsonar.host.url=$SONAR_URL -Dsonar.login=$SONAR_USERNAME -Dsonar.password=$SONAR_PASSWORD -Dsonar.junit.reportPaths=target/surefire-reports -Dsonar.jacoco.reportPaths=target/jacoco.exec > ./temp_output
-          SONAR_GET_REPORT_URL=`cat ./temp_output | grep "More about the report processing at " | awk -F 'at ' '{print substr($2,1)}'`
-          cat ./temp_output
-          echo $SONAR_GET_REPORT_URL 
-
-    # check whether sonarqube test pass or fail
-    - script:
-        name: Get sonarqube analyze result
-        code: |
-        ls
-         # for((i=1;i<=$SONAR_GET_RESULT_LOOP_CNT;i++));
-         # do
-         #   sleep 2m
-         #   echo "Get Sonarqube analyze process..."
-         #   reportProcess=$(curl -X GET -i $SONAR_GET_REPORT_URL | grep "status" | awk -F '"status":' '{print substr($2,2,7)}')
-         #   echo $reportProcess
-         #   if [ -z $reportProcess ]; then
-         #     continue
-         #   fi
-         #   if [ $reportProcess = "IN_PROGRESS" ]; then
-         #     continue
-         #   else
-         #     break
-         #   fi
-         # done
-         # fullResult=$(curl -X GET -u $SONAR_USERNAME:$SONAR_PASSWORD -i $SONAR_URL/api/qualitygates/project_status?projectKey=$SONAR_PROJECT_KEY)
-         # echo "Sonarqube analyze full result is:"
-         # echo $fullResult
-          # sonarResult=`echo $fullResult | grep projectStatus | awk -F '"status":' '{print substr($2,2,2)}'`
-          # sonar result is hard coded untill confirmed by architects
-          #sonarResult="OK"
-          #if [ -z $sonarResult ]; then
-          #  export sonarResult='NG'
-          #fi
-          #echo "Quality gate status is: $sonarResult"
-          #if [ $sonarResult != "OK" ]; then
-          #  exit 1
-          #fi
+  
 
     # Copy binary to location that gets passed along to next workflow
     - script:
