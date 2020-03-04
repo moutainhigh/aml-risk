@@ -1,4 +1,4 @@
-#box: openjdk:8-jdk
+#box: openjdk:8-jdk 
 box: maven:3.6.1-jdk-8
 no-response-timeout: 10
 
